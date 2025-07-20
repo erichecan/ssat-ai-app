@@ -21,12 +21,6 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
-# SPA重定向
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
 # 安全头部
 [[headers]]
   for = "/*"
@@ -47,7 +41,3 @@
 [context.production.environment]
   NODE_ENV = "production"
   NEXT_TELEMETRY_DISABLED = "1"
-
-# 部署预览环境
-[context.deploy-preview.environment]
-  NODE_ENV = "development"
