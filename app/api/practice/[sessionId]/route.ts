@@ -7,13 +7,14 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// 修复Next.js 15的API路由参数类型 - 更新于 2024-01-20 23:45:00
 // Get specific practice session with current question
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  context: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const sessionId = params.sessionId
+    const { sessionId } = await context.params
     
     const { data: session, error } = await supabase
       .from('practice_sessions')
@@ -62,10 +63,10 @@ export async function GET(
 // Update practice session (progress, score, etc.)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  context: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const sessionId = params.sessionId
+    const { sessionId } = await context.params
     const { action, answer, timeSpent } = await request.json()
     
     // Get current session
@@ -176,10 +177,10 @@ export async function PUT(
 // Delete practice session
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  context: { params: Promise<{ sessionId: string }> }
 ) {
   try {
-    const sessionId = params.sessionId
+    const { sessionId } = await context.params
     
     const { error } = await supabase
       .from('practice_sessions')

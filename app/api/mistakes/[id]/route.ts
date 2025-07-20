@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { mistakeSystem } from '@/lib/mistakes'
 
+// 修复Next.js 15的API路由参数类型 - 更新于 2024-01-20 23:45:00
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId, masteryLevel, notes, tags } = await request.json()
+    const { id } = await context.params
     
     if (!userId) {
       return NextResponse.json(
@@ -16,15 +18,15 @@ export async function PUT(
     }
     
     if (masteryLevel !== undefined) {
-      await mistakeSystem.updateMasteryLevel(userId, params.id, masteryLevel)
+      await mistakeSystem.updateMasteryLevel(userId, id, masteryLevel)
     }
     
     if (notes !== undefined) {
-      await mistakeSystem.addNotes(userId, params.id, notes)
+      await mistakeSystem.addNotes(userId, id, notes)
     }
     
     if (tags !== undefined) {
-      await mistakeSystem.addTags(userId, params.id, tags)
+      await mistakeSystem.addTags(userId, id, tags)
     }
     
     return NextResponse.json({ success: true })
@@ -39,11 +41,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId')
+    const { id } = await context.params
     
     if (!userId) {
       return NextResponse.json(
@@ -52,7 +55,7 @@ export async function DELETE(
       )
     }
     
-    await mistakeSystem.removeMistake(userId, params.id)
+    await mistakeSystem.removeMistake(userId, id)
     
     return NextResponse.json({ success: true })
   } catch (error) {
