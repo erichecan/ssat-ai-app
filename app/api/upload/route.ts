@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addKnowledgeToBase } from '@/lib/rag'
-
-// 移除pdf-parse导入，因为它可能导致构建错误
-// import pdf from 'pdf-parse'
+import pdf from 'pdf-parse' // 恢复PDF解析功能 - 更新于 2024-01-21 00:05:00
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +15,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 检查文件类型 - 更新于 2024-01-20 23:55:00
+    // 检查文件类型 - 更新于 2024-01-21 00:05:00
     const allowedTypes = ['application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -41,29 +39,29 @@ export async function POST(request: NextRequest) {
       if (file.type === 'text/plain') {
         content = await file.text()
       } else if (file.type === 'application/pdf') {
-        // 暂时返回错误，因为pdf-parse可能导致构建问题
-        return NextResponse.json(
-          { error: 'PDF parsing is temporarily disabled. Please upload TXT files for now.' },
-          { status: 400 }
-        )
+        // 恢复PDF解析功能
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const pdfData = await pdf(buffer)
+        content = pdfData.text
       } else if (file.type.includes('word')) {
         // Word 文档解析暂时返回错误
         return NextResponse.json(
-          { error: 'Word document parsing not yet implemented. Please upload TXT files for now.' },
+          { error: 'Word document parsing not yet implemented. Please upload PDF or TXT files for now.' },
           { status: 400 }
         )
       }
     } catch (parseError) {
       console.error('File parsing error:', parseError)
       return NextResponse.json(
-        { error: 'Failed to parse file content' },
+        { error: 'Failed to parse file content. Please ensure the file is not corrupted.' },
         { status: 400 }
       )
     }
 
     if (!content.trim()) {
       return NextResponse.json(
-        { error: 'Could not extract text from file' },
+        { error: 'Could not extract text from file. The file might be empty or contain only images.' },
         { status: 400 }
       )
     }

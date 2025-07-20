@@ -1,0 +1,24 @@
+SSAT Vocabulary Practice
+
+This is a test document for the SSAT AI learning platform.
+
+Key vocabulary words:
+1. Aberration - a departure from what is normal, usual, or expected
+2. Benevolent - well meaning and kindly
+3. Cacophony - a harsh, discordant mixture of sounds
+4. Diligent - having or showing care and conscientiousness in one's work or duties
+5. Eloquent - fluent or persuasive in speaking or writing
+
+Reading comprehension tips:
+- Always read the question first
+- Look for context clues in the surrounding text
+- Pay attention to tone and author's purpose
+- Eliminate obviously wrong answers first
+
+Math strategies:
+- Draw diagrams when possible
+- Work backwards from the answer choices
+- Use estimation to check your work
+- Read the problem carefully twice
+
+This document will be processed by the RAG system to provide personalized learning assistance. 
