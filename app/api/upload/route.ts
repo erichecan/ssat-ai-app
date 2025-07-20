@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addKnowledgeToBase } from '@/lib/rag'
-import pdf from 'pdf-parse' // 恢复PDF解析功能 - 更新于 2024-01-21 00:05:00
+
+// 动态导入pdf-parse以避免构建时问题 - 更新于 2024-01-21 00:10:00
+let pdfParse: any = null
+
+async function getPdfParser() {
+  if (!pdfParse) {
+    try {
+      const pdfModule = await import('pdf-parse')
+      pdfParse = pdfModule.default || pdfModule
+    } catch (error) {
+      console.error('Failed to load pdf-parse:', error)
+      throw new Error('PDF parsing is not available')
+    }
+  }
+  return pdfParse
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +30,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 检查文件类型 - 更新于 2024-01-21 00:05:00
+    // 检查文件类型 - 更新于 2024-01-21 00:10:00
     const allowedTypes = ['application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -39,11 +54,20 @@ export async function POST(request: NextRequest) {
       if (file.type === 'text/plain') {
         content = await file.text()
       } else if (file.type === 'application/pdf') {
-        // 恢复PDF解析功能
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        const pdfData = await pdf(buffer)
-        content = pdfData.text
+        // 改进的PDF解析，兼容Netlify环境
+        try {
+          const pdfParser = await getPdfParser()
+          const arrayBuffer = await file.arrayBuffer()
+          const buffer = Buffer.from(arrayBuffer)
+          const pdfData = await pdfParser(buffer)
+          content = pdfData.text
+        } catch (pdfError) {
+          console.error('PDF parsing error:', pdfError)
+          return NextResponse.json(
+            { error: 'Failed to parse PDF file. Please ensure the PDF contains text and is not corrupted.' },
+            { status: 400 }
+          )
+        }
       } else if (file.type.includes('word')) {
         // Word 文档解析暂时返回错误
         return NextResponse.json(

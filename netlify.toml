@@ -1,5 +1,5 @@
 # Netlify 配置 - SSAT AI学习平台
-# 更新于 2024-01-20 23:50:00
+# 更新于 2024-01-21 00:10:00 - 修复PDF解析和构建问题
 
 [build]
   publish = ".next"
@@ -12,8 +12,10 @@
 [build.environment]
   # Node.js 版本
   NODE_VERSION = "18"
-  # 确保支持ES模块
+  # 确保支持ES模块和原生依赖
   NPM_FLAGS = "--legacy-peer-deps"
+  # 启用PDF解析支持
+  NODE_OPTIONS = "--max-old-space-size=4096"
 
 # API路由重定向
 [[redirects]]
@@ -41,3 +43,5 @@
 [context.production.environment]
   NODE_ENV = "production"
   NEXT_TELEMETRY_DISABLED = "1"
+  # 确保PDF解析正常工作
+  NODE_OPTIONS = "--max-old-space-size=4096"
