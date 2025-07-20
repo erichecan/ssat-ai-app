@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:21st.dev)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npm run init-knowledge:*)",
+      "Bash(npm run setup-db:*)",
+      "Bash(npm run test-pinecone:*)",
+      "Bash(npm run fix-pinecone:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(true)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": []
+  }
+}

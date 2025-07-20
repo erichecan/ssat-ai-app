@@ -1,0 +1,51 @@
+{
+  "name": "ssat-ai-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "setup": "node scripts/setup-wizard.js",
+    "setup-db": "node scripts/setup-database.mjs",
+    "test-pinecone": "node scripts/test-pinecone-config.js",
+    "fix-pinecone": "node scripts/fix-pinecone-dimensions.mjs",
+    "init-knowledge": "node scripts/initialize-knowledge-base.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
+    "@pinecone-database/pinecone": "^6.1.1",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@supabase/supabase-js": "^2.50.3",
+    "@types/node": "^24.0.10",
+    "@types/react": "^19.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dotenv": "^17.2.0",
+    "framer-motion": "^12.23.6",
+    "lucide-react": "^0.525.0",
+    "next": "^15.3.5",
+    "pdf-parse": "^1.1.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.3.1",
+    "typescript": "^5.8.3",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "tw-animate-css": "^1.3.5"
+  }
+}

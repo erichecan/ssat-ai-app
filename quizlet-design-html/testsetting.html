@@ -1,0 +1,155 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Lexend%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
+
+    <title>Stitch Design</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div
+      class="relative flex size-full min-h-screen flex-col bg-gray-50 justify-between group/design-root overflow-x-hidden"
+      style="--checkbox-tick-svg: url('data:image/svg+xml,%3csvg viewBox=%270 0 16 16%27 fill=%27rgb(249,250,251)%27 xmlns=%27http://www.w3.org/2000/svg%27%3e%3cpath d=%27M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z%27/%3e%3c/svg%3e'); font-family: Lexend, &quot;Noto Sans&quot;, sans-serif;"
+    >
+      <div>
+        <div class="flex items-center bg-gray-50 p-4 pb-2 justify-between">
+          <div class="text-[#101418] flex size-12 shrink-0 items-center" data-icon="ArrowLeft" data-size="24px" data-weight="regular">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+              <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+            </svg>
+          </div>
+          <h2 class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Test Settings</h2>
+        </div>
+        <h3 class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Subject</h3>
+        <div class="flex flex-wrap gap-3 p-4">
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Vocabulary
+            <input type="radio" class="invisible absolute" name="dd57dcf7-6c9a-4450-b061-560bbad2a2b8" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Reading
+            <input type="radio" class="invisible absolute" name="dd57dcf7-6c9a-4450-b061-560bbad2a2b8" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Math
+            <input type="radio" class="invisible absolute" name="dd57dcf7-6c9a-4450-b061-560bbad2a2b8" />
+          </label>
+        </div>
+        <h3 class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Difficulty</h3>
+        <div class="flex flex-wrap gap-3 p-4">
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Beginner
+            <input type="radio" class="invisible absolute" name="e366e688-e9be-4b73-9b65-e7c4140f3eb0" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Intermediate
+            <input type="radio" class="invisible absolute" name="e366e688-e9be-4b73-9b65-e7c4140f3eb0" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Advanced
+            <input type="radio" class="invisible absolute" name="e366e688-e9be-4b73-9b65-e7c4140f3eb0" />
+          </label>
+        </div>
+        <h3 class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Topics</h3>
+        <div class="px-4">
+          <label class="flex gap-x-3 py-3 flex-row">
+            <input
+              type="checkbox"
+              class="h-5 w-5 rounded border-[#d4dbe2] border-2 bg-transparent text-[#3f7fbf] checked:bg-[#3f7fbf] checked:border-[#3f7fbf] checked:bg-[image:--checkbox-tick-svg] focus:ring-0 focus:ring-offset-0 focus:border-[#d4dbe2] focus:outline-none"
+              checked=""
+            />
+            <p class="text-[#101418] text-base font-normal leading-normal">Synonyms</p>
+          </label>
+          <label class="flex gap-x-3 py-3 flex-row">
+            <input
+              type="checkbox"
+              class="h-5 w-5 rounded border-[#d4dbe2] border-2 bg-transparent text-[#3f7fbf] checked:bg-[#3f7fbf] checked:border-[#3f7fbf] checked:bg-[image:--checkbox-tick-svg] focus:ring-0 focus:ring-offset-0 focus:border-[#d4dbe2] focus:outline-none"
+              checked=""
+            />
+            <p class="text-[#101418] text-base font-normal leading-normal">Antonyms</p>
+          </label>
+          <label class="flex gap-x-3 py-3 flex-row">
+            <input
+              type="checkbox"
+              class="h-5 w-5 rounded border-[#d4dbe2] border-2 bg-transparent text-[#3f7fbf] checked:bg-[#3f7fbf] checked:border-[#3f7fbf] checked:bg-[image:--checkbox-tick-svg] focus:ring-0 focus:ring-offset-0 focus:border-[#d4dbe2] focus:outline-none"
+              checked=""
+            />
+            <p class="text-[#101418] text-base font-normal leading-normal">Sentence Completion</p>
+          </label>
+          <label class="flex gap-x-3 py-3 flex-row">
+            <input
+              type="checkbox"
+              class="h-5 w-5 rounded border-[#d4dbe2] border-2 bg-transparent text-[#3f7fbf] checked:bg-[#3f7fbf] checked:border-[#3f7fbf] checked:bg-[image:--checkbox-tick-svg] focus:ring-0 focus:ring-offset-0 focus:border-[#d4dbe2] focus:outline-none"
+              checked=""
+            />
+            <p class="text-[#101418] text-base font-normal leading-normal">Reading Comprehension</p>
+          </label>
+          <label class="flex gap-x-3 py-3 flex-row">
+            <input
+              type="checkbox"
+              class="h-5 w-5 rounded border-[#d4dbe2] border-2 bg-transparent text-[#3f7fbf] checked:bg-[#3f7fbf] checked:border-[#3f7fbf] checked:bg-[image:--checkbox-tick-svg] focus:ring-0 focus:ring-offset-0 focus:border-[#d4dbe2] focus:outline-none"
+              checked=""
+            />
+            <p class="text-[#101418] text-base font-normal leading-normal">Algebra</p>
+          </label>
+        </div>
+        <h3 class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Test Mode</h3>
+        <div class="flex flex-wrap gap-3 p-4">
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Multiple Choice
+            <input type="radio" class="invisible absolute" name="95c1ed32-7d73-419e-88ac-b81ec63ba9ff" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Matching
+            <input type="radio" class="invisible absolute" name="95c1ed32-7d73-419e-88ac-b81ec63ba9ff" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            Fill in the Blank
+            <input type="radio" class="invisible absolute" name="95c1ed32-7d73-419e-88ac-b81ec63ba9ff" />
+          </label>
+          <label
+            class="text-sm font-medium leading-normal flex items-center justify-center rounded-xl border border-[#d4dbe2] px-4 h-11 text-[#101418] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#3f7fbf] relative cursor-pointer"
+          >
+            True/False
+            <input type="radio" class="invisible absolute" name="95c1ed32-7d73-419e-88ac-b81ec63ba9ff" />
+          </label>
+        </div>
+      </div>
+      <div>
+        <div class="flex px-4 py-3">
+          <button
+            class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 px-5 flex-1 bg-[#3f7fbf] text-gray-50 text-base font-bold leading-normal tracking-[0.015em]"
+          >
+            <span class="truncate">Start Test</span>
+          </button>
+        </div>
+        <div class="h-5 bg-gray-50"></div>
+      </div>
+    </div>
+  </body>
+</html>

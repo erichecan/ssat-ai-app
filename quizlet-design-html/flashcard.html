@@ -1,0 +1,114 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Lexend%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
+
+    <title>Stitch Design</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div class="relative flex size-full min-h-screen flex-col bg-gray-50 justify-between group/design-root overflow-x-hidden" style='font-family: Lexend, "Noto Sans", sans-serif;'>
+      <div>
+        <div class="flex items-center bg-gray-50 p-4 pb-2 justify-between">
+          <div class="text-[#101418] flex size-12 shrink-0 items-center" data-icon="ArrowLeft" data-size="24px" data-weight="regular">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+              <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+            </svg>
+          </div>
+          <h2 class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Flashcard</h2>
+        </div>
+        <div class="p-4 @container">
+          <div class="flex flex-col items-stretch justify-start rounded-xl @xl:flex-row @xl:items-start">
+            <div
+              class="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC3StsrTF9HxliXu6_0M_X5MFDiUDGseEw7ohAqURUD8n6jdtoU2dOXSqzLVe97kgS7-a-QWSmuuN7zwv6TX7pw8vOZsHt0HN8Q7dA5aQwB3CkswQXm9TNHMLEVF_q5TXqkkGRWO3Du6rwH6SrOzpzi-zHqBQbywraWm7SYflkpRrPiqp79dkR6mGES4akAukdgz1GCzVqtz_Ywg9d1ttYshDQeWp9oVjCz9XLDjTqQlEnGdsjyYrFOEM8zPnxr56EjABvbYjsYHNLh");'
+            ></div>
+            <div class="flex w-full min-w-72 grow flex-col items-stretch justify-center gap-1 py-4 @xl:px-4">
+              <p class="text-[#5c738a] text-sm font-normal leading-normal">Vocabulary</p>
+              <p class="text-[#101418] text-lg font-bold leading-tight tracking-[-0.015em]">What does 'Ephemeral' mean?</p>
+              <div class="flex items-end gap-3 justify-between">
+                <p class="text-[#5c738a] text-base font-normal leading-normal">Hint: Think about something that doesn't last long.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-stretch">
+          <div class="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-between">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#3f7fbf] text-gray-50 text-sm font-bold leading-normal tracking-[0.015em]"
+            >
+              <span class="truncate">Flip</span>
+            </button>
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#eaedf1] text-[#101418] text-sm font-bold leading-normal tracking-[0.015em]"
+            >
+              <span class="truncate">Pronounce</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="flex gap-2 border-t border-[#eaedf1] bg-gray-50 px-4 pb-3 pt-2">
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]" href="#">
+            <div class="text-[#5c738a] flex h-8 items-center justify-center" data-icon="House" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#101418]" href="#">
+            <div class="text-[#101418] flex h-8 items-center justify-center" data-icon="BookOpen" data-size="24px" data-weight="fill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M240,64V192a16,16,0,0,1-16,16H160a24,24,0,0,0-24,24,8,8,0,0,1-16,0,24,24,0,0,0-24-24H32a16,16,0,0,1-16-16V64A16,16,0,0,1,32,48H88a32,32,0,0,1,32,32v88a8,8,0,0,0,16,0V80a32,32,0,0,1,32-32h56A16,16,0,0,1,240,64Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#101418] text-xs font-medium leading-normal tracking-[0.015em]">Learn</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]" href="#">
+            <div class="text-[#5c738a] flex h-8 items-center justify-center" data-icon="File" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]" href="#">
+            <div class="text-[#5c738a] flex h-8 items-center justify-center" data-icon="CheckSquare" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM224,48V208a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM208,208V48H48V208H208Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Test</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]" href="#">
+            <div class="text-[#5c738a] flex h-8 items-center justify-center" data-icon="User" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+          </a>
+        </div>
+        <div class="h-5 bg-gray-50"></div>
+      </div>
+    </div>
+  </body>
+</html>
