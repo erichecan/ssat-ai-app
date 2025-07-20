@@ -6,7 +6,7 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   
-  // 服务器外部包 - 更新于 2024-01-21 00:10:00
+  // 服务器外部包 - 更新于 2024-01-21 00:15:00
   serverExternalPackages: ['pdf-parse'],
   
   // 图片优化
@@ -21,17 +21,6 @@ const nextConfig = {
   // 环境变量
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
-  },
-  
-  // 重定向
-  async redirects() {
-    return [
-      {
-        source: '/upload',
-        destination: '/aitutor',
-        permanent: false,
-      },
-    ]
   },
   
   // 头部配置
