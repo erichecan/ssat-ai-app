@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addKnowledgeToBase } from '@/lib/rag'
-import pdf from 'pdf-parse'
+
+// 移除pdf-parse导入，因为它可能导致构建错误
+// import pdf from 'pdf-parse'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 检查文件类型
+    // 检查文件类型 - 更新于 2024-01-20 23:55:00
     const allowedTypes = ['application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
@@ -35,14 +37,28 @@ export async function POST(request: NextRequest) {
 
     // 解析文件内容
     let content = ''
-    if (file.type === 'text/plain') {
-      content = await file.text()
-    } else if (file.type === 'application/pdf') {
-      // PDF 解析将在下个步骤实现
-      content = await parsePDF(file)
-    } else if (file.type.includes('word')) {
-      // Word 文档解析将在下个步骤实现
-      content = await parseWord(file)
+    try {
+      if (file.type === 'text/plain') {
+        content = await file.text()
+      } else if (file.type === 'application/pdf') {
+        // 暂时返回错误，因为pdf-parse可能导致构建问题
+        return NextResponse.json(
+          { error: 'PDF parsing is temporarily disabled. Please upload TXT files for now.' },
+          { status: 400 }
+        )
+      } else if (file.type.includes('word')) {
+        // Word 文档解析暂时返回错误
+        return NextResponse.json(
+          { error: 'Word document parsing not yet implemented. Please upload TXT files for now.' },
+          { status: 400 }
+        )
+      }
+    } catch (parseError) {
+      console.error('File parsing error:', parseError)
+      return NextResponse.json(
+        { error: 'Failed to parse file content' },
+        { status: 400 }
+      )
     }
 
     if (!content.trim()) {
@@ -79,6 +95,13 @@ export async function POST(request: NextRequest) {
         console.error(`Error processing chunk ${i + 1}:`, error)
         // 继续处理其他块，不因单个块失败而终止
       }
+    }
+
+    if (processedChunks.length === 0) {
+      return NextResponse.json(
+        { error: 'Failed to process any chunks from the file' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({
@@ -140,28 +163,4 @@ function splitTextIntoChunks(text: string, chunkSize: number = 1000): string[] {
   }
   
   return chunks.filter(chunk => chunk.length > 0)
-}
-
-// PDF 解析函数
-async function parsePDF(file: File): Promise<string> {
-  try {
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const data = await pdf(buffer)
-    
-    if (!data.text || data.text.trim().length === 0) {
-      throw new Error('No text found in PDF file')
-    }
-    
-    return data.text
-  } catch (error) {
-    console.error('PDF parsing error:', error)
-    throw new Error(`Failed to parse PDF: ${error instanceof Error ? error.message : 'Unknown error'}`)
-  }
-}
-
-// Word 文档解析函数 (简化版本)
-async function parseWord(file: File): Promise<string> {
-  // 这里需要使用 Word 解析库，暂时返回错误
-  throw new Error('Word document parsing not yet implemented. Please upload TXT files for now.')
 }
