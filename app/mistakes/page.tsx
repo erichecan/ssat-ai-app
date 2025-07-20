@@ -155,7 +155,7 @@ export default function MistakesPage() {
               onClick={() => setShowReviewMode(false)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
             >
-              <ArrowLeftIcon className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5" />
               Back to Mistakes
             </button>
             <div className="text-sm text-gray-600">
@@ -234,7 +234,7 @@ export default function MistakesPage() {
       <div className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="flex items-center justify-between">
           <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-            <ArrowLeftIcon className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" />
             Back
           </button>
           <h1 className="text-lg font-bold text-gray-900">错题本</h1>
@@ -242,7 +242,7 @@ export default function MistakesPage() {
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
           >
-            <FunnelIcon className="w-5 h-5" />
+            <Filter className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -387,7 +387,7 @@ export default function MistakesPage() {
           </div>
         ) : mistakes.length === 0 ? (
           <div className="text-center py-8">
-            <BookOpenIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No mistakes found</p>
             <p className="text-sm text-gray-500 mt-2">
               {Object.keys(filters).length > 0 ? "Try adjusting your filters" : "Keep practicing to add questions here"}
@@ -407,7 +407,7 @@ export default function MistakesPage() {
                   onClick={() => handleRemoveMistake(mistake.id)}
                   className="p-1 text-gray-400 hover:text-red-500"
                 >
-                  <TrashIcon className="w-4 h-4" />
+                  <Trash className="w-4 h-4" />
                 </button>
               </div>
               
@@ -417,7 +417,7 @@ export default function MistakesPage() {
               
               <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                 <div className="flex items-center gap-1">
-                  <ClockIcon className="w-4 h-4" />
+                  <Clock className="w-4 h-4" />
                   {formatDate(mistake.last_mistake_at)}
                 </div>
                 <div className="flex items-center gap-1">
@@ -428,7 +428,7 @@ export default function MistakesPage() {
               
               {mistake.tags.length > 0 && (
                 <div className="flex items-center gap-2 mb-3">
-                  <TagIcon className="w-4 h-4 text-gray-400" />
+                  <Tag className="w-4 h-4 text-gray-400" />
                   <div className="flex gap-1 flex-wrap">
                     {mistake.tags.map(tag => (
                       <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">

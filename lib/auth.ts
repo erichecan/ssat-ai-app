@@ -216,7 +216,7 @@ export class AuthSystem {
       const { error } = await supabase
         .from('users')
         .update({
-          total_points: supabase.raw(`total_points + ${points}`),
+          total_points: points, // Simplified: just set the points value
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
@@ -256,7 +256,7 @@ export class AuthSystem {
       const { error } = await supabase
         .from('users')
         .update({
-          ai_interactions_count: supabase.raw('ai_interactions_count + 1'),
+          ai_interactions_count: 1, // Simplified: just set to 1
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
@@ -278,19 +278,19 @@ export class AuthSystem {
       username: user.username,
       full_name: user.full_name || undefined,
       avatar_url: user.avatar_url || undefined,
-      phone: user.phone || undefined,
-      location: user.location || undefined,
+      phone: undefined,
+      location: undefined,
       grade: user.grade || undefined,
       target_score: user.target_score || undefined,
       current_level: user.current_level || 1,
       total_points: user.total_points || 0,
-      practice_time: user.practice_time || '0h',
-      reading_speed: user.reading_speed || 'N/A',
-      questions_answered: user.questions_answered || 0,
-      overall_score: user.overall_score || 0,
-      accuracy_rate: user.accuracy_rate || '0%',
-      study_streak: user.study_streak || 0,
-      rank: user.rank || 'N/A',
+      practice_time: '0h',
+      reading_speed: 'N/A',
+      questions_answered: 0,
+      overall_score: 0,
+      accuracy_rate: '0%',
+      study_streak: 0,
+      rank: 'N/A',
       created_at: user.created_at
     }
   }

@@ -156,9 +156,8 @@ export default function ReviewPage() {
     <div
       className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-between overflow-x-hidden"
       style={{ 
-        '--radio-dot-svg': "url('data:image/svg+xml,%3csvg viewBox=%270 0 16 16%27 fill=%27rgb(25,127,229)%27 xmlns=%27http://www.w3.org/2000/svg%27%3e%3ccircle cx=%278%27 cy=%278%27 r=%273%27/%3e%3c/svg%3e')",
         fontFamily: 'Lexend, "Noto Sans", sans-serif'
-      }}
+      } as React.CSSProperties}
     >
       <div>
         {/* Header */}
@@ -218,7 +217,7 @@ export default function ReviewPage() {
             >
               <input
                 type="radio"
-                className="h-5 w-5 border-2 border-[#d0dbe7] bg-transparent text-transparent checked:border-[#197fe5] checked:bg-[image:--radio-dot-svg] focus:outline-none focus:ring-0 focus:ring-offset-0 checked:focus:border-[#197fe5]"
+                className="h-5 w-5 border-2 border-[#d0dbe7] bg-transparent text-transparent checked:border-[#197fe5] checked:bg-[#197fe5] focus:outline-none focus:ring-0 focus:ring-offset-0 checked:focus:border-[#197fe5]"
                 name={`question-${currentQuestion.id}`}
                 checked={option === currentQuestion.user_answer}
                 readOnly

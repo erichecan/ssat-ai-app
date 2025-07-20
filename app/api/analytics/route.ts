@@ -137,11 +137,12 @@ export async function GET(request: NextRequest) {
     }, {} as { [key: string]: { total: number, correct: number, totalTime: number } })
 
     Object.entries(subjectStats).forEach(([subject, stats]) => {
+      const typedStats = stats as { total: number, correct: number, totalTime: number }
       subjectPerformance[subject] = {
-        total: stats.total,
-        correct: stats.correct,
-        accuracy: Math.round((stats.correct / stats.total) * 100),
-        averageTime: Math.round(stats.totalTime / stats.total)
+        total: typedStats.total,
+        correct: typedStats.correct,
+        accuracy: Math.round((typedStats.correct / typedStats.total) * 100),
+        averageTime: Math.round(typedStats.totalTime / typedStats.total)
       }
     })
 
@@ -158,10 +159,11 @@ export async function GET(request: NextRequest) {
     }, {} as { [key: string]: { total: number, correct: number } })
 
     Object.entries(difficultyStats).forEach(([difficulty, stats]) => {
+      const typedStats = stats as { total: number, correct: number }
       difficultyPerformance[difficulty] = {
-        total: stats.total,
-        correct: stats.correct,
-        accuracy: Math.round((stats.correct / stats.total) * 100)
+        total: typedStats.total,
+        correct: typedStats.correct,
+        accuracy: Math.round((typedStats.correct / typedStats.total) * 100)
       }
     })
 

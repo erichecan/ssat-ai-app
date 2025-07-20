@@ -117,7 +117,7 @@ export default function LeaderboardPage() {
       {/* Header */}
       <div className="flex items-center bg-gray-50 p-4 pb-2 justify-between">
         <button className="text-gray-900 flex size-12 shrink-0 items-center justify-center">
-          <ArrowLeftIcon className="h-6 w-6" />
+          <ArrowLeft className="h-6 w-6" />
         </button>
         <h2 className="text-gray-900 text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-12">
           Leaderboard

@@ -59,7 +59,7 @@ export class MistakeSystem {
             mistake_count: existing.mistake_count + 1,
             last_mistake_at: new Date().toISOString(),
             mastery_level: Math.max(0, existing.mastery_level - 1), // Reduce mastery level
-            tags: [...new Set([...existing.tags, ...tags])],
+            tags: Array.from(new Set([...existing.tags, ...tags])),
             user_notes: userNotes || existing.user_notes
           })
           .eq('id', existing.id)
@@ -357,7 +357,7 @@ export class MistakeSystem {
       
       if (!mistake) return
       
-      const newTags = [...new Set([...mistake.tags, ...tags])]
+      const newTags = Array.from(new Set([...mistake.tags, ...tags]))
       
       const { error } = await supabase
         .from('mistake_questions')
