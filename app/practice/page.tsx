@@ -15,6 +15,17 @@ export default function PracticePage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
+  // 确保有demo用户
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentUser = SessionManager.getCurrentUser();
+      if (!currentUser) {
+        console.log('No user found on page load, setting demo user...');
+        SessionManager.setDemoUser();
+      }
+    }
+  }, []);
+
   const handleSubjectChange = (subject: string, checked: boolean) => {
     if (checked) {
       setSelectedSubjects([...selectedSubjects, subject]);
@@ -29,13 +40,24 @@ export default function PracticePage() {
 
     try {
       const currentUser = SessionManager.getCurrentUser();
+      console.log('Current user:', currentUser);
+      
       if (!currentUser) {
-        router.push('/auth');
-        return;
+        console.log('No user found, setting demo user...');
+        SessionManager.setDemoUser();
+        const demoUser = SessionManager.getCurrentUser();
+        console.log('Demo user set:', demoUser);
+        
+        if (!demoUser) {
+          setError('Failed to initialize user session');
+          setIsCreating(false);
+          return;
+        }
       }
 
+      const user = SessionManager.getCurrentUser()!;
       const sessionData = {
-        userId: currentUser.id,
+        userId: user.id,
         sessionType: practiceType,
         subjects: practiceType === 'custom' ? selectedSubjects : ['all'],
         difficulty: practiceType === 'custom' ? difficulty : 'adaptive',
@@ -43,23 +65,29 @@ export default function PracticePage() {
         timeLimit: practiceType === 'custom' ? questionCount * 90 : undefined // 90 seconds per question
       };
 
+      console.log('Creating session with data:', sessionData);
+
       const response = await fetch('/api/practice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sessionData)
       });
 
+      console.log('Response status:', response.status);
       const result = await response.json();
+      console.log('Response data:', result);
 
-      if (response.ok) {
-        // Redirect to practice session
-        router.push(`/practice/${result.session.id}`);
+      if (response.ok && result.success && result.session) {
+        console.log('Redirecting to session:', result.session.id);
+        // Use replace instead of push to prevent back button issues
+        router.replace(`/practice/${result.session.id}`);
       } else {
         setError(result.error || 'Failed to create practice session');
+        console.error('Session creation failed:', result);
       }
     } catch (error) {
       console.error('Error creating practice session:', error);
-      setError('Network error. Please try again.');
+      setError(`Network error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsCreating(false);
     }
