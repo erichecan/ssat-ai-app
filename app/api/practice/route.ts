@@ -46,69 +46,115 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate questions based on settings
-    let questions: any[] = []
+    // 简化版本：使用AI生成题目而不依赖数据库表
+    console.log('Creating practice session for user:', userId)
     
-    if (sessionType === 'adaptive') {
-      // For adaptive mode, use AI to select appropriate questions based on user history
-      // For now, we'll use a mix of difficulties
-      const easyQuestions = filterQuestions(undefined, 'easy', undefined, Math.floor(questionCount * 0.3))
-      const mediumQuestions = filterQuestions(undefined, 'medium', undefined, Math.floor(questionCount * 0.5))
-      const hardQuestions = filterQuestions(undefined, 'hard', undefined, Math.floor(questionCount * 0.2))
+    try {
+      // 调用AI生成题目API
+      const questionResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          questionType: 'mixed',
+          count: questionCount || 10
+        })
+      })
+
+      if (!questionResponse.ok) {
+        throw new Error('Failed to generate questions')
+      }
+
+      const questionsData = await questionResponse.json()
       
-      questions = [...easyQuestions, ...mediumQuestions, ...hardQuestions]
-        .sort(() => Math.random() - 0.5) // shuffle
-        .slice(0, questionCount)
-    } else {
-      // Custom mode - filter by user selections
-      const selectedSubjects = subjects?.length > 0 ? subjects : undefined
-      questions = filterQuestions(
-        selectedSubjects?.[0], // Use first subject for now
-        difficulty || 'medium',
-        undefined,
-        questionCount || 10
-      )
+      if (!questionsData.success || !questionsData.questions) {
+        throw new Error('Invalid questions data')
+      }
+
+      // 创建简化的session对象（不依赖数据库）
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      const session = {
+        id: sessionId,
+        user_id: userId,
+        session_type: sessionType,
+        settings: {
+          subjects: subjects || ['all'],
+          difficulty: difficulty || 'medium', 
+          question_count: questionCount || 10,
+          time_limit: timeLimit
+        },
+        questions: questionsData.questions,
+        status: 'active',
+        current_question_index: 0,
+        score: 0,
+        start_time: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      }
+
+      console.log('Practice session created successfully:', sessionId)
+
+      return NextResponse.json({
+        success: true,
+        session,
+        questions: questionsData.questions,
+        message: 'Practice session created successfully',
+        metadata: questionsData.metadata
+      })
+
+    } catch (questionsError) {
+      console.error('Error generating questions for practice:', questionsError)
+      
+      // 备用：使用question-bank中的题目
+      console.log('Falling back to question bank...')
+      
+      let questions: any[] = []
+      
+      if (sessionType === 'adaptive') {
+        const easyQuestions = filterQuestions(undefined, 'easy', undefined, Math.floor((questionCount || 10) * 0.3))
+        const mediumQuestions = filterQuestions(undefined, 'medium', undefined, Math.floor((questionCount || 10) * 0.5))
+        const hardQuestions = filterQuestions(undefined, 'hard', undefined, Math.floor((questionCount || 10) * 0.2))
+        
+        questions = [...easyQuestions, ...mediumQuestions, ...hardQuestions]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, questionCount || 10)
+      } else {
+        questions = filterQuestions(
+          subjects?.[0],
+          difficulty || 'medium',
+          undefined,
+          questionCount || 10
+        )
+      }
+
+      const sessionId = `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      const session = {
+        id: sessionId,
+        user_id: userId,
+        session_type: sessionType,
+        settings: {
+          subjects: subjects || ['all'],
+          difficulty: difficulty || 'medium',
+          question_count: questionCount || 10,
+          time_limit: timeLimit
+        },
+        questions,
+        status: 'active',
+        current_question_index: 0,
+        score: 0,
+        start_time: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      }
+
+      return NextResponse.json({
+        success: true,
+        session,
+        questions,
+        message: 'Practice session created successfully (fallback mode)',
+        isFallback: true
+      })
     }
-
-    // Create practice session
-    const sessionData = {
-      user_id: userId,
-      session_type: sessionType,
-      settings: {
-        subjects: subjects || ['all'],
-        difficulty: difficulty || 'medium',
-        question_count: questionCount || 10,
-        time_limit: timeLimit
-      },
-      questions: questions.map(q => q.id),
-      status: 'active',
-      current_question_index: 0,
-      score: 0,
-      start_time: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-
-    const { data: session, error } = await supabase
-      .from('practice_sessions')
-      .insert(sessionData)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating practice session:', error)
-      return NextResponse.json(
-        { error: 'Failed to create practice session' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      session,
-      questions: questions.slice(0, 1), // Return first question only
-      message: 'Practice session created successfully'
-    })
 
   } catch (error) {
     console.error('Practice session API error:', error)

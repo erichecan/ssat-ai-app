@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateText } from '@/lib/gemini'
 
-// 简化的AI助手实现，避免复杂的RAG系统和向量数据库
+// 真正的AI助手实现，使用Gemini AI
 export async function POST(request: NextRequest) {
   try {
     const { message } = await request.json()
@@ -12,16 +13,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 简单的关键词匹配回复系统
-    const response = generateSimpleResponse(message)
+    // 使用真正的AI生成回复
+    console.log('User message:', message)
     
-    return NextResponse.json({
-      answer: response,
-      sources: [],
-      confidence: 0.8
-    })
+    try {
+      const prompt = `You are an expert SSAT/SAT tutor helping a student. 
+
+Student's question: "${message}"
+
+Provide a helpful, educational response that:
+1. Directly addresses their question
+2. Uses simple, clear language
+3. Gives practical study tips when relevant
+4. Is encouraging and supportive
+5. Keeps responses concise but informative (2-3 paragraphs max)
+
+If they ask about specific subjects:
+- Vocabulary: Focus on memorization techniques, word roots, context clues
+- Math: Explain concepts step-by-step, provide examples
+- Reading: Discuss comprehension strategies, passage analysis
+- Writing: Cover grammar rules, essay structure, style
+
+Respond in a friendly, tutor-like tone.`
+
+      const response = await generateText(prompt, 10000) // 10秒超时
+      
+      return NextResponse.json({
+        answer: response.trim(),
+        sources: [],
+        confidence: 0.9,
+        isAI: true
+      })
+    } catch (aiError) {
+      console.error('AI generation failed, using fallback:', aiError)
+      // 如果AI失败，使用智能备用回复
+      const fallbackResponse = generateContextualFallback(message)
+      
+      return NextResponse.json({
+        answer: fallbackResponse,
+        sources: [],
+        confidence: 0.6,
+        isFallback: true
+      })
+    }
   } catch (error) {
-    console.error('Error in simple AI chat:', error)
+    console.error('Error in AI chat:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -29,72 +65,53 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generateSimpleResponse(message: string): string {
+// 智能备用回复函数（当AI不可用时）
+function generateContextualFallback(message: string): string {
   const lowerMessage = message.toLowerCase()
   
-  // SSAT词汇相关
-  if (lowerMessage.includes('vocabulary') || lowerMessage.includes('word') || lowerMessage.includes('meaning')) {
-    return `对于SSAT词汇学习，我建议你：
+  // 根据消息内容生成更智能的回复
+  if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('你好')) {
+    return `你好！我是你的SSAT学习助手。虽然现在AI服务暂时不可用，但我仍然可以为你提供基本的学习指导。你可以问我关于词汇、数学、阅读理解或考试策略的问题。`
+  }
+  
+  if (lowerMessage.includes('vocabulary') || lowerMessage.includes('word') || lowerMessage.includes('单词')) {
+    return `词汇学习建议：
 1. 每天学习15-20个新单词
 2. 使用词根词缀记忆法
-3. 通过阅读文章理解词汇在语境中的用法
-4. 定期复习之前学过的单词
+3. 在上下文中理解词汇含义
+4. 定期复习巩固记忆
 
-你想了解某个特定单词的含义吗？`
+你有具体的词汇问题吗？`
   }
   
-  // SSAT数学相关
-  if (lowerMessage.includes('math') || lowerMessage.includes('数学') || lowerMessage.includes('algebra') || lowerMessage.includes('geometry')) {
-    return `SSAT数学主要包含以下内容：
-1. 代数 - 方程式、不等式、函数
-2. 几何 - 面积、周长、角度、相似三角形
-3. 数据分析 - 统计、概率、图表解读
-4. 算术 - 分数、小数、百分比
+  if (lowerMessage.includes('math') || lowerMessage.includes('数学') || lowerMessage.includes('algebra')) {
+    return `SSAT数学备考策略：
+1. 掌握基础概念（代数、几何、数据分析）
+2. 多做练习题，熟悉题型
+3. 学会时间管理
+4. 记录错题并分析原因
 
-你需要在哪个数学领域得到更多帮助？`
+需要具体数学概念的帮助吗？`
   }
   
-  // SSAT阅读相关
-  if (lowerMessage.includes('reading') || lowerMessage.includes('阅读') || lowerMessage.includes('comprehension')) {
-    return `提高SSAT阅读理解的策略：
-1. 先快速浏览文章结构
-2. 注意主题句和关键词
-3. 理解作者的观点和语气
-4. 练习不同类型的文章（小说、议论文、科普文等）
+  if (lowerMessage.includes('reading') || lowerMessage.includes('阅读')) {
+    return `阅读理解提升方法：
+1. 快速浏览找主旨
+2. 注意作者观点和语气
+3. 理解文章结构
+4. 练习不同文体的文章
 
-你在阅读理解的哪个方面需要更多指导？`
+你在阅读的哪个方面需要帮助？`
   }
   
-  // 学习策略相关
-  if (lowerMessage.includes('study') || lowerMessage.includes('学习') || lowerMessage.includes('prepare') || lowerMessage.includes('tips')) {
-    return `SSAT备考建议：
-1. 制定每日学习计划，保持规律
-2. 做真题练习，熟悉考试格式
-3. 记录错题，分析错误原因
-4. 保持良好的心态，适度休息
+  // 默认智能回复
+  return `我收到了你的消息："${message.length > 50 ? message.substring(0, 50) + '...' : message}"
 
-你想了解具体哪个方面的学习策略？`
-  }
-  
-  // 考试技巧相关
-  if (lowerMessage.includes('test') || lowerMessage.includes('exam') || lowerMessage.includes('strategy') || lowerMessage.includes('技巧')) {
-    return `SSAT考试技巧：
-1. 时间管理很重要，不要在难题上花太多时间
-2. 如果不确定答案，可以合理猜测（没有倒扣分）
-3. 仔细读题，注意关键词
-4. 保持冷静，相信自己的准备
+虽然AI服务暂时不可用，但我仍然可以帮助你：
+📚 词汇学习策略
+🔢 数学解题技巧  
+📖 阅读理解方法
+🎯 考试应试技巧
 
-你需要哪个科目的具体应试技巧？`
-  }
-  
-  // 默认回复
-  return `你好！我是你的SSAT学习助手。我可以帮助你：
-
-📚 词汇学习 - 单词记忆、词根词缀
-🔢 数学练习 - 代数、几何、数据分析
-📖 阅读理解 - 理解策略、文章分析
-📝 学习规划 - 制定学习计划、备考建议
-🎯 考试技巧 - 应试策略、时间管理
-
-请告诉我你需要在哪个方面得到帮助，我会为你提供针对性的指导！`
+请告诉我你需要哪方面的帮助！`
 }
