@@ -1,0 +1,11 @@
+This is a test document for SSAT preparation.
+
+The SSAT (Secondary School Admission Test) is a standardized test designed to assess the skills of students applying to independent schools.
+
+Key areas tested include:
+1. Verbal reasoning
+2. Quantitative math
+3. Reading comprehension
+4. Writing sample
+
+This content can be used to test the upload functionality.

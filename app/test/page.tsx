@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { 
   X,
@@ -9,44 +9,97 @@ import {
   Bookmark,
   User,
   BookOpen,
-  Bot
+  Bot,
+  Loader2
 } from 'lucide-react'
 import AIAssistantButton from '@/components/ui/ai-assistant-button'
+import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 
 interface Question {
   id: string
-  type: 'vocabulary' | 'reading' | 'math'
+  type: 'vocabulary' | 'reading' | 'math' | 'writing'
   question: string
   options: string[]
   correctAnswer: string
   explanation: string
 }
 
-const mockQuestion: Question = {
-  id: '1',
-  type: 'vocabulary',
-  question: "Which of the following is the best definition of 'ambivalent'?",
-  options: [
-    "Having mixed feelings or contradictory ideas about something or someone.",
-    "Showing or feeling active opposition toward something or someone.",
-    "Feeling or showing sympathy and concern for others.",
-    "Having or showing a lack of ambition or determination."
-  ],
-  correctAnswer: "Having mixed feelings or contradictory ideas about something or someone.",
-  explanation: "Ambivalent means having mixed feelings or contradictory ideas about something or someone. It comes from the Latin 'ambi' (both) and 'valent' (strong), literally meaning 'having strength in both directions.'"
-}
-
 export default function TestPage() {
+  const [questions, setQuestions] = useState<Question[]>([])
   const [selectedAnswer, setSelectedAnswer] = useState<string>('')
   const [currentQuestion, setCurrentQuestion] = useState(1)
   const [totalQuestions] = useState(5)
   const [showAnswer, setShowAnswer] = useState(false)
-  const [currentTab, setCurrentTab] = useState('test')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string>('')
   
-  // Mock user ID - replace with actual auth
-  const userId = 'user-1'
+  const currentUser = SessionManager.getCurrentUser()
+  const userId = currentUser?.id || 'anonymous'
 
   const progress = (currentQuestion / totalQuestions) * 100
+  const currentQuestionData = questions[currentQuestion - 1]
+
+  // 加载AI生成的题目
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        setIsLoading(true)
+        setError('')
+
+        const response = await fetch('/api/generate-questions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,
+            questionType: 'mixed',
+            count: totalQuestions
+          })
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to generate questions')
+        }
+
+        const data = await response.json()
+        
+        if (data.success && data.questions) {
+          setQuestions(data.questions)
+        } else {
+          throw new Error('Invalid response format')
+        }
+      } catch (error) {
+        console.error('Error loading questions:', error)
+        setError(error instanceof Error ? error.message : 'Failed to load questions')
+        
+        // 如果AI生成失败，使用备用题目
+        setQuestions([
+          {
+            id: 'fallback_1',
+            type: 'vocabulary',
+            question: "Which word is closest in meaning to 'meticulous'?",
+            options: ["Careless", "Detailed", "Quick", "Loud"],
+            correctAnswer: "Detailed",
+            explanation: "Meticulous means showing great attention to detail; very careful and precise."
+          },
+          {
+            id: 'fallback_2',
+            type: 'math',
+            question: "If x + 5 = 12, what is x?",
+            options: ["5", "7", "17", "12"],
+            correctAnswer: "7",
+            explanation: "To solve x + 5 = 12, subtract 5 from both sides: x = 7."
+          }
+        ])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadQuestions()
+  }, [userId, totalQuestions])
 
   const handleAnswerSelect = (answer: string) => {
     setSelectedAnswer(answer)
@@ -57,9 +110,14 @@ export default function TestPage() {
       // Process answer logic here
       setShowAnswer(true)
       setTimeout(() => {
-        setCurrentQuestion(prev => prev + 1)
-        setSelectedAnswer('')
-        setShowAnswer(false)
+        if (currentQuestion < totalQuestions) {
+          setCurrentQuestion(prev => prev + 1)
+          setSelectedAnswer('')
+          setShowAnswer(false)
+        } else {
+          // Navigate to results page
+          window.location.href = '/test/results'
+        }
       }, 2000)
     }
   }
@@ -100,62 +158,98 @@ export default function TestPage() {
         </div>
       </div>
 
-      {/* Question */}
+      {/* Question Content */}
       <div className="flex-1 max-h-[calc(100vh-280px)] overflow-y-auto">
-        <p className="text-gray-900 text-base font-normal leading-normal pb-3 pt-1 px-3">
-          {mockQuestion.question}
-        </p>
-
-        {/* Answer Options */}
-        <div className="flex flex-col gap-3 p-3">
-          {mockQuestion.options.map((option, index) => (
-            <label 
-              key={index}
-              className={`flex items-center gap-4 rounded-lg border-2 border-solid p-3 cursor-pointer transition-colors ${
-                selectedAnswer === option ? 'border-primary-500 bg-primary-50' : ''
-              } ${
-                showAnswer && option === mockQuestion.correctAnswer ? 'border-green-500 bg-green-50' : ''
-              } ${
-                showAnswer && selectedAnswer === option && option !== mockQuestion.correctAnswer ? 'border-red-500 bg-red-50' : ''
-              }`}
-            >
-              <input
-                type="radio"
-                className="h-5 w-5 border-2 border-gray-300 bg-transparent text-transparent checked:border-primary-500 checked:bg-primary-500 focus:outline-none focus:ring-0 focus:ring-offset-0 checked:focus:border-primary-500"
-                name="answer"
-                value={option}
-                checked={selectedAnswer === option}
-                onChange={() => handleAnswerSelect(option)}
-                disabled={showAnswer}
-              />
-              <div className="flex grow flex-col">
-                <p className="text-gray-900 text-sm font-medium leading-normal">
-                  {option}
-                </p>
-              </div>
-              
-              {/* Show correct/incorrect icons when answer is revealed */}
-              {showAnswer && (
-                <div className="flex items-center">
-                  {option === mockQuestion.correctAnswer ? (
-                    <div className="text-green-600 text-xl">✓</div>
-                  ) : selectedAnswer === option ? (
-                    <div className="text-red-600 text-xl">✗</div>
-                  ) : null}
-                </div>
-              )}
-            </label>
-          ))}
-        </div>
-
-        {/* Explanation (shown after answer) */}
-        {showAnswer && (
-          <div className="mx-3 mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2 text-sm">Explanation:</h4>
-            <p className="text-blue-800 text-sm leading-relaxed">
-              {mockQuestion.explanation}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] px-4">
+            <Loader2 className="h-8 w-8 animate-spin text-[#197fe5] mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">AI正在为您生成题目...</h3>
+            <p className="text-sm text-gray-600 text-center">
+              根据您的学习材料和历史表现，AI正在创建个性化的SSAT题目
             </p>
           </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] px-4">
+            <div className="text-red-500 text-xl mb-4">⚠️</div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">生成题目时遇到问题</h3>
+            <p className="text-sm text-gray-600 text-center mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#197fe5] text-white rounded-lg text-sm font-medium"
+            >
+              重试
+            </button>
+          </div>
+        ) : !currentQuestionData ? (
+          <div className="flex flex-col items-center justify-center h-full min-h-[300px] px-4">
+            <p className="text-gray-600">没有可用的题目</p>
+          </div>
+        ) : (
+          <>
+            <div className="px-3 pt-1 pb-3">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                  {currentQuestionData.type.toUpperCase()}
+                </span>
+                <span className="text-xs text-gray-500">AI生成</span>
+              </div>
+              <p className="text-gray-900 text-base font-normal leading-normal">
+                {currentQuestionData.question}
+              </p>
+            </div>
+
+            {/* Answer Options */}
+            <div className="flex flex-col gap-3 p-3">
+              {currentQuestionData.options.map((option, index) => (
+                <label 
+                  key={index}
+                  className={`flex items-center gap-4 rounded-lg border-2 border-solid p-3 cursor-pointer transition-colors ${
+                    selectedAnswer === option ? 'border-primary-500 bg-primary-50' : ''
+                  } ${
+                    showAnswer && option === currentQuestionData.correctAnswer ? 'border-green-500 bg-green-50' : ''
+                  } ${
+                    showAnswer && selectedAnswer === option && option !== currentQuestionData.correctAnswer ? 'border-red-500 bg-red-50' : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="h-5 w-5 border-2 border-gray-300 bg-transparent text-transparent checked:border-primary-500 checked:bg-primary-500 focus:outline-none focus:ring-0 focus:ring-offset-0 checked:focus:border-primary-500"
+                    name="answer"
+                    value={option}
+                    checked={selectedAnswer === option}
+                    onChange={() => handleAnswerSelect(option)}
+                    disabled={showAnswer}
+                  />
+                  <div className="flex grow flex-col">
+                    <p className="text-gray-900 text-sm font-medium leading-normal">
+                      {option}
+                    </p>
+                  </div>
+                  
+                  {/* Show correct/incorrect icons when answer is revealed */}
+                  {showAnswer && (
+                    <div className="flex items-center">
+                      {option === currentQuestionData.correctAnswer ? (
+                        <div className="text-green-600 text-xl">✓</div>
+                      ) : selectedAnswer === option ? (
+                        <div className="text-red-600 text-xl">✗</div>
+                      ) : null}
+                    </div>
+                  )}
+                </label>
+              ))}
+            </div>
+
+            {/* Explanation (shown after answer) */}
+            {showAnswer && (
+              <div className="mx-3 mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2 text-sm">AI解释:</h4>
+                <p className="text-blue-800 text-sm leading-relaxed">
+                  {currentQuestionData.explanation}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -175,15 +269,15 @@ export default function TestPage() {
           </button>
           <button
             onClick={handleNext}
-            disabled={!selectedAnswer || showAnswer}
+            disabled={!selectedAnswer || showAnswer || isLoading || !currentQuestionData}
             className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 text-sm font-bold leading-normal tracking-wide ${
-              !selectedAnswer || showAnswer
+              !selectedAnswer || showAnswer || isLoading || !currentQuestionData
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-primary-500 text-white'
             }`}
           >
             <span className="truncate">
-              {currentQuestion === totalQuestions ? 'Finish' : 'Next'}
+              {isLoading ? 'Loading...' : currentQuestion === totalQuestions ? 'Finish' : 'Next'}
             </span>
           </button>
         </div>
