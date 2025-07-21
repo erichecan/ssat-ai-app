@@ -75,8 +75,8 @@ Generate exactly ${count} questions. Only return the JSON, no other text.
           questions: questionsWithIds,
           metadata: {
             generatedAt: new Date().toISOString(),
-            basedOnUserMaterials: (knowledgeData?.length || 0) > 0,
-            userWeaknesses: userWeaknesses
+            basedOnUserMaterials: false, // 暂时设为false，后续会从数据库获取
+            userWeaknesses: 'No previous performance data available. Generate a balanced mix of question types.'
           }
         })
       } else {
