@@ -46,6 +46,8 @@ export default function TestPage() {
         setIsLoading(true)
         setError('')
 
+        console.log('Requesting questions with userId:', userId)
+        
         const response = await fetch('/api/generate-questions', {
           method: 'POST',
           headers: {
@@ -58,17 +60,38 @@ export default function TestPage() {
           })
         })
 
+        console.log('Response status:', response.status)
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+        // 先获取响应文本，然后检查是否为JSON
+        const responseText = await response.text()
+        console.log('Response text preview:', responseText.substring(0, 200))
+
         if (!response.ok) {
-          const errorData = await response.json()
+          // 尝试解析为JSON，如果失败就使用原始文本
+          let errorData
+          try {
+            errorData = JSON.parse(responseText)
+          } catch {
+            throw new Error(`Server error (${response.status}): ${responseText.substring(0, 100)}`)
+          }
           throw new Error(errorData.error || 'Failed to generate questions')
         }
 
-        const data = await response.json()
+        // 解析JSON响应
+        let data
+        try {
+          data = JSON.parse(responseText)
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError)
+          throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`)
+        }
         
         if (data.success && data.questions) {
+          console.log('Successfully loaded questions:', data.questions.length)
           setQuestions(data.questions)
         } else {
-          throw new Error('Invalid response format')
+          throw new Error('Invalid response format: ' + JSON.stringify(data))
         }
       } catch (error) {
         console.error('Error loading questions:', error)

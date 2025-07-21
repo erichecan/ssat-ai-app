@@ -13,7 +13,9 @@ interface Question {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('API called: generate-questions')
     const { userId, questionType = 'mixed', count = 5 } = await request.json()
+    console.log('Request data:', { userId, questionType, count })
 
     if (!userId) {
       return NextResponse.json(
@@ -22,80 +24,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 获取用户上传的知识库内容
-    const { data: knowledgeData, error: knowledgeError } = await supabase
-      .from('knowledge_base')
-      .select('*')
-      .contains('tags', [userId])
-      .limit(10)
-
-    if (knowledgeError) {
-      console.error('Knowledge fetch error:', knowledgeError)
-    }
-
-    // 获取用户的答题历史以了解弱点
-    const { data: userAnswers, error: answersError } = await supabase
-      .from('user_answers')
-      .select(`
-        *,
-        questions!inner(type, difficulty)
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(20)
-
-    if (answersError) {
-      console.error('User answers fetch error:', answersError)
-    }
-
-    // 构建AI提示词
-    const contextContent = knowledgeData && knowledgeData.length > 0 
-      ? knowledgeData.map(kb => `${kb.title}: ${kb.content}`).join('\n\n')
-      : ''
-
-    const userWeaknesses = analyzeUserWeaknesses(userAnswers || [])
+    // 暂时跳过数据库查询以简化调试
+    console.log('Skipping database queries for debugging')
     
     const prompt = `
-You are an expert SSAT test question generator. Based on the uploaded study materials and user performance data, generate ${count} high-quality SSAT questions.
-
-UPLOADED STUDY MATERIALS:
-${contextContent || 'No specific materials uploaded - use general SSAT knowledge'}
-
-USER PERFORMANCE ANALYSIS:
-${userWeaknesses}
+You are an expert SSAT test question generator. Generate ${count} high-quality SSAT questions.
 
 QUESTION REQUIREMENTS:
-1. Generate ${count} questions of type: ${questionType}
-2. Each question should have exactly 4 multiple choice options (A, B, C, D)
+1. Generate ${count} questions of mixed types (vocabulary, reading, math)
+2. Each question should have exactly 4 multiple choice options
 3. Questions should be similar in style and difficulty to real SSAT questions
-4. Focus on areas where the user needs improvement
-5. Include detailed explanations for the correct answer
+4. Include detailed explanations for the correct answer
 
-RESPONSE FORMAT (JSON):
+RESPONSE FORMAT (JSON only, no markdown):
 {
   "questions": [
     {
       "id": "unique_id",
-      "type": "vocabulary|reading|math|writing",
+      "type": "vocabulary",
       "question": "The question text",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correctAnswer": "Option A",
-      "explanation": "Detailed explanation of why this is correct and why others are wrong"
+      "explanation": "Detailed explanation"
     }
   ]
 }
 
-QUESTION TYPES TO FOCUS ON:
-- Vocabulary: Analogies, synonyms, antonyms based on uploaded content
-- Reading: Comprehension questions about passages in uploaded materials
-- Math: Arithmetic, algebra, geometry problems appropriate for SSAT level
-- Writing: Grammar, usage, and style questions
-
-Generate questions that test real understanding, not just memorization. Make them challenging but fair.
+Generate exactly ${count} questions. Only return the JSON, no other text.
 `
 
-    console.log('Generating questions with AI...')
+    console.log('Calling Gemini API...')
     const aiResponse = await generateText(prompt)
+    console.log('AI response received, length:', aiResponse.length)
     
     try {
       // 尝试解析AI响应为JSON

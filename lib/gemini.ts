@@ -3,6 +3,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 const apiKey = process.env.GOOGLE_GEMINI_API_KEY
 const model = process.env.GEMINI_MODEL || 'gemini-1.5-pro'
 
+console.log('Gemini config:', { 
+  hasApiKey: !!apiKey, 
+  model: model,
+  apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : 'missing'
+})
+
 if (!apiKey) {
   throw new Error('GOOGLE_GEMINI_API_KEY is not set')
 }
