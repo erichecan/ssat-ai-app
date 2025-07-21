@@ -30,10 +30,10 @@ interface FlashcardWithProgress extends Flashcard {
 export default function FlashCardPage() {
   const [flashcards, setFlashcards] = useState<FlashcardWithProgress[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isFlipped, setIsFlipped] = useState(false)
+  const [isFlipped, setIsFlipped] = useState(true)  // 默认显示答案面
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showingAnswer, setShowingAnswer] = useState(false)
+  const [showingAnswer, setShowingAnswer] = useState(true)  // 默认显示答案
   
   const currentCard = flashcards[currentIndex]
 
@@ -92,16 +92,16 @@ export default function FlashCardPage() {
   const handleNext = () => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(currentIndex + 1)
-      setIsFlipped(false)
-      setShowingAnswer(false)
+      setIsFlipped(true)
+      setShowingAnswer(true)
     }
   }
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1)
-      setIsFlipped(false)
-      setShowingAnswer(false)
+      setIsFlipped(true)
+      setShowingAnswer(true)
     }
   }
 
@@ -190,12 +190,12 @@ export default function FlashCardPage() {
       <div className="flex-1 p-3 max-h-[calc(100vh-140px)] overflow-y-auto">
         <div className="flex flex-col items-stretch justify-start rounded-xl">
           {/* Card Container */}
-          <div className="relative w-full h-64 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-3">
-            {/* Front of Card */}
+          <div className="relative w-full min-h-80 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-3">
+            {/* Question Side (Word Only) */}
             {!isFlipped && (
               <div className="absolute inset-0 flex flex-col justify-center items-center p-6">
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="flex items-center justify-center gap-2 mb-6">
                     <span className="px-3 py-1 bg-[#e7edf3] text-[#4e7397] text-xs font-medium rounded-full">
                       {currentCard.category}
                     </span>
@@ -203,52 +203,83 @@ export default function FlashCardPage() {
                       {currentCard.difficulty}
                     </span>
                   </div>
-                  <h3 className="text-gray-900 text-3xl font-bold mb-2">{currentCard.word}</h3>
-                  <p className="text-gray-600 text-lg font-normal mb-4">{currentCard.part_of_speech}</p>
+                  <h3 className="text-gray-900 text-4xl font-bold mb-4">{currentCard.word}</h3>
                   {currentCard.pronunciation && (
-                    <p className="text-gray-500 text-base font-mono">{currentCard.pronunciation}</p>
+                    <p className="text-gray-500 text-lg font-mono mb-4">{currentCard.pronunciation}</p>
                   )}
-                  {currentCard.memory_tip && (
-                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <p className="text-yellow-800 text-sm">💡 {currentCard.memory_tip}</p>
-                    </div>
-                  )}
+                  <p className="text-gray-600 text-lg font-normal">{currentCard.part_of_speech}</p>
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-blue-800 text-sm font-medium">💭 Try to recall the meaning, then flip to check!</p>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Back of Card */}
+            {/* Answer Side (Full Details) */}
             {isFlipped && (
-              <div className="absolute inset-0 flex flex-col justify-start items-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 overflow-y-auto">
-                <div className="w-full">
-                  <div className="text-center mb-4">
-                    <h3 className="text-gray-900 text-2xl font-bold mb-2">{currentCard.word}</h3>
-                    <p className="text-gray-700 text-lg leading-relaxed">{currentCard.definition}</p>
+              <div className="absolute inset-0 p-4 bg-gradient-to-br from-blue-50 to-blue-100 overflow-y-auto">
+                <div className="h-full flex flex-col">
+                  {/* Header */}
+                  <div className="text-center mb-3">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <span className="px-2 py-1 bg-[#e7edf3] text-[#4e7397] text-xs font-medium rounded-full">
+                        {currentCard.category}
+                      </span>
+                      <span className="px-2 py-1 bg-[#f0f0f0] text-[#666] text-xs font-medium rounded-full">
+                        {currentCard.difficulty}
+                      </span>
+                    </div>
+                    <h3 className="text-gray-900 text-2xl font-bold mb-1">{currentCard.word}</h3>
+                    {currentCard.pronunciation && (
+                      <p className="text-gray-500 text-sm font-mono">{currentCard.pronunciation}</p>
+                    )}
+                    <p className="text-gray-600 text-sm font-medium">{currentCard.part_of_speech}</p>
                   </div>
                   
-                  <div className="bg-white p-4 rounded-lg shadow-sm space-y-3">
-                    <div>
-                      <p className="text-gray-600 text-sm font-semibold mb-1">Example:</p>
-                      <p className="text-gray-700 text-sm italic">"{currentCard.example_sentence}"</p>
+                  {/* Main Definition */}
+                  <div className="bg-white rounded-lg p-3 mb-3 shadow-sm">
+                    <p className="text-gray-800 text-base font-medium leading-relaxed text-center">
+                      {currentCard.definition}
+                    </p>
+                  </div>
+                  
+                  {/* Content Sections */}
+                  <div className="flex-1 space-y-2 overflow-y-auto">
+                    {/* Hint Sentence */}
+                    {currentCard.memory_tip && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <p className="text-yellow-800 text-xs font-semibold mb-1">💡 Context Hint:</p>
+                        <p className="text-yellow-900 text-sm italic leading-relaxed">"{currentCard.memory_tip}"</p>
+                      </div>
+                    )}
+                    
+                    {/* Example */}
+                    <div className="bg-white rounded-lg p-3">
+                      <p className="text-gray-600 text-xs font-semibold mb-1">📝 Example:</p>
+                      <p className="text-gray-700 text-sm italic leading-relaxed">"{currentCard.example_sentence}"</p>
                     </div>
                     
-                    {currentCard.synonyms.length > 0 && (
-                      <div>
-                        <p className="text-gray-600 text-sm font-semibold mb-1">Synonyms:</p>
-                        <p className="text-gray-700 text-sm">{currentCard.synonyms.join(', ')}</p>
-                      </div>
-                    )}
+                    {/* Synonyms & Antonyms */}
+                    <div className="grid grid-cols-1 gap-2">
+                      {currentCard.synonyms.length > 0 && (
+                        <div className="bg-white rounded-lg p-3">
+                          <p className="text-green-600 text-xs font-semibold mb-1">✅ Synonyms:</p>
+                          <p className="text-gray-700 text-sm">{currentCard.synonyms.slice(0, 3).join(', ')}</p>
+                        </div>
+                      )}
+                      
+                      {currentCard.antonyms.length > 0 && (
+                        <div className="bg-white rounded-lg p-3">
+                          <p className="text-red-600 text-xs font-semibold mb-1">❌ Antonyms:</p>
+                          <p className="text-gray-700 text-sm">{currentCard.antonyms.slice(0, 3).join(', ')}</p>
+                        </div>
+                      )}
+                    </div>
                     
-                    {currentCard.antonyms.length > 0 && (
-                      <div>
-                        <p className="text-gray-600 text-sm font-semibold mb-1">Antonyms:</p>
-                        <p className="text-gray-700 text-sm">{currentCard.antonyms.join(', ')}</p>
-                      </div>
-                    )}
-                    
+                    {/* Etymology */}
                     {currentCard.etymology && (
-                      <div>
-                        <p className="text-gray-600 text-sm font-semibold mb-1">Etymology:</p>
+                      <div className="bg-white rounded-lg p-3">
+                        <p className="text-purple-600 text-xs font-semibold mb-1">🏛️ Etymology:</p>
                         <p className="text-gray-700 text-sm">{currentCard.etymology}</p>
                       </div>
                     )}
@@ -314,7 +345,7 @@ export default function FlashCardPage() {
               onClick={handleFlip}
               className="flex-1 max-w-[200px] cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-[#197fe5] text-white text-sm font-bold leading-normal tracking-wide hover:bg-[#1668c7]"
             >
-              <span className="truncate">{isFlipped ? 'Show Word' : 'Show Definition'}</span>
+              <span className="truncate">{isFlipped ? 'Test Yourself' : 'Show Answer'}</span>
             </button>
             
             <button
