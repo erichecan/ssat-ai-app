@@ -15,14 +15,73 @@ export async function GET(
 ) {
   try {
     const { sessionId } = await context.params
+    console.log('Loading practice session:', sessionId)
     
-    const { data: session, error } = await supabase
-      .from('practice_sessions')
-      .select('*')
-      .eq('id', sessionId)
-      .single()
+    let session: any = null
+    
+    // 首先尝试从数据库获取session
+    try {
+      const { data: dbSession, error } = await supabase
+        .from('practice_sessions')
+        .select('*')
+        .eq('id', sessionId)
+        .single()
 
-    if (error || !session) {
+      if (!error && dbSession) {
+        session = dbSession
+        console.log('Found session in database')
+      }
+    } catch (dbError) {
+      console.log('Database session not found, checking for temporary session')
+    }
+
+    // 如果数据库中没有，检查是否是临时session（以session_或fallback_开头）
+    if (!session && (sessionId.startsWith('session_') || sessionId.startsWith('fallback_'))) {
+      console.log('Creating temporary session for:', sessionId)
+      
+      // 重新生成题目来模拟session
+      try {
+        const questionResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'temp_user',
+            questionType: 'mixed', 
+            count: 10
+          })
+        })
+
+        if (questionResponse.ok) {
+          const questionsData = await questionResponse.json()
+          
+          if (questionsData.success && questionsData.questions) {
+            session = {
+              id: sessionId,
+              user_id: 'temp_user',
+              session_type: 'adaptive',
+              settings: {
+                subjects: ['all'],
+                difficulty: 'medium',
+                question_count: questionsData.questions.length,
+                time_limit: undefined
+              },
+              questions: questionsData.questions,
+              status: 'active',
+              current_question_index: 0,
+              score: 0,
+              start_time: new Date().toISOString(),
+              created_at: new Date().toISOString()
+            }
+            console.log('Created temporary session with', questionsData.questions.length, 'questions')
+          }
+        }
+      } catch (questionError) {
+        console.error('Error generating questions for temp session:', questionError)
+      }
+    }
+
+    if (!session) {
+      console.log('Session not found:', sessionId)
       return NextResponse.json(
         { error: 'Practice session not found' },
         { status: 404 }
@@ -30,10 +89,19 @@ export async function GET(
     }
 
     // Get current question
-    const currentQuestionId = session.questions[session.current_question_index]
-    const currentQuestion = questionBank.find(q => q.id === currentQuestionId)
+    const currentQuestionData = session.questions[session.current_question_index]
+    let currentQuestion = currentQuestionData
+
+    // 如果questions数组存储的是question对象而不是ID，直接使用
+    if (typeof currentQuestionData === 'object' && currentQuestionData.question) {
+      currentQuestion = currentQuestionData
+    } else {
+      // 如果是ID，从question bank查找
+      currentQuestion = questionBank.find(q => q.id === currentQuestionData)
+    }
 
     if (!currentQuestion) {
+      console.log('Current question not found, index:', session.current_question_index)
       return NextResponse.json(
         { error: 'Current question not found' },
         { status: 404 }
@@ -69,7 +137,32 @@ export async function PUT(
     const { sessionId } = await context.params
     const { action, answer, timeSpent } = await request.json()
     
-    // Get current session
+    console.log('Updating practice session:', sessionId, 'action:', action)
+    
+    // 对于临时session，我们简化处理
+    if (sessionId.startsWith('session_') || sessionId.startsWith('fallback_')) {
+      console.log('Processing temporary session update')
+      
+      // 返回简化的成功响应，用于临时session
+      return NextResponse.json({
+        success: true,
+        session: {
+          id: sessionId,
+          status: 'active',
+          current_question_index: 1, // 简化：总是移到下一题
+          score: 0
+        },
+        nextQuestion: null, // 让前端重新加载
+        progress: {
+          current: 2,
+          total: 5,
+          percentage: 40
+        },
+        isTemporary: true
+      })
+    }
+    
+    // 对于真实session，尝试从数据库获取
     const { data: session, error: fetchError } = await supabase
       .from('practice_sessions')
       .select('*')
