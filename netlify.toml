@@ -4,6 +4,20 @@
 [build]
   publish = ".next"
   command = "npm run build"
+  
+[build.processing]
+  skip_processing = false
+  
+[build.processing.css]
+  bundle = true
+  minify = true
+  
+[build.processing.js]
+  bundle = true
+  minify = true
+  
+[build.processing.html]
+  pretty_urls = true
 
 # Next.js 15 支持
 [[plugins]]
@@ -16,6 +30,8 @@
   NPM_FLAGS = "--legacy-peer-deps"
   # 启用PDF解析支持
   NODE_OPTIONS = "--max-old-space-size=4096"
+  # AWS Lambda 兼容性
+  AWS_LAMBDA_JS_RUNTIME = "nodejs18.x"
 
 # API路由重定向
 [[redirects]]

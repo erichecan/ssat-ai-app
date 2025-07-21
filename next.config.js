@@ -9,6 +9,18 @@ const nextConfig = {
   // 服务器外部包 - 更新于 2024-01-21 00:15:00
   serverExternalPackages: ['pdf-parse'],
   
+  // Webpack配置支持pdf-parse
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // 确保pdf-parse在服务器端正确工作
+      config.externals = config.externals || []
+      config.externals.push({
+        'pdf-parse': 'commonjs pdf-parse',
+      })
+    }
+    return config
+  },
+  
   // 图片优化
   images: {
     domains: ['localhost'],
@@ -16,7 +28,7 @@ const nextConfig = {
   },
   
   // 输出配置
-  output: 'standalone',
+  // output: 'standalone', // 注释掉，让Netlify自动处理
   
   // 环境变量
   env: {

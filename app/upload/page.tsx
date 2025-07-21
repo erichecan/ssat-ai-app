@@ -71,6 +71,15 @@ export default function UploadPage() {
             body: formData,
           });
           
+          // 检查响应类型
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            // 如果不是JSON响应，可能是HTML错误页面
+            const text = await response.text();
+            console.error('Non-JSON response:', text);
+            throw new Error('Server returned an invalid response. Please check if the API is working correctly.');
+          }
+          
           const result = await response.json();
           
           if (response.ok) {

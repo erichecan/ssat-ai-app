@@ -7,11 +7,26 @@ let pdfParse: any = null
 async function getPdfParser() {
   if (!pdfParse) {
     try {
-      const pdfModule = await import('pdf-parse')
+      console.log('Loading pdf-parse module...')
+      // 尝试多种导入方式以确保兼容性
+      let pdfModule
+      try {
+        pdfModule = await import('pdf-parse')
+      } catch (e1) {
+        console.log('First import attempt failed, trying alternative...')
+        try {
+          pdfModule = require('pdf-parse')
+        } catch (e2) {
+          console.error('All import methods failed:', e1, e2)
+          throw new Error('PDF parsing library could not be loaded')
+        }
+      }
+      
       pdfParse = pdfModule.default || pdfModule
+      console.log('PDF parser loaded successfully')
     } catch (error) {
       console.error('Failed to load pdf-parse:', error)
-      throw new Error('PDF parsing is not available')
+      throw new Error(`PDF parsing is not available: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
   return pdfParse
@@ -21,9 +36,22 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Upload API called - 更新于 2024-01-21 01:00:00')
     
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const userId = formData.get('userId') as string
+    // 确保formData解析不会失败
+    let formData: FormData;
+    let file: File | null = null;
+    let userId: string | null = null;
+    
+    try {
+      formData = await request.formData()
+      file = formData.get('file') as File
+      userId = formData.get('userId') as string
+    } catch (formError) {
+      console.error('FormData parsing error:', formError)
+      return NextResponse.json(
+        { error: 'Invalid form data. Please ensure you are uploading a valid file.' },
+        { status: 400 }
+      )
+    }
     
     console.log('File info:', { name: file?.name, type: file?.type, size: file?.size })
     console.log('User ID:', userId)
@@ -62,17 +90,38 @@ export async function POST(request: NextRequest) {
       } else if (file.type === 'application/pdf') {
         // 改进的PDF解析，兼容Netlify环境
         try {
+          console.log('Attempting PDF parsing...')
           const pdfParser = await getPdfParser()
           const arrayBuffer = await file.arrayBuffer()
           const buffer = Buffer.from(arrayBuffer)
-          const pdfData = await pdfParser(buffer)
+          
+          // 添加超时处理，防止长时间阻塞
+          const parsePromise = pdfParser(buffer)
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('PDF parsing timeout')), 30000)
+          )
+          
+          const pdfData = await Promise.race([parsePromise, timeoutPromise])
           content = pdfData.text
           console.log('PDF content length:', content.length)
+          
+          if (!content || content.trim().length === 0) {
+            throw new Error('PDF appears to be empty or contains no extractable text')
+          }
+          
         } catch (pdfError) {
           console.error('PDF parsing error:', pdfError)
           return NextResponse.json(
-            { error: 'Failed to parse PDF file. Please ensure the PDF contains text and is not corrupted.' },
-            { status: 400 }
+            { 
+              error: 'Failed to parse PDF file. This could be due to: 1) The PDF is password protected, 2) The PDF contains only images/scanned content, 3) The PDF is corrupted. Please ensure your PDF contains selectable text.',
+              details: pdfError instanceof Error ? pdfError.message : 'Unknown PDF parsing error'
+            },
+            { 
+              status: 400,
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            }
           )
         }
       } else if (file.type.includes('word')) {
@@ -159,11 +208,32 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in upload API:', error)
+    // 确保总是返回JSON响应，即使发生未预期的错误
     return NextResponse.json(
-      { error: 'Internal server error during file processing' },
-      { status: 500 }
+      { 
+        error: 'Internal server error during file processing',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
     )
   }
+}
+
+// 添加OPTIONS方法支持CORS预检请求
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
 }
 
 // 文本分割函数
