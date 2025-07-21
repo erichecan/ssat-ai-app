@@ -32,6 +32,9 @@ export default function TestPage() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>('')
+  const [isFallback, setIsFallback] = useState(false)
+  const [basedOnUserMaterials, setBasedOnUserMaterials] = useState(false)
+  const [userMaterialsCount, setUserMaterialsCount] = useState(0)
   
   const currentUser = SessionManager.getCurrentUser()
   const userId = currentUser?.id || 'anonymous'
@@ -96,6 +99,16 @@ export default function TestPage() {
         
         if (data.success && data.questions) {
           console.log('Successfully loaded questions:', data.questions.length)
+          console.log('Questions based on user materials:', data.metadata?.basedOnUserMaterials)
+          console.log('User materials count:', data.metadata?.userMaterialsCount)
+          
+          if (data.metadata?.isFallback) {
+            console.log('Using fallback questions due to AI timeout')
+            setIsFallback(true)
+          } else {
+            setBasedOnUserMaterials(data.metadata?.basedOnUserMaterials || false)
+            setUserMaterialsCount(data.metadata?.userMaterialsCount || 0)
+          }
           setQuestions(data.questions)
         } else {
           throw new Error('Invalid response format: ' + JSON.stringify(data))
@@ -221,7 +234,14 @@ export default function TestPage() {
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                   {currentQuestionData.type.toUpperCase()}
                 </span>
-                <span className="text-xs text-gray-500">AI生成</span>
+                <span className="text-xs text-gray-500">
+                  {isFallback 
+                    ? '标准题库' 
+                    : basedOnUserMaterials 
+                      ? `基于您的学习材料 (${userMaterialsCount}份)` 
+                      : 'AI生成 (通用)'
+                  }
+                </span>
               </div>
               <p className="text-gray-900 text-base font-normal leading-normal">
                 {currentQuestionData.question}

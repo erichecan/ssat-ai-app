@@ -17,11 +17,23 @@ const genAI = new GoogleGenerativeAI(apiKey)
 
 export const geminiModel = genAI.getGenerativeModel({ model })
 
-export async function generateText(prompt: string): Promise<string> {
+export async function generateText(prompt: string, timeout: number = 15000): Promise<string> {
   try {
-    const result = await geminiModel.generateContent(prompt)
-    const response = await result.response
-    return response.text()
+    console.log('Generating text with timeout:', timeout)
+    
+    // 创建超时Promise
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('AI request timeout')), timeout)
+    )
+    
+    // 创建生成Promise
+    const generatePromise = geminiModel.generateContent(prompt).then(result => result.response.text())
+    
+    // 竞争超时
+    const response = await Promise.race([generatePromise, timeoutPromise]) as string
+    
+    console.log('AI response generated successfully, length:', response.length)
+    return response
   } catch (error) {
     console.error('Error generating text with Gemini:', error)
     throw error

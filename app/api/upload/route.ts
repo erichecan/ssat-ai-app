@@ -150,25 +150,56 @@ export async function POST(request: NextRequest) {
     const chunks = splitTextIntoChunks(content, 1000) // 1000字符一块
     console.log('Created chunks:', chunks.length)
     
-    // 简化处理：只处理第一个块，避免数据库依赖问题
+    // 处理所有块并保存到知识库
     const processedChunks = []
     try {
-      const firstChunk = chunks[0]
-      console.log('Processing first chunk, length:', firstChunk.length)
+      console.log('Processing', chunks.length, 'chunks for knowledge base...')
       
-      // 暂时跳过数据库保存，直接返回成功
-      processedChunks.push({
-        id: 'temp-' + Date.now(),
-        content: firstChunk.substring(0, 100) + '...', // 预览
-        size: firstChunk.length,
-        note: 'File parsed successfully (database save disabled for testing)'
-      })
-      console.log('File processed successfully, chunks created:', processedChunks.length)
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i]
+        const chunkTitle = `${file.name} - Part ${i + 1}`
+        
+        console.log(`Processing chunk ${i + 1}/${chunks.length}, length:`, chunk.length)
+        
+        try {
+          // 添加到知识库（包含向量化和数据库存储）
+          const knowledgeId = await addKnowledgeToBase(
+            chunkTitle,
+            chunk,
+            'uploaded_document', // topic
+            'medium', // difficulty
+            'concept', // type - 改为concept更适合学习材料
+            ['user_upload', userId], // tags
+            file.name // source
+          )
+          
+          processedChunks.push({
+            id: knowledgeId,
+            content: chunk.substring(0, 100) + '...', // 预览
+            size: chunk.length,
+            title: chunkTitle
+          })
+          
+          console.log(`Successfully added chunk ${i + 1} to knowledge base:`, knowledgeId)
+        } catch (chunkError) {
+          console.error(`Error processing chunk ${i + 1}:`, chunkError)
+          // 如果单个块失败，继续处理其他块
+          processedChunks.push({
+            id: 'error-' + Date.now() + '-' + i,
+            content: chunk.substring(0, 100) + '...',
+            size: chunk.length,
+            title: chunkTitle,
+            error: chunkError instanceof Error ? chunkError.message : 'Unknown error'
+          })
+        }
+      }
+      
+      console.log('Finished processing chunks. Success:', processedChunks.filter(c => !c.error).length, 'Failed:', processedChunks.filter(c => c.error).length)
       
     } catch (error) {
-      console.error('Error processing chunk:', error)
+      console.error('Error in chunk processing loop:', error)
       return NextResponse.json(
-        { error: 'Failed to process file content' },
+        { error: 'Failed to process file chunks' },
         { 
           status: 500,
           headers: {

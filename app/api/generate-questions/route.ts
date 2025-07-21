@@ -27,38 +27,95 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 暂时跳过数据库查询以简化调试
-    console.log('Skipping database queries for debugging')
+    // 获取用户上传的知识库内容
+    console.log('Fetching user uploaded materials...')
+    const { data: knowledgeData, error: knowledgeError } = await supabase
+      .from('knowledge_base')
+      .select('*')
+      .contains('tags', [userId])
+      .limit(10)
+
+    if (knowledgeError) {
+      console.error('Knowledge fetch error:', knowledgeError)
+    } else {
+      console.log('Found', knowledgeData?.length || 0, 'knowledge entries for user')
+    }
+
+    // 获取用户的答题历史以了解弱点
+    const { data: userAnswers, error: answersError } = await supabase
+      .from('user_answers')
+      .select(`
+        *,
+        questions!inner(type, difficulty)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (answersError) {
+      console.error('User answers fetch error:', answersError)
+    } else {
+      console.log('Found', userAnswers?.length || 0, 'user answers for analysis')
+    }
+
+    // 构建基于用户材料的提示词
+    const contextContent = knowledgeData && knowledgeData.length > 0 
+      ? knowledgeData.map(kb => `${kb.title}: ${kb.content}`).join('\n\n')
+      : ''
+
+    const userWeaknesses = analyzeUserWeaknesses(userAnswers || [])
     
-    const prompt = `
-You are an expert SSAT test question generator. Generate ${count} high-quality SSAT questions.
+    let prompt = `Generate ${count} SSAT questions in JSON format based on the following study materials:`
 
-QUESTION REQUIREMENTS:
-1. Generate ${count} questions of mixed types (vocabulary, reading, math)
-2. Each question should have exactly 4 multiple choice options
-3. Questions should be similar in style and difficulty to real SSAT questions
-4. Include detailed explanations for the correct answer
+    if (contextContent) {
+      prompt += `
 
-RESPONSE FORMAT (JSON only, no markdown):
+UPLOADED STUDY MATERIALS:
+${contextContent.substring(0, 2000)}${contextContent.length > 2000 ? '\n... (content truncated)' : ''}
+
+USER PERFORMANCE ANALYSIS:
+${userWeaknesses}
+
+Create questions that test understanding of the uploaded materials. Focus on:
+- Key concepts and vocabulary from the materials
+- Reading comprehension based on the content
+- Math problems that relate to examples in the materials
+- Areas where the user needs improvement`
+    } else {
+      prompt += `
+
+No specific study materials uploaded. Generate general SSAT questions focusing on:
+${userWeaknesses}`
+    }
+
+    prompt += `
+
+Response format (JSON only):
 {
   "questions": [
     {
-      "id": "unique_id",
+      "id": "q1",
       "type": "vocabulary",
-      "question": "The question text",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correctAnswer": "Option A",
-      "explanation": "Detailed explanation"
+      "question": "Question text here",
+      "options": ["A", "B", "C", "D"],
+      "correctAnswer": "A",
+      "explanation": "Brief explanation"
     }
   ]
 }
 
-Generate exactly ${count} questions. Only return the JSON, no other text.
-`
+Generate exactly ${count} questions. Mix vocabulary, math, reading types.`
 
-    console.log('Calling Gemini API...')
-    const aiResponse = await generateText(prompt)
-    console.log('AI response received, length:', aiResponse.length)
+    // 首先尝试AI生成，如果失败使用备用题目
+    let aiResponse: string
+    try {
+      console.log('Calling Gemini API with 12s timeout...')
+      aiResponse = await generateText(prompt, 12000) // 12秒超时
+      console.log('AI response received, length:', aiResponse.length)
+    } catch (aiError) {
+      console.log('AI generation failed, using fallback questions:', aiError)
+      return getFallbackQuestions(count)
+    }
     
     try {
       // 尝试解析AI响应为JSON
@@ -78,8 +135,11 @@ Generate exactly ${count} questions. Only return the JSON, no other text.
           questions: questionsWithIds,
           metadata: {
             generatedAt: new Date().toISOString(),
-            basedOnUserMaterials: false, // 暂时设为false，后续会从数据库获取
-            userWeaknesses: 'No previous performance data available. Generate a balanced mix of question types.'
+            basedOnUserMaterials: (knowledgeData?.length || 0) > 0,
+            userMaterialsCount: knowledgeData?.length || 0,
+            userHistoryAnalyzed: (userAnswers?.length || 0) > 0,
+            userWeaknesses: userWeaknesses,
+            isFallback: false
           }
         })
       } else {
@@ -147,4 +207,67 @@ function analyzeUserWeaknesses(userAnswers: any[]): string {
   ].join('\n')
 
   return analysis
+}
+
+// 备用题目生成函数
+function getFallbackQuestions(count: number) {
+  const fallbackQuestions: Question[] = [
+    {
+      id: 'fallback_1',
+      type: 'vocabulary',
+      question: "Which word is closest in meaning to 'abundant'?",
+      options: ["Scarce", "Plentiful", "Difficult", "Simple"],
+      correctAnswer: "Plentiful",
+      explanation: "Abundant means existing in large quantities; plentiful."
+    },
+    {
+      id: 'fallback_2',
+      type: 'math',
+      question: "If x + 8 = 15, what is x?",
+      options: ["7", "8", "15", "23"],
+      correctAnswer: "7",
+      explanation: "To solve x + 8 = 15, subtract 8 from both sides: x = 7."
+    },
+    {
+      id: 'fallback_3',
+      type: 'vocabulary',
+      question: "What does 'meticulous' mean?",
+      options: ["Careless", "Very careful and precise", "Fast", "Loud"],
+      correctAnswer: "Very careful and precise",
+      explanation: "Meticulous means showing great attention to detail; very careful and precise."
+    },
+    {
+      id: 'fallback_4',
+      type: 'reading',
+      question: "In the phrase 'a deafening silence,' what literary device is being used?",
+      options: ["Simile", "Metaphor", "Oxymoron", "Alliteration"],
+      correctAnswer: "Oxymoron",
+      explanation: "An oxymoron combines contradictory terms. 'Deafening silence' combines loud (deafening) with quiet (silence)."
+    },
+    {
+      id: 'fallback_5',
+      type: 'math',
+      question: "What is 30% of 50?",
+      options: ["15", "20", "25", "30"],
+      correctAnswer: "15",
+      explanation: "30% of 50 = 0.30 × 50 = 15."
+    }
+  ]
+
+  const selectedQuestions = fallbackQuestions.slice(0, count)
+  
+  return NextResponse.json({
+    success: true,
+    questions: selectedQuestions.map((q, index) => ({
+      ...q,
+      id: `fallback_${Date.now()}_${index}`,
+      generatedAt: new Date().toISOString()
+    })),
+    metadata: {
+      generatedAt: new Date().toISOString(),
+      basedOnUserMaterials: false,
+      userWeaknesses: 'Using fallback questions due to AI timeout',
+      isFallback: true
+    }
+  })
 }
