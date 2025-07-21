@@ -13,8 +13,11 @@ interface Question {
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('API called: generate-questions')
-    const { userId, questionType = 'mixed', count = 5 } = await request.json()
+    console.log('API called: generate-questions at', new Date().toISOString())
+    console.log('Environment:', process.env.NODE_ENV)
+    
+    const body = await request.json()
+    const { userId, questionType = 'mixed', count = 5 } = body
     console.log('Request data:', { userId, questionType, count })
 
     if (!userId) {

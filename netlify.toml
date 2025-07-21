@@ -33,11 +33,7 @@
   # AWS Lambda 兼容性
   AWS_LAMBDA_JS_RUNTIME = "nodejs18.x"
 
-# API路由重定向
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# Next.js API路由会自动被 @netlify/plugin-nextjs 处理，无需手动重定向
 
 # 安全头部
 [[headers]]

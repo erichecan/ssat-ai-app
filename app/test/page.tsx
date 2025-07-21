@@ -48,7 +48,14 @@ export default function TestPage() {
 
         console.log('Requesting questions with userId:', userId)
         
-        const response = await fetch('/api/generate-questions', {
+        // 确保API URL正确
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/generate-questions' 
+          : '/api/generate-questions'
+        
+        console.log('Making request to:', apiUrl)
+        
+        const response = await fetch(apiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
