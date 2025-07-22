@@ -10,7 +10,7 @@ import {
   MapPin,
   House,
   BookOpen,
-  Search,
+  Brain,
   User,
   TrendingUp,
   Target,
@@ -341,11 +341,11 @@ export default function ProfilePage() {
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/review" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <Search size={24} />
+              <Brain size={24} />
             </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]">
             <div className="text-[#0e141b] flex h-8 items-center justify-center">

@@ -63,12 +63,34 @@ export async function POST(request: NextRequest) {
         .sort(() => Math.random() - 0.5)
         .slice(0, questionCount || 10)
     } else {
+      // 将用户友好的主题名称映射到question bank中的type
+      const subjectTypeMap: Record<string, string> = {
+        'Reading Comprehension': 'reading',
+        'Math': 'math', 
+        'Vocabulary': 'vocabulary',
+        'Essay Writing': 'writing'
+      }
+      
+      const selectedSubject = subjects?.[0]
+      const questionType = subjectTypeMap[selectedSubject] || undefined
+      
+      console.log('Custom practice - selected subject:', selectedSubject, 'mapped to type:', questionType)
+      
       questions = filterQuestions(
-        subjects?.[0],
+        questionType,
         difficulty || 'medium',
         undefined,
         questionCount || 10
       )
+      
+      console.log('Generated', questions.length, 'questions for custom practice')
+    }
+
+    // 确保至少有一些问题
+    if (questions.length === 0) {
+      console.error('No questions generated! Using fallback questions...')
+      // 使用混合的默认问题作为备用
+      questions = filterQuestions(undefined, 'medium', undefined, Math.min(questionCount || 10, 5))
     }
 
     const sessionId = `practice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`

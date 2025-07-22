@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, GraduationCap, House, File, User } from 'lucide-react';
+import { ArrowLeft, BookOpen, House, Brain, User } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 export default function PracticePage() {
@@ -82,8 +82,13 @@ export default function PracticePage() {
         // Use replace instead of push to prevent back button issues
         router.replace(`/practice/${result.session.id}`);
       } else {
-        setError(result.error || 'Failed to create practice session');
+        const errorMessage = result.error || 'Failed to create practice session'
+        setError(errorMessage);
         console.error('Session creation failed:', result);
+        console.error('Error details:', errorMessage);
+        
+        // 显示更详细的错误信息
+        alert(`Practice session creation failed: ${errorMessage}. Please check the console for more details.`);
       }
     } catch (error) {
       console.error('Error creating practice session:', error);
@@ -264,15 +269,15 @@ export default function PracticePage() {
           </Link>
           <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]">
             <div className="text-[#0e141b] flex h-8 items-center justify-center">
-              <GraduationCap size={24} fill="currentColor" />
+              <BookOpen size={24} fill="currentColor" />
             </div>
             <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/review" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <File size={24} />
+              <Brain size={24} />
             </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">

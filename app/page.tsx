@@ -8,19 +8,13 @@ import {
   BookOpen, 
   User,
   Clock,
-  FileText
+  Brain
 } from 'lucide-react';
 
 export default function HomePage() {
   const [overallProgress] = useState(65);
 
   const recommendedCards = [
-    {
-      title: 'My Files',
-      description: '我的文件',
-      link: '/files',
-      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=300&fit=crop&crop=center'
-    },
     {
       title: 'Reading Speed Boost',
       description: 'Improve reading speed',
@@ -118,14 +112,14 @@ export default function HomePage() {
             </Link>
 
             <Link 
-              href="/files"
+              href="/profile"
               className="bg-white rounded-lg p-3 border border-[#d0dbe7] hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="text-[#197fe5]" size={18} />
-                <span className="text-[#0e141b] font-medium text-sm">我的文件</span>
+                <User className="text-[#197fe5]" size={18} />
+                <span className="text-[#0e141b] font-medium text-sm">Profile</span>
               </div>
-              <p className="text-[#4e7397] text-xs">Manage files</p>
+              <p className="text-[#4e7397] text-xs">Settings & Files</p>
             </Link>
           </div>
         </div>
@@ -146,11 +140,11 @@ export default function HomePage() {
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/files" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <FileText size={24} />
+              <Brain size={24} />
             </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">我的文件</p>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">

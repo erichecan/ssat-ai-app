@@ -7,10 +7,9 @@ import {
   X,
   House,
   Check,
-  List,
-  Search,
-  User,
-  BookOpen
+  BookOpen,
+  Brain,
+  User
 } from 'lucide-react'
 
 interface QuestionResult {
@@ -308,22 +307,22 @@ export default function TestResultsPage() {
           <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
         </Link>
         <Link 
-          href="/test" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]"
-        >
-          <div className="text-[#0e141b] flex h-8 items-center justify-center">
-            <List size={24} fill="currentColor" />
-          </div>
-          <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Tests</p>
-        </Link>
-        <Link 
-          href="/review" 
+          href="/practice" 
           className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
         >
           <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <Search size={24} />
+            <BookOpen size={24} />
           </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
+          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+        </Link>
+        <Link 
+          href="/flashcard" 
+          className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
+        >
+          <div className="text-[#4e7397] flex h-8 items-center justify-center">
+            <Brain size={24} />
+          </div>
+          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
         </Link>
         <Link 
           href="/profile" 

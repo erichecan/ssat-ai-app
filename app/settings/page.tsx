@@ -6,16 +6,15 @@ import {
   ArrowLeft, 
   ArrowRight, 
   House, 
-  Search, 
-  Plus, 
-  Bookmark, 
+  BookOpen, 
+  Brain, 
+  FileText, 
   User,
   Bell,
   Palette,
   Globe,
   UserCog,
   HelpCircle,
-  FileText,
   Shield,
   Save,
   RotateCcw
@@ -438,23 +437,17 @@ export default function SettingsPage() {
             </div>
             <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
           </Link>
-          <Link href="/search" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
+          <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
             <div className="text-[#5c738a] flex h-8 items-center justify-center">
-              <Search size={24} />
+              <BookOpen size={24} />
             </div>
-            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Search</p>
+            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/upload" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
             <div className="text-[#5c738a] flex h-8 items-center justify-center">
-              <Plus size={24} />
+              <Brain size={24} />
             </div>
-            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Create</p>
-          </Link>
-          <Link href="/mistakes" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
-            <div className="text-[#5c738a] flex h-8 items-center justify-center">
-              <Bookmark size={24} />
-            </div>
-            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Library</p>
+            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#101418]">
             <div className="text-[#101418] flex h-8 items-center justify-center">

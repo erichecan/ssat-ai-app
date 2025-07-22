@@ -6,14 +6,14 @@ import {
   ArrowLeft,
   House,
   BookOpen,
-  File,
-  CheckSquare,
+  Brain,
   User,
   RotateCcw,
   Volume2,
   ChevronLeft,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  CheckSquare
 } from 'lucide-react'
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 import { Flashcard } from '@/lib/flashcard-bank'
@@ -415,51 +415,30 @@ export default function FlashCardPage() {
       {/* Bottom Navigation */}
       <div>
         <div className="flex gap-2 border-t border-[#e7edf3] bg-slate-50 px-4 pb-3 pt-2">
-        <Link 
-          href="/" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
-        >
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <House size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
-        </Link>
-        <Link 
-          href="/flashcard" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]"
-        >
-          <div className="text-[#0e141b] flex h-8 items-center justify-center">
-            <BookOpen size={24} fill="currentColor" />
-          </div>
-          <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Learn</p>
-        </Link>
-        <Link 
-          href="/practice" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
-        >
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <File size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
-        </Link>
-        <Link 
-          href="/test" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
-        >
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <CheckSquare size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Test</p>
-        </Link>
-        <Link 
-          href="/profile" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
-        >
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <User size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
-        </Link>
+          <Link href="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <House size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </Link>
+          <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <BookOpen size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]">
+            <div className="text-[#0e141b] flex h-8 items-center justify-center">
+              <Brain size={24} fill="currentColor" />
+            </div>
+            <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
+          </Link>
+          <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <User size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+          </Link>
         </div>
         <div className="h-5 bg-slate-50"></div>
       </div>
