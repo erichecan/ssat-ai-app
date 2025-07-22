@@ -12,6 +12,18 @@ interface UploadedFile {
   type: string;
   uploadedAt: string;
   status: 'uploading' | 'success' | 'error';
+  chunks?: Array<{
+    id: string;
+    content: string;
+    size: number;
+    title: string;
+    error?: string;
+  }>;
+  fileInfo?: {
+    chunksProcessed: number;
+    totalChunks: number;
+    contentLength: number;
+  };
 }
 
 export default function UploadPage() {
@@ -23,7 +35,26 @@ export default function UploadPage() {
       size: 2400000,
       type: 'application/pdf',
       uploadedAt: '2024-04-20',
-      status: 'success'
+      status: 'success',
+      chunks: [
+        {
+          id: 'chunk-1',
+          content: 'This essay explores the key events and figures that shaped American history...',
+          size: 850,
+          title: 'Essay on American History - Part 1'
+        },
+        {
+          id: 'chunk-2',
+          content: 'The Revolutionary War marked a turning point in American independence...',
+          size: 920,
+          title: 'Essay on American History - Part 2'
+        }
+      ],
+      fileInfo: {
+        chunksProcessed: 2,
+        totalChunks: 2,
+        contentLength: 1770
+      }
     },
     {
       id: '2',
@@ -31,7 +62,20 @@ export default function UploadPage() {
       size: 1800000,
       type: 'application/pdf',
       uploadedAt: '2024-04-15',
-      status: 'success'
+      status: 'success',
+      chunks: [
+        {
+          id: 'chunk-3',
+          content: 'Chapter 3 covers the fundamental principles of chemistry...',
+          size: 780,
+          title: 'Science Textbook Chapter 3 - Part 1'
+        }
+      ],
+      fileInfo: {
+        chunksProcessed: 1,
+        totalChunks: 1,
+        contentLength: 780
+      }
     }
   ]);
   const [uploading, setUploading] = useState(false);
@@ -90,10 +134,16 @@ export default function UploadPage() {
         });
 
         if (response.ok) {
+          const result = await response.json();
           setUploadedFiles(prev => 
             prev.map(f => 
               f.id === newFile.id 
-                ? { ...f, status: 'success' as const }
+                ? { 
+                    ...f, 
+                    status: 'success' as const,
+                    chunks: result.chunks || [],
+                    fileInfo: result.fileInfo
+                  }
                 : f
             )
           );
@@ -206,7 +256,7 @@ export default function UploadPage() {
             <div className="space-y-3">
               {uploadedFiles.map((file) => (
                 <div key={file.id} className="bg-white rounded-lg p-4 border border-[#d0dbe7]">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 mb-3">
                     <FileText size={24} className="text-[#197fe5]" />
                     <div className="flex-1">
                       <p className="text-[#0e141b] text-base font-medium">{file.name}</p>
@@ -232,6 +282,64 @@ export default function UploadPage() {
                       </button>
                     </div>
                   </div>
+                  
+                  {/* RAG Processing Results */}
+                  {file.status === 'success' && file.fileInfo && (
+                    <div className="mt-3 pt-3 border-t border-[#e7edf3]">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <p className="text-[#0e141b] text-sm font-medium">RAG Processing Complete</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-3 mb-3">
+                        <div className="text-center">
+                          <p className="text-[#4e7397] text-xs">Chunks</p>
+                          <p className="text-[#0e141b] text-sm font-bold">{file.fileInfo.chunksProcessed}/{file.fileInfo.totalChunks}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[#4e7397] text-xs">Content</p>
+                          <p className="text-[#0e141b] text-sm font-bold">{file.fileInfo.contentLength.toLocaleString()} chars</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[#4e7397] text-xs">Status</p>
+                          <p className="text-green-600 text-sm font-bold">Ready for AI</p>
+                        </div>
+                      </div>
+                      
+                      {/* Chunks Preview */}
+                      {file.chunks && file.chunks.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-[#4e7397] text-xs font-medium mb-2">Knowledge Chunks:</p>
+                          <div className="space-y-2 max-h-32 overflow-y-auto">
+                            {file.chunks.slice(0, 3).map((chunk, index) => (
+                              <div key={chunk.id} className="bg-[#f8fafc] rounded p-2">
+                                <p className="text-[#0e141b] text-xs font-medium">{chunk.title}</p>
+                                <p className="text-[#4e7397] text-xs mt-1">{chunk.content}</p>
+                                {chunk.error && (
+                                  <p className="text-red-500 text-xs mt-1">Error: {chunk.error}</p>
+                                )}
+                              </div>
+                            ))}
+                            {file.chunks.length > 3 && (
+                              <p className="text-[#4e7397] text-xs text-center">
+                                +{file.chunks.length - 3} more chunks
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Error Display */}
+                  {file.status === 'error' && (
+                    <div className="mt-3 pt-3 border-t border-[#e7edf3]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                        <p className="text-red-600 text-sm">Processing failed</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
