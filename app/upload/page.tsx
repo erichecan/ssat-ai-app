@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Upload, FileText, X, Check, Trash2 } from 'lucide-react';
@@ -28,58 +28,50 @@ interface UploadedFile {
 
 export default function UploadPage() {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([
-    {
-      id: '1',
-      name: 'Essay on American History',
-      size: 2400000,
-      type: 'application/pdf',
-      uploadedAt: '2024-04-20',
-      status: 'success',
-      chunks: [
-        {
-          id: 'chunk-1',
-          content: 'This essay explores the key events and figures that shaped American history...',
-          size: 850,
-          title: 'Essay on American History - Part 1'
-        },
-        {
-          id: 'chunk-2',
-          content: 'The Revolutionary War marked a turning point in American independence...',
-          size: 920,
-          title: 'Essay on American History - Part 2'
-        }
-      ],
-      fileInfo: {
-        chunksProcessed: 2,
-        totalChunks: 2,
-        contentLength: 1770
-      }
-    },
-    {
-      id: '2',
-      name: 'Science Textbook Chapter 3',
-      size: 1800000,
-      type: 'application/pdf',
-      uploadedAt: '2024-04-15',
-      status: 'success',
-      chunks: [
-        {
-          id: 'chunk-3',
-          content: 'Chapter 3 covers the fundamental principles of chemistry...',
-          size: 780,
-          title: 'Science Textbook Chapter 3 - Part 1'
-        }
-      ],
-      fileInfo: {
-        chunksProcessed: 1,
-        totalChunks: 1,
-        contentLength: 780
-      }
-    }
-  ]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // 加载已上传的文件
+  useEffect(() => {
+    loadUploadedFiles();
+  }, []);
+
+  const loadUploadedFiles = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/uploaded-files?userId=demo-user-123');
+      const result = await response.json();
+
+      if (response.ok && result.files) {
+        const files: UploadedFile[] = result.files.map((file: any) => ({
+          id: file.fileName,
+          name: file.fileName,
+          size: file.totalWords * 5, // 估算文件大小
+          type: 'application/pdf', // 默认类型
+          uploadedAt: new Date(file.uploadedAt).toISOString().split('T')[0],
+          status: 'success' as const,
+          chunks: file.chunks.map((chunk: any) => ({
+            id: chunk.id,
+            content: chunk.preview,
+            size: chunk.wordCount * 5,
+            title: chunk.title
+          })),
+          fileInfo: {
+            chunksProcessed: file.totalChunks,
+            totalChunks: file.totalChunks,
+            contentLength: file.totalWords * 5
+          }
+        }));
+        setUploadedFiles(files);
+      }
+    } catch (error) {
+      console.error('Error loading uploaded files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -135,18 +127,8 @@ export default function UploadPage() {
 
         if (response.ok) {
           const result = await response.json();
-          setUploadedFiles(prev => 
-            prev.map(f => 
-              f.id === newFile.id 
-                ? { 
-                    ...f, 
-                    status: 'success' as const,
-                    chunks: result.chunks || [],
-                    fileInfo: result.fileInfo
-                  }
-                : f
-            )
-          );
+          // 上传成功后，重新加载文件列表以显示最新数据
+          await loadUploadedFiles();
         } else {
           setUploadedFiles(prev => 
             prev.map(f => 
@@ -171,8 +153,21 @@ export default function UploadPage() {
     setUploading(false);
   };
 
-  const handleDeleteFile = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  const handleDeleteFile = async (fileId: string) => {
+    try {
+      const response = await fetch(`/api/uploaded-files?userId=demo-user-123&fileName=${encodeURIComponent(fileId)}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // 从本地状态中移除文件
+        setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+      } else {
+        console.error('Failed to delete file from database');
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -253,7 +248,19 @@ export default function UploadPage() {
               Uploaded Documents
             </h3>
             
-            <div className="space-y-3">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#197fe5]"></div>
+                <p className="text-[#4e7397] text-sm ml-2">Loading files...</p>
+              </div>
+            ) : uploadedFiles.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText size={48} className="mx-auto text-[#4e7397] mb-4" />
+                <p className="text-[#4e7397] text-base">No files uploaded yet</p>
+                <p className="text-[#4e7397] text-sm">Upload your first document to get started</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
               {uploadedFiles.map((file) => (
                 <div key={file.id} className="bg-white rounded-lg p-4 border border-[#d0dbe7]">
                   <div className="flex items-center gap-3 mb-3">
@@ -341,8 +348,9 @@ export default function UploadPage() {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+                              ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
