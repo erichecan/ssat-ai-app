@@ -23,7 +23,8 @@ export default function ReadingPracticePage() {
   const [loading, setLoading] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [currentWPM, setCurrentWPM] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [totalReadingTime, setTotalReadingTime] = useState(0);
   const [userId] = useState('demo-user-' + Date.now()); // 演示用户ID
   const router = useRouter();
 
@@ -99,44 +100,56 @@ export default function ReadingPracticePage() {
     setIsReading(true)
     setStartTime(Date.now())
     setProgress(0)
-    setTimeElapsed(0)
     
-    // 计算阅读进度和WPM
+    // 设置总阅读时间（用户可以自己决定何时完成）
+    const totalTime = readingMaterial.estimatedReadingTime * 60 // 转换为秒
+    setTotalReadingTime(totalTime)
+    setTimeRemaining(totalTime)
+    
+    // 倒计时逻辑
     const interval = setInterval(() => {
       const now = Date.now()
       const elapsed = Math.floor((now - (startTime || now)) / 1000)
-      setTimeElapsed(elapsed)
+      const remaining = Math.max(0, totalTime - elapsed)
+      setTimeRemaining(remaining)
       
+      // 计算阅读进度（基于时间）
+      const timeProgress = (elapsed / totalTime) * 100
+      setProgress(Math.min(timeProgress, 100))
+      
+      // 计算当前WPM（假设用户按正常速度阅读）
       if (elapsed > 0) {
-        // 假设用户已读完的单词数基于时间进度
-        const estimatedWordsRead = Math.min(
-          readingMaterial.wordCount,
-          (elapsed / 60) * 200 // 假设平均阅读速度200WPM
-        )
-        const currentProgress = (estimatedWordsRead / readingMaterial.wordCount) * 100
-        setProgress(Math.min(currentProgress, 100))
-        
-        // 计算当前WPM
-        const minutesElapsed = elapsed / 60
-        if (minutesElapsed > 0) {
-          setCurrentWPM(Math.round(estimatedWordsRead / minutesElapsed))
-        }
+        const estimatedWPM = Math.round((readingMaterial.wordCount / totalTime) * 60)
+        setCurrentWPM(estimatedWPM)
       }
       
-      // 自动完成条件（可以手动调整）
-      if (elapsed >= readingMaterial.estimatedReadingTime * 60) {
+      // 时间到了自动结束（可选）
+      if (remaining <= 0) {
         clearInterval(interval)
-        handleFinishReading()
+        // 不自动跳转，让用户决定
       }
     }, 1000)
   }
   
   const handleFinishReading = () => {
     setIsReading(false)
-    // 这里可以跳转到结果页面或显示完成信息
+    // 跳转到问题生成页面，传递阅读材料信息
+    const readingData = {
+      material: readingMaterial,
+      timeSpent: totalReadingTime - timeRemaining,
+      actualWPM: readingMaterial ? Math.round((readingMaterial.wordCount / ((totalReadingTime - timeRemaining) / 60))) : 0
+    }
+    
+    console.log('Reading completed! Data:', readingData)
+    console.log('Redirecting to /reading/questions...')
+    
+    // 将数据存储到sessionStorage
+    sessionStorage.setItem('readingData', JSON.stringify(readingData))
+    
+    // 确保页面跳转
     setTimeout(() => {
-      router.push('/test')
-    }, 2000)
+      router.push('/reading/questions')
+    }, 500)
   }
 
   const handleBack = () => {
@@ -311,8 +324,8 @@ export default function ReadingPracticePage() {
                 <p className="text-[#0e141b] text-lg font-bold">{Math.round(progress)}%</p>
               </div>
               <div className="bg-white rounded-lg p-3 border border-[#d0dbe7] text-center">
-                <p className="text-[#4e7397] text-xs font-medium">Time Elapsed</p>
-                <p className="text-[#0e141b] text-lg font-bold">{formatTime(timeElapsed)}</p>
+                <p className="text-[#4e7397] text-xs font-medium">Time Remaining</p>
+                <p className={`text-lg font-bold ${timeRemaining <= 30 ? 'text-red-500' : 'text-[#0e141b]'}`}>{formatTime(timeRemaining)}</p>
               </div>
             </div>
           </div>
