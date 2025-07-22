@@ -163,46 +163,29 @@ export async function POST(request: NextRequest) {
         console.log(`Processing chunk ${i + 1}/${chunks.length}, length:`, chunk.length)
         
         try {
-          console.log(`Attempting to add chunk ${i + 1} to knowledge base...`)
+          console.log(`Attempting to add chunk ${i + 1} to knowledge base with RAG processing...`)
           
-          // 包含所有必需的字段
-          const { data, error } = await supabase
-            .from('knowledge_base')
-            .insert({
-              title: chunkTitle,
-              content: chunk,
-              topic: 'uploaded_document',
-              difficulty: 'medium',
-              type: 'concept',
-              tags: ['user_upload', userId],
-              source: file.name,
-              file_name: file.name,
-              file_type: file.type,
-              file_size: file.size,
-              file_path: `/uploads/${userId}/${file.name}`
-            })
-            .select()
-            .single()
+          // 使用RAG系统添加知识，包含向量化处理
+          const knowledgeId = await addKnowledgeToBase(
+            chunkTitle,
+            chunk,
+            'uploaded_document',
+            'medium',
+            'concept',
+            ['user_upload', userId],
+            file.name,
+            file.type,
+            file.size
+          )
           
-          if (error) {
-            console.error('Supabase insert error:', error)
-            console.error('Error details:', {
-              code: error.code,
-              message: error.message,
-              details: error.details,
-              hint: error.hint
-            })
-            throw error
-          }
+          console.log(`Successfully added chunk ${i + 1} with RAG processing, ID:`, knowledgeId)
           
           processedChunks.push({
-            id: data.id,
+            id: knowledgeId,
             content: chunk.substring(0, 100) + '...', // 预览
             size: chunk.length,
             title: chunkTitle
           })
-          
-          console.log(`Successfully added chunk ${i + 1} to knowledge base:`, data.id)
         } catch (chunkError) {
           console.error(`Error processing chunk ${i + 1}:`, chunkError)
           console.error('Error details:', {

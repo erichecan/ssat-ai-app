@@ -59,6 +59,8 @@ export default function PracticeSessionPage() {
   const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<number>(Date.now());
+  const [showVocabModal, setShowVocabModal] = useState(false);
+  const [selectedWord, setSelectedWord] = useState('');
 
   useEffect(() => {
     loadSession();
@@ -175,6 +177,48 @@ export default function PracticeSessionPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleWordDoubleClick = (event: React.MouseEvent) => {
+    const selection = window.getSelection();
+    const word = selection?.toString().trim();
+    
+    if (word && word.length > 2 && /^[a-zA-Z]+$/.test(word)) {
+      setSelectedWord(word);
+      setShowVocabModal(true);
+    }
+  };
+
+  const addWordToVocabulary = async (word: string) => {
+    try {
+      const response = await fetch('/api/vocabulary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          word: word.toLowerCase(),
+          userId: 'demo-user-123',
+          context: currentQuestion?.question || '',
+          source: 'practice_session'
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log('Word added to vocabulary:', word);
+        // You can add a success toast notification here if needed
+        if (result.alreadyExists) {
+          console.log('Word already exists in vocabulary');
+        }
+      } else {
+        console.error('Failed to add word to vocabulary:', result.error);
+      }
+    } catch (error) {
+      console.error('Error adding word to vocabulary:', error);
+    }
+    
+    setShowVocabModal(false);
+    setSelectedWord('');
+  };
+
   if (loading) {
     return (
       <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
@@ -251,11 +295,19 @@ export default function PracticeSessionPage() {
             
             {currentQuestion.passage && (
               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <p className="text-[#0e141b] text-sm leading-relaxed">{currentQuestion.passage}</p>
+                <p 
+                  className="text-[#0e141b] text-sm leading-relaxed select-text cursor-text"
+                  onDoubleClick={handleWordDoubleClick}
+                >
+                  {currentQuestion.passage}
+                </p>
               </div>
             )}
             
-            <p className="text-[#0e141b] text-base font-medium leading-normal">
+            <p 
+              className="text-[#0e141b] text-base font-medium leading-normal select-text cursor-text"
+              onDoubleClick={handleWordDoubleClick}
+            >
               {currentQuestion.question}
             </p>
           </div>
@@ -338,6 +390,35 @@ export default function PracticeSessionPage() {
           >
             {submitting ? 'Submitting...' : 'Submit Answer'}
           </button>
+        </div>
+      )}
+
+      {/* Vocabulary Modal */}
+      {showVocabModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-80 max-w-sm mx-4">
+            <h3 className="text-lg font-bold text-[#0e141b] mb-3">Add to Vocabulary</h3>
+            <p className="text-[#4e7397] text-sm mb-4">
+              Add "<span className="font-semibold text-[#0e141b]">{selectedWord}</span>" to your vocabulary list?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => addWordToVocabulary(selectedWord)}
+                className="flex-1 bg-[#197fe5] text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-[#1668c7]"
+              >
+                Add Word
+              </button>
+              <button
+                onClick={() => {
+                  setShowVocabModal(false);
+                  setSelectedWord('');
+                }}
+                className="flex-1 bg-gray-200 text-gray-800 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

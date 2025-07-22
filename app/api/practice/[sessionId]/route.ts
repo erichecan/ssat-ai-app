@@ -19,12 +19,42 @@ export async function GET(
     
     let session: any = null
     
-    // 对于practice开头的sessionId，创建临时session使用question bank
+    // 对于practice开头的sessionId，创建临时session使用AI生成的问题
     if (sessionId.startsWith('practice_')) {
       console.log('Creating temporary session for:', sessionId)
       
-      // 使用question bank生成题目
-      const questions = filterQuestions(undefined, 'medium', undefined, 10)
+      let questions = []
+      
+      try {
+        // 首先尝试使用AI生成问题
+        console.log('Attempting to generate AI questions...')
+        const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'demo-user-123', // 使用固定用户ID获取上传的材料
+            questionType: 'mixed',
+            count: 10
+          })
+        })
+        
+        if (generateResponse.ok) {
+          const generateData = await generateResponse.json()
+          if (generateData.success && generateData.questions) {
+            questions = generateData.questions
+            console.log('Successfully generated', questions.length, 'AI questions')
+          } else {
+            throw new Error('AI question generation failed')
+          }
+        } else {
+          throw new Error('AI API request failed')
+        }
+      } catch (aiError) {
+        console.log('AI generation failed, falling back to question bank:', aiError)
+        // 回退到静态question bank
+        questions = filterQuestions(undefined, 'medium', undefined, 10)
+        console.log('Using fallback question bank with', questions.length, 'questions')
+      }
       
       session = {
         id: sessionId,
@@ -43,7 +73,7 @@ export async function GET(
         start_time: new Date().toISOString(),
         created_at: new Date().toISOString()
       }
-      console.log('Created temporary session with', questions.length, 'questions from question bank')
+      console.log('Created temporary session with', questions.length, 'questions')
     }
 
     if (!session) {

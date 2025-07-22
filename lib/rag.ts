@@ -310,7 +310,9 @@ export async function addKnowledgeToBase(
   difficulty: 'easy' | 'medium' | 'hard',
   type: 'concept' | 'strategy' | 'example' | 'common_mistake',
   tags: string[] = [],
-  source?: string
+  source?: string,
+  fileType?: string,
+  fileSize?: number
 ): Promise<string> {
   try {
     console.log('Adding knowledge to base:', { title, topic, difficulty, type, source })
@@ -330,11 +332,10 @@ export async function addKnowledgeToBase(
         type,
         tags,
         source,
-        file_name: source || 'unknown', // 添加file_name字段
-        file_path: `/uploads/${source || 'unknown'}`, // 添加file_path字段
-        file_size: content.length, // 添加file_size字段
-        file_type: 'text/plain', // 添加file_type字段
-        status: 'processed' // 添加status字段
+        file_name: source || 'unknown',
+        file_path: `/uploads/${source || 'unknown'}`,
+        file_size: fileSize || content.length,
+        file_type: fileType || 'text/plain'
       })
       .select()
       .single()

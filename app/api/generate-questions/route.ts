@@ -65,46 +65,85 @@ export async function POST(request: NextRequest) {
 
     const userWeaknesses = analyzeUserWeaknesses(userAnswers || [])
     
-    let prompt = `Generate ${count} SSAT questions in JSON format based on the following study materials:`
+    let prompt = `You are an expert SSAT/SAT test question generator. Generate ${count} high-quality questions in JSON format that closely match the official SSAT/SAT style and difficulty.`
 
     if (contextContent) {
       prompt += `
 
-UPLOADED STUDY MATERIALS:
-${contextContent.substring(0, 2000)}${contextContent.length > 2000 ? '\n... (content truncated)' : ''}
+## UPLOADED STUDY MATERIALS:
+${contextContent.substring(0, 3000)}${contextContent.length > 3000 ? '\n... (content truncated for length)' : ''}
 
-USER PERFORMANCE ANALYSIS:
+## USER PERFORMANCE ANALYSIS:
 ${userWeaknesses}
 
-Create questions that test understanding of the uploaded materials. Focus on:
-- Key concepts and vocabulary from the materials
-- Reading comprehension based on the content
-- Math problems that relate to examples in the materials
-- Areas where the user needs improvement`
+## QUESTION GENERATION REQUIREMENTS:
+
+**PRIORITY 1 - Use Uploaded Materials:**
+- Extract key vocabulary words from the uploaded content for vocabulary questions
+- Use passages or concepts from the materials for reading comprehension questions
+- Base math word problems on scenarios mentioned in the materials when possible
+- Reference specific facts, ideas, or examples from the uploaded content
+
+**PRIORITY 2 - SSAT Format Adherence:**
+- Vocabulary: Test word meaning, synonyms, analogies in context
+- Reading: Ask about main ideas, inference, author's tone, literary devices
+- Math: Include algebra, geometry, data analysis with clear problem-solving steps
+- Writing: Test grammar, sentence structure, paragraph organization
+
+**PRIORITY 3 - User-Targeted Difficulty:**
+Focus extra attention on areas identified as weak: ${userWeaknesses}`
     } else {
       prompt += `
 
-No specific study materials uploaded. Generate general SSAT questions focusing on:
-${userWeaknesses}`
+## NO UPLOADED MATERIALS - GENERATE STANDARD SSAT QUESTIONS
+
+## USER PERFORMANCE ANALYSIS:
+${userWeaknesses}
+
+## QUESTION GENERATION REQUIREMENTS:
+Generate authentic SSAT-style questions covering:
+- **Vocabulary**: Advanced words typical for grades 8-11 with context clues
+- **Reading**: Passages with main idea, inference, and literary analysis questions  
+- **Math**: Pre-algebra through geometry problems similar to actual SSAT
+- **Writing**: Grammar and usage questions testing standard conventions
+
+Focus on areas where the user needs improvement: ${userWeaknesses}`
     }
 
     prompt += `
 
-Response format (JSON only):
+## OUTPUT FORMAT (JSON only - no markdown):
 {
   "questions": [
     {
       "id": "q1",
-      "type": "vocabulary",
-      "question": "Question text here",
-      "options": ["A", "B", "C", "D"],
-      "correctAnswer": "A",
-      "explanation": "Brief explanation"
+      "type": "vocabulary|reading|math|writing",
+      "question": "Actual question text exactly as it would appear on the SSAT",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": "Option A",
+      "explanation": "Clear explanation of why the answer is correct and others are wrong",
+      "difficulty": "easy|medium|hard",
+      "passage": "Include only for reading questions - the passage text",
+      "tags": ["keyword1", "keyword2"]
     }
   ]
 }
 
-Generate exactly ${count} questions. Mix vocabulary, math, reading types.`
+## EXAMPLES OF GOOD SSAT QUESTIONS:
+
+**Vocabulary Example:**
+"The politician's speech was so VERBOSE that many audience members left before it ended. VERBOSE most nearly means:"
+A) Brief  B) Wordy  C) Unclear  D) Persuasive
+
+**Reading Example:** 
+[Passage about nature/history/science] "The author's primary purpose in this passage is to:"
+A) Entertain readers with anecdotes  B) Argue for policy changes  C) Explain a scientific concept  D) Compare different viewpoints
+
+**Math Example:**
+"If 3x + 7 = 22, what is the value of x - 4?"
+A) 1  B) 3  C) 5  D) 11
+
+Generate exactly ${count} questions with this level of quality and authenticity.`
 
     // 首先尝试AI生成，如果失败使用备用题目
     let aiResponse: string
