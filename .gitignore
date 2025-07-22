@@ -47,6 +47,11 @@ logs
 coverage/
 .nyc_output/
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
 # Other projects (these shouldn't be in this repo)
 auction-app/
 choicely/
