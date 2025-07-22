@@ -189,98 +189,113 @@ export default function FlashCardPage() {
       {/* Main Content */}
       <div className="flex-1 p-3 overflow-y-auto">
         <div className="flex flex-col items-stretch justify-start rounded-xl">
-          {/* Card Container */}
-          <div className="relative w-full h-96 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-3">
-            {/* Question Side (Word Only) */}
+          {/* Card Container - 21st.dev inspired design */}
+          <div className="relative w-full h-96 bg-white rounded-3xl shadow-xl border border-zinc-200 overflow-hidden mb-4 transition-all duration-300 hover:shadow-2xl">
+            {/* Question Side (Word Only) - 21st.dev style */}
             {!isFlipped && (
-              <div className="absolute inset-0 flex flex-col justify-center items-center p-6">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-2 mb-6">
-                    <span className="px-3 py-1 bg-[#e7edf3] text-[#4e7397] text-xs font-medium rounded-full">
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-8 bg-gradient-to-br from-slate-50 to-white">
+                <div className="text-center max-w-sm">
+                  <div className="flex items-center justify-center gap-3 mb-8">
+                    <span className="px-4 py-2 bg-zinc-100 text-zinc-700 text-sm font-medium rounded-2xl border border-zinc-200 shadow-sm">
                       {currentCard.category}
                     </span>
-                    <span className="px-3 py-1 bg-[#f0f0f0] text-[#666] text-xs font-medium rounded-full">
+                    <span className="px-4 py-2 bg-rose-100 text-rose-700 text-sm font-medium rounded-2xl border border-rose-200 shadow-sm">
                       {currentCard.difficulty}
                     </span>
                   </div>
-                  <h3 className="text-gray-900 text-4xl font-bold mb-4">{currentCard.word}</h3>
+                  <h3 className="text-zinc-900 text-5xl font-bold mb-6 tracking-tight">{currentCard.word}</h3>
                   {currentCard.pronunciation && (
-                    <p className="text-gray-500 text-lg font-mono mb-4">{currentCard.pronunciation}</p>
+                    <p className="text-zinc-500 text-xl font-mono mb-4 tracking-wide">{currentCard.pronunciation}</p>
                   )}
-                  <p className="text-gray-600 text-lg font-normal">{currentCard.part_of_speech}</p>
-                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-blue-800 text-sm font-medium">💭 Try to recall the meaning, then flip to check!</p>
+                  <p className="text-zinc-600 text-xl font-normal mb-8">{currentCard.part_of_speech}</p>
+                  <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-2xl shadow-sm">
+                    <p className="text-blue-800 text-base font-medium">💭 Try to recall the meaning, then flip to check!</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Answer Side (Full Details) */}
+            {/* Answer Side (Full Details) - 21st.dev style */}
             {isFlipped && (
-              <div className="absolute inset-0 p-4 bg-gradient-to-br from-blue-50 to-blue-100 overflow-y-auto">
-                <div className="min-h-full flex flex-col">
+              <div className="absolute inset-0 p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 overflow-y-auto">
+                <div className="min-h-full flex flex-col space-y-4">
                   {/* Header */}
-                  <div className="text-center mb-3">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <span className="px-2 py-1 bg-[#e7edf3] text-[#4e7397] text-xs font-medium rounded-full">
+                  <div className="text-center pb-4 border-b border-zinc-200">
+                    <div className="flex items-center justify-center gap-3 mb-3">
+                      <span className="px-3 py-1.5 bg-zinc-100 text-zinc-700 text-xs font-medium rounded-xl border border-zinc-200">
                         {currentCard.category}
                       </span>
-                      <span className="px-2 py-1 bg-[#f0f0f0] text-[#666] text-xs font-medium rounded-full">
+                      <span className="px-3 py-1.5 bg-rose-100 text-rose-700 text-xs font-medium rounded-xl border border-rose-200">
                         {currentCard.difficulty}
                       </span>
                     </div>
-                    <h3 className="text-gray-900 text-2xl font-bold mb-1">{currentCard.word}</h3>
+                    <h3 className="text-zinc-900 text-3xl font-bold mb-2 tracking-tight">{currentCard.word}</h3>
                     {currentCard.pronunciation && (
-                      <p className="text-gray-500 text-sm font-mono">{currentCard.pronunciation}</p>
+                      <p className="text-zinc-500 text-base font-mono tracking-wide">{currentCard.pronunciation}</p>
                     )}
-                    <p className="text-gray-600 text-sm font-medium">{currentCard.part_of_speech}</p>
+                    <p className="text-zinc-600 text-base font-medium">{currentCard.part_of_speech}</p>
                   </div>
                   
                   {/* Main Definition */}
-                  <div className="bg-white rounded-lg p-3 mb-3 shadow-sm">
-                    <p className="text-gray-800 text-base font-medium leading-relaxed text-center">
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-zinc-200 transition-all duration-200 hover:shadow-md">
+                    <p className="text-zinc-800 text-lg font-medium leading-relaxed text-center">
                       {currentCard.definition}
                     </p>
                   </div>
                   
-                  {/* Content Sections */}
-                  <div className="flex-1 space-y-2">
+                  {/* Content Sections - 21st.dev modern cards */}
+                  <div className="flex-1 space-y-3 divide-y divide-zinc-100">
                     {/* Hint Sentence */}
                     {currentCard.memory_tip && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-yellow-800 text-xs font-semibold mb-1">💡 Context Hint:</p>
-                        <p className="text-yellow-900 text-sm italic leading-relaxed">"{currentCard.memory_tip}"</p>
+                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                          <p className="text-amber-800 text-sm font-semibold">Context Hint</p>
+                        </div>
+                        <p className="text-amber-900 text-sm italic leading-relaxed pl-4">"{currentCard.memory_tip}"</p>
                       </div>
                     )}
                     
                     {/* Example */}
-                    <div className="bg-white rounded-lg p-3">
-                      <p className="text-gray-600 text-xs font-semibold mb-1">📝 Example:</p>
-                      <p className="text-gray-700 text-sm italic leading-relaxed">"{currentCard.example_sentence}"</p>
+                    <div className="bg-white border border-zinc-200 rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md pt-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <p className="text-zinc-700 text-sm font-semibold">Example Usage</p>
+                      </div>
+                      <p className="text-zinc-600 text-sm italic leading-relaxed pl-4">"{currentCard.example_sentence}"</p>
                     </div>
                     
                     {/* Synonyms & Antonyms */}
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 gap-3 pt-3">
                       {currentCard.synonyms.length > 0 && (
-                        <div className="bg-white rounded-lg p-3">
-                          <p className="text-green-600 text-xs font-semibold mb-1">✅ Synonyms:</p>
-                          <p className="text-gray-700 text-sm">{currentCard.synonyms.slice(0, 3).join(', ')}</p>
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                            <p className="text-emerald-700 text-sm font-semibold">Similar Words</p>
+                          </div>
+                          <p className="text-emerald-800 text-sm pl-4">{currentCard.synonyms.slice(0, 3).join(' • ')}</p>
                         </div>
                       )}
                       
                       {currentCard.antonyms.length > 0 && (
-                        <div className="bg-white rounded-lg p-3">
-                          <p className="text-red-600 text-xs font-semibold mb-1">❌ Antonyms:</p>
-                          <p className="text-gray-700 text-sm">{currentCard.antonyms.slice(0, 3).join(', ')}</p>
+                        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
+                            <p className="text-rose-700 text-sm font-semibold">Opposite Words</p>
+                          </div>
+                          <p className="text-rose-800 text-sm pl-4">{currentCard.antonyms.slice(0, 3).join(' • ')}</p>
                         </div>
                       )}
                     </div>
                     
                     {/* Etymology */}
                     {currentCard.etymology && (
-                      <div className="bg-white rounded-lg p-3">
-                        <p className="text-purple-600 text-xs font-semibold mb-1">🏛️ Etymology:</p>
-                        <p className="text-gray-700 text-sm">{currentCard.etymology}</p>
+                      <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 shadow-sm transition-all duration-200 hover:shadow-md pt-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <p className="text-purple-700 text-sm font-semibold">Word Origin</p>
+                        </div>
+                        <p className="text-purple-800 text-sm pl-4">{currentCard.etymology}</p>
                       </div>
                     )}
                   </div>
@@ -297,47 +312,47 @@ export default function FlashCardPage() {
 
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - 21st.dev modern style */}
         <div className="flex justify-stretch">
-          <div className="flex flex-1 gap-2 flex-wrap py-2">
+          <div className="flex flex-1 gap-3 flex-wrap py-3">
             <button
               onClick={handlePrevious}
               disabled={currentIndex === 0}
-              className={`flex items-center justify-center gap-2 h-10 px-3 rounded-xl text-sm font-bold ${
+              className={`flex items-center justify-center gap-2 h-11 px-4 rounded-2xl text-sm font-semibold border transition-all duration-200 ${
                 currentIndex === 0 
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                  ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed border-zinc-200' 
+                  : 'bg-white text-zinc-700 hover:bg-zinc-50 border-zinc-200 shadow-sm hover:shadow-md'
               }`}
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={18} />
               Prev
             </button>
             
             <button
               onClick={handleFlip}
-              className="flex-1 max-w-[200px] cursor-pointer items-center justify-center rounded-xl h-10 px-4 bg-[#197fe5] text-white text-sm font-bold leading-normal tracking-wide hover:bg-[#1668c7]"
+              className="flex-1 max-w-[200px] cursor-pointer items-center justify-center rounded-2xl h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-semibold shadow-lg border border-blue-600 transition-all duration-200 hover:shadow-xl hover:from-blue-700 hover:to-blue-800"
             >
               <span className="truncate">{isFlipped ? 'Test Yourself' : 'Show Answer'}</span>
             </button>
             
             <button
               onClick={handlePronounce}
-              className="flex items-center justify-center gap-2 h-10 px-3 bg-gray-200 text-gray-900 text-sm font-bold leading-normal tracking-wide rounded-xl hover:bg-gray-300"
+              className="flex items-center justify-center gap-2 h-11 px-4 bg-white text-zinc-700 text-sm font-semibold rounded-2xl border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50 hover:shadow-md"
             >
-              <Volume2 size={16} />
+              <Volume2 size={18} />
             </button>
             
             <button
               onClick={handleNext}
               disabled={currentIndex === flashcards.length - 1}
-              className={`flex items-center justify-center gap-2 h-10 px-3 rounded-xl text-sm font-bold ${
+              className={`flex items-center justify-center gap-2 h-11 px-4 rounded-2xl text-sm font-semibold border transition-all duration-200 ${
                 currentIndex === flashcards.length - 1
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                  ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed border-zinc-200'
+                  : 'bg-white text-zinc-700 hover:bg-zinc-50 border-zinc-200 shadow-sm hover:shadow-md'
               }`}
             >
               Next
-              <ChevronRight size={16} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>
@@ -358,24 +373,24 @@ export default function FlashCardPage() {
 
         {/* Difficulty Buttons - Only show after seeing the answer */}
         {showingAnswer && (
-          <div className="mt-3">
-            <p className="text-gray-600 text-sm font-medium mb-3 text-center">How well did you know this word?</p>
-            <div className="flex gap-2">
+          <div className="mt-4">
+            <p className="text-zinc-600 text-base font-medium mb-4 text-center">How well did you know this word?</p>
+            <div className="flex gap-3">
               <button 
                 onClick={() => handleDifficultyRating(1)}
-                className="flex-1 py-2 px-3 bg-red-100 text-red-700 rounded-lg font-medium hover:bg-red-200 transition-colors text-sm"
+                className="flex-1 py-3 px-4 bg-rose-50 text-rose-700 rounded-2xl font-semibold border border-rose-200 shadow-sm transition-all duration-200 hover:bg-rose-100 hover:shadow-md text-sm"
               >
                 Don't Know
               </button>
               <button 
                 onClick={() => handleDifficultyRating(3)}
-                className="flex-1 py-2 px-3 bg-yellow-100 text-yellow-700 rounded-lg font-medium hover:bg-yellow-200 transition-colors text-sm"
+                className="flex-1 py-3 px-4 bg-amber-50 text-amber-700 rounded-2xl font-semibold border border-amber-200 shadow-sm transition-all duration-200 hover:bg-amber-100 hover:shadow-md text-sm"
               >
                 Somewhat
               </button>
               <button 
                 onClick={() => handleDifficultyRating(5)}
-                className="flex-1 py-2 px-3 bg-green-100 text-green-700 rounded-lg font-medium hover:bg-green-200 transition-colors text-sm"
+                className="flex-1 py-3 px-4 bg-emerald-50 text-emerald-700 rounded-2xl font-semibold border border-emerald-200 shadow-sm transition-all duration-200 hover:bg-emerald-100 hover:shadow-md text-sm"
               >
                 Know Well
               </button>
