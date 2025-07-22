@@ -292,6 +292,33 @@ export default function ProfilePage() {
           </>
         )}
 
+        {/* File Management Section */}
+        <h3 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
+          File Management
+        </h3>
+        <div className="px-4 py-3">
+          <div className="bg-white rounded-lg p-4 border border-[#d0dbe7]">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="text-[#197fe5] flex items-center justify-center rounded-lg bg-[#e7edf3] shrink-0 size-12">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                  <polyline points="14,2 14,8 20,8"></polyline>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-[#0e141b] text-base font-medium">Upload Study Materials</p>
+                <p className="text-[#4e7397] text-sm">Upload PDFs and text files for AI learning</p>
+              </div>
+            </div>
+            <Link 
+              href="/upload"
+              className="w-full bg-[#197fe5] text-white py-2 px-4 rounded-lg text-center block hover:bg-[#1668c7] transition-colors"
+            >
+              Manage Files
+            </Link>
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="px-4 pb-6">
           <div className="grid grid-cols-3 gap-3">
@@ -341,11 +368,14 @@ export default function ProfilePage() {
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+          <Link href="/review" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <Brain size={24} />
+              <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path d="m21 21-4.34-4.34"></path>
+                <circle cx="11" cy="11" r="8"></circle>
+              </svg>
             </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]">
             <div className="text-[#0e141b] flex h-8 items-center justify-center">
