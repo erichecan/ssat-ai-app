@@ -257,7 +257,7 @@ export default function PracticeResultsPage() {
         
         <div className="grid grid-cols-2 gap-3">
           <Link
-            href="/review"
+            href={`/review/mistakes?sessionId=${sessionId}`}
             className="flex items-center justify-center h-10 px-4 bg-white text-[#197fe5] border border-[#197fe5] rounded-lg text-sm font-semibold hover:bg-blue-50"
           >
             Review Mistakes

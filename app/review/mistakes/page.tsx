@@ -1,187 +1,337 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { X, ArrowLeft, Check } from 'lucide-react'
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, House, BookOpen, Brain, User, ChevronLeft, ChevronRight, RefreshCw, Bot } from 'lucide-react';
 
-interface Question {
+interface ReviewQuestion {
   id: string
   question: string
-  isCorrect: boolean
-  userAnswer: string
-  correctAnswer: string
+  passage?: string
+  options: string[]
+  correct_answer: string
+  user_answer: string
   explanation: string
-  type?: string
+  type: string
+  difficulty: string
+  answered_at: string
+  time_spent: number
+  session_id: string
 }
 
-export default function ReviewMistakesPage() {
-  const router = useRouter()
-  const [mistakes, setMistakes] = useState<Question[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [loading, setLoading] = useState(true)
+function ReviewMistakesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('sessionId');
+  
+  const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  const currentQuestion = questions[currentQuestionIndex];
 
   useEffect(() => {
-    const loadMistakes = () => {
-      try {
-        const reviewQuestions = sessionStorage.getItem('reviewQuestions')
-        if (reviewQuestions) {
-          const parsedMistakes = JSON.parse(reviewQuestions)
-          setMistakes(parsedMistakes)
-        } else {
-          // No mistakes to review, redirect back
-          router.push('/test/results')
-        }
-      } catch (error) {
-        console.error('Error loading review questions:', error)
-        router.push('/test/results')
-      } finally {
-        setLoading(false)
+    loadSessionMistakes();
+  }, [sessionId]);
+
+  const loadSessionMistakes = async () => {
+    if (!sessionId) {
+      setError('No session ID provided');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      console.log('Loading mistakes for session:', sessionId);
+      
+      // 获取特定session的错题
+      const response = await fetch(`/api/review/mistakes?sessionId=practice_${sessionId}`);
+      const result = await response.json();
+
+      if (response.ok) {
+        console.log('Loaded mistakes:', result.questions);
+        setQuestions(result.questions);
+      } else {
+        setError('Failed to load session mistakes');
       }
+    } catch (error) {
+      console.error('Error loading session mistakes:', error);
+      setError('Network error');
+    } finally {
+      setLoading(false);
     }
-
-    loadMistakes()
-  }, [router])
-
-  const handleNext = () => {
-    if (currentIndex < mistakes.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    } else {
-      // Finished reviewing all mistakes
-      router.push('/test/results')
-    }
-  }
+  };
 
   const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
-  }
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
+  const getAnswerStatus = (option: string) => {
+    if (option === currentQuestion.correct_answer) {
+      return 'correct';
+    }
+    if (option === currentQuestion.user_answer && option !== currentQuestion.correct_answer) {
+      return 'incorrect';
+    }
+    return 'default';
+  };
+
+  const getOptionStyle = (option: string) => {
+    const status = getAnswerStatus(option);
+    if (status === 'correct') {
+      return 'border-green-500 bg-green-50';
+    }
+    if (status === 'incorrect') {
+      return 'border-red-500 bg-red-50';
+    }
+    return 'border-[#d0dbe7]';
+  };
 
   if (loading) {
     return (
       <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-gray-600">Loading review questions...</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#197fe5]"></div>
+        <p className="text-[#4e7397] text-sm mt-2">Loading mistakes...</p>
       </div>
-    )
+    );
   }
 
-  if (mistakes.length === 0) {
+  if (error) {
     return (
       <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
-        <Check className="h-16 w-16 text-green-500 mb-4" />
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Perfect Score!</h2>
-        <p className="text-gray-600 mb-4">You didn't make any mistakes to review.</p>
-        <Link href="/test/results" className="px-4 py-2 bg-blue-500 text-white rounded-lg">
-          Back to Results
-        </Link>
+        <p className="text-[#4e7397] text-base mb-4">{error}</p>
+        <button onClick={loadSessionMistakes} className="text-[#197fe5] flex items-center gap-2">
+          <RefreshCw size={16} />
+          Retry
+        </button>
       </div>
-    )
+    );
   }
 
-  const currentMistake = mistakes[currentIndex]
+  if (questions.length === 0) {
+    return (
+      <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
+        <div className="text-center px-4">
+          <Bot className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h3 className="text-[#0e141b] text-lg font-bold mb-2">Perfect Score!</h3>
+          <p className="text-[#4e7397] text-sm mb-4">You answered all questions correctly in this session. Great job!</p>
+          <div className="space-y-2">
+            <Link href="/practice" className="block text-[#197fe5] font-semibold">Start Another Practice</Link>
+            <Link href="/flashcard" className="block text-[#197fe5]">Study Vocabulary</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div 
+    <div
       className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-between overflow-x-hidden"
-      style={{ fontFamily: 'Lexend, "Noto Sans", sans-serif' }}
+      style={{ 
+        fontFamily: 'Lexend, "Noto Sans", sans-serif'
+      } as React.CSSProperties}
     >
       <div>
         {/* Header */}
         <div className="flex items-center bg-slate-50 p-4 pb-2 justify-between">
-          <Link href="/test/results" className="text-[#0e141b] flex size-12 shrink-0 items-center">
-            <X size={24} />
-          </Link>
+          <button 
+            onClick={() => router.back()}
+            className="text-[#0e141b] flex size-12 shrink-0 items-center"
+          >
+            <ArrowLeft size={24} />
+          </button>
           <h2 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">
             Review Mistakes
           </h2>
         </div>
 
-        {/* Progress */}
-        <div className="flex flex-col gap-3 p-4">
-          <div className="flex gap-6 justify-between">
-            <p className="text-[#0e141b] text-base font-medium leading-normal">
-              Question {currentIndex + 1} of {mistakes.length}
-            </p>
-            <p className="text-[#4e7397] text-sm">
-              {Math.round(((currentIndex + 1) / mistakes.length) * 100)}% Complete
-            </p>
-          </div>
-          <div className="rounded bg-[#d0dbe7]">
-            <div 
-              className="h-2 rounded bg-[#197fe5] transition-all duration-300" 
-              style={{ width: `${((currentIndex + 1) / mistakes.length) * 100}%` }}
-            />
-          </div>
+        {/* Question Counter */}
+        <div className="px-4 py-4">
+          <h3 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] mb-2">
+            Mistake {currentQuestionIndex + 1} of {questions.length}
+          </h3>
+          <p className="text-[#4e7397] text-sm">
+            Review the questions you got wrong in this session
+          </p>
         </div>
+
+        {/* Subject and Difficulty Badges */}
+        <div className="px-4 pb-2 flex gap-2">
+          <span className="inline-block px-3 py-1 bg-[#e7edf3] text-[#4e7397] text-xs font-medium rounded-full">
+            {currentQuestion.type}
+          </span>
+          <span className="inline-block px-3 py-1 bg-[#f0f0f0] text-[#666] text-xs font-medium rounded-full">
+            {currentQuestion.difficulty}
+          </span>
+        </div>
+
+        {/* Passage (if exists) */}
+        {currentQuestion.passage && (
+          <div className="px-4 py-3">
+            <div className="bg-white rounded-lg p-4 border border-[#d0dbe7]">
+              <p className="text-[#0e141b] text-base font-normal leading-normal">
+                {currentQuestion.passage}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Question */}
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-              INCORRECT
+        <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4 font-medium">
+          {currentQuestion.question}
+        </p>
+
+        {/* Options */}
+        <div className="flex flex-col gap-3 p-4">
+          {currentQuestion.options.map((option, index) => (
+            <label 
+              key={index}
+              className={`flex items-center gap-4 rounded-lg border border-solid p-[15px] ${getOptionStyle(option)}`}
+            >
+              <input
+                type="radio"
+                className="h-5 w-5 border-2 border-[#d0dbe7] bg-transparent text-transparent checked:border-[#197fe5] checked:bg-[#197fe5] focus:outline-none focus:ring-0 focus:ring-offset-0 checked:focus:border-[#197fe5]"
+                name={`question-${currentQuestion.id}`}
+                checked={option === currentQuestion.user_answer}
+                readOnly
+              />
+              <div className="flex grow flex-col">
+                <p className="text-[#0e141b] text-sm font-medium leading-normal">
+                  {option}
+                </p>
+                {getAnswerStatus(option) === 'correct' && (
+                  <p className="text-green-600 text-xs mt-1">✓ Correct Answer</p>
+                )}
+                {getAnswerStatus(option) === 'incorrect' && (
+                  <p className="text-red-600 text-xs mt-1">✗ Your Answer</p>
+                )}
+              </div>
+            </label>
+          ))}
+        </div>
+
+        {/* Answer Summary */}
+        <div className="px-4 space-y-2">
+          <div className="flex items-start gap-2">
+            <span className="text-[#4e7397] text-sm font-medium min-w-fit">Your answer:</span>
+            <span className="text-red-600 text-sm font-semibold">
+              {currentQuestion.user_answer || 'Not answered'}
             </span>
-            {currentMistake.type && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                {currentMistake.type.toUpperCase()}
-              </span>
-            )}
           </div>
           
-          <p className="text-[#0e141b] text-base font-normal leading-normal mb-4">
-            {currentMistake.question}
-          </p>
-
-          {/* Your Answer vs Correct Answer */}
-          <div className="space-y-3">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-800 text-sm font-semibold mb-1">Your Answer:</p>
-              <p className="text-red-700 text-sm">{currentMistake.userAnswer}</p>
-            </div>
-            
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <p className="text-green-800 text-sm font-semibold mb-1">Correct Answer:</p>
-              <p className="text-green-700 text-sm">{currentMistake.correctAnswer}</p>
-            </div>
+          <div className="flex items-start gap-2">
+            <span className="text-[#4e7397] text-sm font-medium min-w-fit">Correct answer:</span>
+            <span className="text-green-600 text-sm font-semibold">
+              {currentQuestion.correct_answer}
+            </span>
           </div>
+          
+          <div className="flex items-start gap-2">
+            <span className="text-[#4e7397] text-sm font-medium min-w-fit">Time spent:</span>
+            <span className="text-[#0e141b] text-sm">
+              {currentQuestion.time_spent}s
+            </span>
+          </div>
+        </div>
 
-          {/* Explanation */}
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <h4 className="font-semibold text-blue-900 mb-2 text-sm">Explanation:</h4>
-            <p className="text-blue-800 text-sm leading-relaxed">
-              {currentMistake.explanation}
+        {/* AI Feedback */}
+        <div className="px-4 py-3">
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <h4 className="text-[#0e141b] text-sm font-semibold mb-2 flex items-center gap-2">
+              <Bot size={16} className="text-[#197fe5]" />
+              Explanation
+            </h4>
+            <p className="text-[#0e141b] text-sm leading-relaxed">
+              {currentQuestion.explanation}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-stretch">
-        <div className="flex flex-1 gap-3 flex-wrap px-4 py-6 justify-between">
-          <button
-            onClick={handlePrevious}
-            disabled={currentIndex === 0}
-            className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 text-sm font-bold leading-normal tracking-wide ${
-              currentIndex === 0 
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-            }`}
-          >
-            <span className="truncate">Previous</span>
-          </button>
-          <button
-            onClick={handleNext}
-            className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 text-sm font-bold leading-normal tracking-wide bg-[#197fe5] text-white hover:bg-[#1570d4]"
-          >
-            <span className="truncate">
-              {currentIndex === mistakes.length - 1 ? 'Finish Review' : 'Next'}
-            </span>
-          </button>
+      {/* Navigation and Bottom */}
+      <div>
+        {/* Navigation Buttons */}
+        <div className="flex justify-stretch">
+          <div className="flex flex-1 gap-3 flex-wrap px-4 py-3 justify-between">
+            <button
+              onClick={handlePrevious}
+              disabled={currentQuestionIndex === 0}
+              className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                currentQuestionIndex === 0 
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#e7edf3] text-[#0e141b] hover:bg-[#d0dbe7]'
+              }`}
+            >
+              <ChevronLeft size={16} className="mr-1" />
+              <span className="truncate">Previous</span>
+            </button>
+            <button
+              onClick={handleNext}
+              disabled={currentQuestionIndex === questions.length - 1}
+              className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
+                currentQuestionIndex === questions.length - 1
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-[#197fe5] text-slate-50 hover:bg-[#1570d4]'
+              }`}
+            >
+              <span className="truncate">Next</span>
+              <ChevronRight size={16} className="ml-1" />
+            </button>
+          </div>
         </div>
+
+        {/* Bottom Navigation */}
+        <div className="flex gap-2 border-t border-[#e7edf3] bg-slate-50 px-4 pb-3 pt-2">
+          <Link href="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <House size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </Link>
+          <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <BookOpen size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <Brain size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
+          </Link>
+          <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <User size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+          </Link>
+        </div>
+        <div className="h-5 bg-slate-50"></div>
       </div>
-      
-      <div className="h-5 bg-slate-50"></div>
     </div>
-  )
+  );
+}
+
+export default function ReviewMistakesPage() {
+  return (
+    <Suspense fallback={
+      <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#197fe5]"></div>
+        <p className="text-[#4e7397] text-sm mt-2">Loading...</p>
+      </div>
+    }>
+      <ReviewMistakesContent />
+    </Suspense>
+  );
 }

@@ -153,8 +153,39 @@ export async function PUT(
         
         // 检查答案是否正确
         const currentQuestion = questions[Math.min(baseIndex, questions.length - 1)]
-        if (currentQuestion && answer === currentQuestion.correct_answer) {
+        const isCorrect = currentQuestion && answer === currentQuestion.correct_answer
+        if (isCorrect) {
           score = 1
+        }
+        
+        // 保存答题记录到数据库（用于review功能）
+        if (currentQuestion) {
+          try {
+            await supabase
+              .from('user_answers')
+              .insert({
+                user_id: 'demo-user-123',
+                question_id: currentQuestion.id,
+                session_id: sessionId,
+                selected_answer: answer,
+                user_answer: answer,
+                correct_answer: currentQuestion.correct_answer,
+                is_correct: isCorrect,
+                time_spent: timeSpent || 0,
+                question_text: currentQuestion.question,
+                question_type: currentQuestion.type,
+                difficulty: currentQuestion.difficulty,
+                options: JSON.stringify(currentQuestion.options),
+                explanation: currentQuestion.explanation,
+                passage_text: currentQuestion.passage,
+                answered_at: new Date().toISOString()
+              })
+            
+            console.log('Answer record saved to database')
+          } catch (saveError) {
+            console.error('Failed to save answer record:', saveError)
+            // 不阻断答题流程，只是记录错误
+          }
         }
         
         console.log('Answer processed:', { answer, currentQuestion: currentQuestion?.correct_answer, isCorrect: score > 0 })
