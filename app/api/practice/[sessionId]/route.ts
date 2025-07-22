@@ -105,24 +105,63 @@ export async function PUT(
     
     console.log('Updating practice session:', sessionId, 'action:', action)
     
-    // 对于临时session，我们简化处理
-    if (sessionId.startsWith('session_') || sessionId.startsWith('fallback_')) {
-      console.log('Processing temporary session update')
+    // 对于临时session，我们需要重新加载并更新状态
+    if (sessionId.startsWith('practice_')) {
+      console.log('Processing temporary session update for:', sessionId)
       
-      // 返回简化的成功响应，用于临时session
+      // 重新生成session来获取当前状态
+      const questions = filterQuestions(undefined, 'medium', undefined, 10)
+      
+      let currentIndex = 0
+      let score = 0
+      
+      if (action === 'answer') {
+        // 简单的内存状态管理：基于sessionId生成一致的状态
+        const sessionHash = sessionId.split('_')[1] || '0'
+        const baseIndex = parseInt(sessionHash.slice(-1)) || 0
+        currentIndex = Math.min(baseIndex + 1, questions.length - 1)
+        
+        // 检查答案是否正确
+        const currentQuestion = questions[Math.min(baseIndex, questions.length - 1)]
+        if (currentQuestion && answer === currentQuestion.correct_answer) {
+          score = 1
+        }
+        
+        console.log('Answer processed:', { answer, currentQuestion: currentQuestion?.correct_answer, isCorrect: score > 0 })
+      }
+      
+      // 获取下一题
+      let nextQuestion = null
+      const status = currentIndex >= questions.length - 1 ? 'completed' : 'active'
+      
+      if (status === 'active') {
+        nextQuestion = questions[currentIndex]
+      }
+      
       return NextResponse.json({
         success: true,
         session: {
           id: sessionId,
-          status: 'active',
-          current_question_index: 1, // 简化：总是移到下一题
-          score: 0
+          user_id: 'temp_user',
+          session_type: 'adaptive',
+          settings: {
+            subjects: ['all'],
+            difficulty: 'medium',
+            question_count: questions.length,
+            time_limit: undefined
+          },
+          questions: questions,
+          status: status,
+          current_question_index: currentIndex,
+          score: score,
+          start_time: new Date().toISOString(),
+          created_at: new Date().toISOString()
         },
-        nextQuestion: null, // 让前端重新加载
+        nextQuestion,
         progress: {
-          current: 2,
-          total: 5,
-          percentage: 40
+          current: currentIndex + 1,
+          total: questions.length,
+          percentage: Math.round(((currentIndex + 1) / questions.length) * 100)
         },
         isTemporary: true
       })
