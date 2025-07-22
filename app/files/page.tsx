@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, FileText, Trash2, Upload, Eye, Calendar, Hash, Type } from 'lucide-react'
+import { X, FileText, Trash2, Upload, Eye, Calendar, Hash, Type, Plus } from 'lucide-react'
 
 interface FileChunk {
   id: string
@@ -29,6 +29,9 @@ export default function FilesPage() {
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [userId] = useState('demo-user-' + Date.now()) // 演示用户ID
+  const [uploading, setUploading] = useState(false)
+  const [isDragOver, setIsDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -81,6 +84,65 @@ export default function FilesPage() {
     }
   }
 
+  const handleFileUpload = async (selectedFiles: FileList | null) => {
+    if (!selectedFiles) return
+
+    setUploading(true)
+    const uploadPromises = Array.from(selectedFiles).map(async (file) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('userId', userId)
+
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        })
+
+        const result = await response.json()
+        
+        if (result.success) {
+          console.log('Upload successful:', result.message)
+          return true
+        } else {
+          throw new Error(result.error || 'Upload failed')
+        }
+      } catch (error) {
+        console.error('Upload error:', error)
+        alert(`Upload failed for ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        return false
+      }
+    })
+
+    await Promise.all(uploadPromises)
+    setUploading(false)
+    loadFiles() // 重新加载文件列表
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    handleFileUpload(e.dataTransfer.files)
+  }
+
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileUpload(e.target.files)
+  }
+
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -125,11 +187,12 @@ export default function FilesPage() {
           My Uploaded Files
         </h2>
         <button
-          onClick={() => router.push('/upload')}
-          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#197fe5] hover:text-[#1570d4]"
+          onClick={handleBrowseClick}
+          disabled={uploading}
+          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#197fe5] hover:text-[#1570d4] disabled:opacity-50"
         >
           <Upload size={16} />
-          Upload
+          {uploading ? 'Uploading...' : 'Upload'}
         </button>
       </div>
 
@@ -142,20 +205,68 @@ export default function FilesPage() {
               <p className="text-[#4e7397] text-sm ml-3">Loading files...</p>
             </div>
           ) : files.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center px-4">
+            <div 
+              className={`flex flex-col items-center justify-center h-64 text-center px-4 mx-4 mt-4 border-2 border-dashed rounded-lg transition-colors ${
+                isDragOver ? 'border-[#197fe5] bg-blue-50' : 'border-gray-300'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <FileText className="w-16 h-16 text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-600 mb-2">No files uploaded yet</h3>
-              <p className="text-gray-500 mb-4">Upload your first PDF or text file to get started with personalized AI questions</p>
+              <p className="text-gray-500 mb-4">Drag and drop files here or click to browse</p>
               <button
-                onClick={() => router.push('/upload')}
-                className="flex items-center gap-2 px-4 py-2 bg-[#197fe5] text-white rounded-lg hover:bg-[#1570d4] transition-colors"
+                onClick={handleBrowseClick}
+                disabled={uploading}
+                className="flex items-center gap-2 px-4 py-2 bg-[#197fe5] text-white rounded-lg hover:bg-[#1570d4] transition-colors disabled:opacity-50"
               >
                 <Upload size={16} />
-                Upload File
+                {uploading ? 'Uploading...' : 'Upload File'}
               </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".pdf,.txt,.doc,.docx"
+                onChange={handleFileInputChange}
+                className="hidden"
+              />
             </div>
           ) : (
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-4">
+              {/* Upload Area */}
+              <div 
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isDragOver ? 'border-[#197fe5] bg-blue-50' : 'border-gray-300'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 mb-2">
+                  {isDragOver ? 'Drop files here' : 'Drag and drop files here or'}
+                </p>
+                <button
+                  onClick={handleBrowseClick}
+                  disabled={uploading}
+                  className="text-sm text-[#197fe5] hover:text-[#1570d4] font-medium disabled:opacity-50"
+                >
+                  {uploading ? 'Uploading...' : 'browse to upload'}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.txt,.doc,.docx"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Files List */}
+              <div className="space-y-3">
               {files.map((file) => (
                 <div
                   key={file.fileName}
@@ -226,6 +337,7 @@ export default function FilesPage() {
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           )}
         </div>
