@@ -1,24 +1,18 @@
-SSAT Vocabulary Practice
+这是一个测试文档，用于验证SSAT AI学习平台的文件上传功能。
 
-This is a test document for the SSAT AI learning platform.
+文档内容：
+1. SSAT考试介绍
+SSAT（Secondary School Admission Test）是美国私立中学入学考试，主要测试学生的数学、阅读和写作能力。
 
-Key vocabulary words:
-1. Aberration - a departure from what is normal, usual, or expected
-2. Benevolent - well meaning and kindly
-3. Cacophony - a harsh, discordant mixture of sounds
-4. Diligent - having or showing care and conscientiousness in one's work or duties
-5. Eloquent - fluent or persuasive in speaking or writing
+2. 考试结构
+- 数学部分：包含基础数学和代数
+- 阅读部分：测试阅读理解能力
+- 写作部分：要求学生写一篇短文
 
-Reading comprehension tips:
-- Always read the question first
-- Look for context clues in the surrounding text
-- Pay attention to tone and author's purpose
-- Eliminate obviously wrong answers first
+3. 备考建议
+- 制定合理的学习计划
+- 多做练习题
+- 提高词汇量
+- 练习时间管理
 
-Math strategies:
-- Draw diagrams when possible
-- Work backwards from the answer choices
-- Use estimation to check your work
-- Read the problem carefully twice
-
-This document will be processed by the RAG system to provide personalized learning assistance. 
+这个文档将用于测试RAG系统的知识库功能。 

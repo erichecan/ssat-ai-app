@@ -15,14 +15,89 @@ export async function GET(request: NextRequest) {
 
     console.log('Fetching uploaded files for user:', userId)
 
-    // 暂时返回空列表，因为数据库配置问题
-    // TODO: 修复数据库连接后恢复完整功能
-    console.log('Database not configured, returning empty list')
+    // 检查Supabase配置
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.log('Supabase not configured, returning empty list')
+      return NextResponse.json({
+        success: true,
+        files: [],
+        totalFiles: 0,
+        totalChunks: 0
+      })
+    }
+
+    // 从knowledge_base表获取用户上传的文件
+    const { data: files, error } = await supabase
+      .from('knowledge_base')
+      .select(`
+        id,
+        title,
+        content,
+        topic,
+        difficulty,
+        type,
+        tags,
+        source,
+        created_at,
+        updated_at
+      `)
+      .contains('tags', [userId])
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching files:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch files' },
+        { status: 500 }
+      )
+    }
+
+    // 按文件名分组，因为一个文件可能被分成多个chunks
+    const fileGroups: { [key: string]: any[] } = {}
+    
+    files?.forEach(file => {
+      const fileName = file.source || 'Unknown File'
+      if (!fileGroups[fileName]) {
+        fileGroups[fileName] = []
+      }
+      fileGroups[fileName].push(file)
+    })
+
+    // 为每个文件创建汇总信息
+    const fileSummaries = Object.entries(fileGroups).map(([fileName, chunks]) => {
+      const totalChunks = chunks.length
+      const totalWords = chunks.reduce((sum, chunk) => {
+        return sum + (chunk.content?.split(/\s+/).length || 0)
+      }, 0)
+      
+      const firstChunk = chunks[0]
+      const lastChunk = chunks[chunks.length - 1]
+      
+      return {
+        fileName,
+        totalChunks,
+        totalWords,
+        topic: firstChunk.topic,
+        difficulty: firstChunk.difficulty,
+        type: firstChunk.type,
+        uploadedAt: firstChunk.created_at,
+        lastUpdated: lastChunk.updated_at,
+        chunks: chunks.map(chunk => ({
+          id: chunk.id,
+          title: chunk.title,
+          preview: chunk.content?.substring(0, 100) + '...',
+          wordCount: chunk.content?.split(/\s+/).length || 0
+        }))
+      }
+    })
+
+    console.log(`Found ${fileSummaries.length} uploaded files for user ${userId}`)
+
     return NextResponse.json({
       success: true,
-      files: [],
-      totalFiles: 0,
-      totalChunks: 0
+      files: fileSummaries,
+      totalFiles: fileSummaries.length,
+      totalChunks: files?.length || 0
     })
 
   } catch (error) {

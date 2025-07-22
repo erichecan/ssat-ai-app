@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { addKnowledgeToBase } from '@/lib/rag'
+import { supabase } from '@/lib/supabase'
 
 // 动态导入pdf-parse以避免构建时问题 - 更新于 2024-01-21 01:00:00
 let pdfParse: any = null
@@ -162,27 +163,45 @@ export async function POST(request: NextRequest) {
         console.log(`Processing chunk ${i + 1}/${chunks.length}, length:`, chunk.length)
         
         try {
-          // 添加到知识库（包含向量化和数据库存储）
-          const knowledgeId = await addKnowledgeToBase(
-            chunkTitle,
-            chunk,
-            'uploaded_document', // topic
-            'medium', // difficulty
-            'concept', // type - 改为concept更适合学习材料
-            ['user_upload', userId], // tags
-            file.name // source
-          )
+          console.log(`Attempting to add chunk ${i + 1} to knowledge base...`)
+          
+          // 使用最简单的字段进行测试
+          const { data, error } = await supabase
+            .from('knowledge_base')
+            .insert({
+              title: chunkTitle
+              // 暂时只使用title字段，其他字段可能不存在
+            })
+            .select()
+            .single()
+          
+          if (error) {
+            console.error('Supabase insert error:', error)
+            console.error('Error details:', {
+              code: error.code,
+              message: error.message,
+              details: error.details,
+              hint: error.hint
+            })
+            throw error
+          }
           
           processedChunks.push({
-            id: knowledgeId,
+            id: data.id,
             content: chunk.substring(0, 100) + '...', // 预览
             size: chunk.length,
             title: chunkTitle
           })
           
-          console.log(`Successfully added chunk ${i + 1} to knowledge base:`, knowledgeId)
+          console.log(`Successfully added chunk ${i + 1} to knowledge base:`, data.id)
         } catch (chunkError) {
           console.error(`Error processing chunk ${i + 1}:`, chunkError)
+          console.error('Error details:', {
+            message: chunkError instanceof Error ? chunkError.message : 'Unknown error',
+            stack: chunkError instanceof Error ? chunkError.stack : undefined,
+            error: chunkError
+          })
+          
           // 如果单个块失败，继续处理其他块
           processedChunks.push({
             id: 'error-' + Date.now() + '-' + i,

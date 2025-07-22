@@ -313,10 +313,13 @@ export async function addKnowledgeToBase(
   source?: string
 ): Promise<string> {
   try {
-    // Generate embedding
-    const embedding = await generateEmbedding(content)
+    console.log('Adding knowledge to base:', { title, topic, difficulty, type, source })
     
-    // Insert to Supabase
+    // 暂时跳过向量嵌入，先确保基本功能正常
+    // TODO: 重新启用向量嵌入功能
+    // const embedding = await generateEmbedding(content)
+    
+    // Insert to Supabase (without vector_embedding for now)
     const { data, error } = await supabase
       .from('knowledge_base')
       .insert({
@@ -327,12 +330,21 @@ export async function addKnowledgeToBase(
         type,
         tags,
         source
+        // vector_embedding: embedding // 暂时注释掉
       })
       .select()
       .single()
     
-    if (error) throw error
+    if (error) {
+      console.error('Supabase insert error:', error)
+      throw error
+    }
     
+    console.log('Successfully inserted to Supabase:', data.id)
+    
+    // 暂时跳过Pinecone，先确保Supabase功能正常
+    // TODO: 重新启用Pinecone功能
+    /*
     // Insert to Pinecone
     const vectorRecord: KnowledgeRecord = {
       id: data.id,
@@ -355,6 +367,7 @@ export async function addKnowledgeToBase(
       // 客户端通过 API 调用
       await upsertKnowledgeClient([vectorRecord])
     }
+    */
     
     return data.id
   } catch (error) {

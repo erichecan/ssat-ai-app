@@ -18,6 +18,21 @@ CREATE TABLE IF NOT EXISTS users (
   subscription_expires_at TIMESTAMP WITH TIME ZONE
 );
 
+-- 知识库表 (用于存储上传的文档内容)
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  topic VARCHAR(100),
+  difficulty VARCHAR(20) DEFAULT 'medium',
+  type VARCHAR(50) DEFAULT 'concept',
+  tags TEXT[] DEFAULT '{}',
+  source VARCHAR(255),
+  vector_embedding VECTOR(1536), -- 用于向量搜索
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 题目表 (用于存储动态题目)
 CREATE TABLE IF NOT EXISTS questions (
   id VARCHAR(50) PRIMARY KEY,
@@ -120,6 +135,11 @@ CREATE TABLE IF NOT EXISTS user_achievements (
 );
 
 -- 创建索引以提升查询性能
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_topic ON knowledge_base(topic);
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_difficulty ON knowledge_base(difficulty);
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_source ON knowledge_base(source);
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_created_at ON knowledge_base(created_at);
+
 CREATE INDEX IF NOT EXISTS idx_user_answers_user_id ON user_answers(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_answers_question_id ON user_answers(question_id);
 CREATE INDEX IF NOT EXISTS idx_user_answers_answered_at ON user_answers(answered_at);
