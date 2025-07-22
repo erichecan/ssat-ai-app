@@ -12,12 +12,10 @@ import {
   Trash,
   House,
   Search,
-  Bot,
   User
 } from 'lucide-react'
 import { mistakeSystem, MistakeWithQuestion, MistakeStats } from '@/lib/mistakes'
 import { cn } from '@/lib/utils'
-import AIAssistantButton from '@/components/ui/ai-assistant-button'
 
 // Mock user ID for now - replace with actual auth
 const MOCK_USER_ID = 'user-1'
@@ -220,10 +218,6 @@ export default function MistakesPage() {
           </div>
         </div>
         
-        <AIAssistantButton 
-          userId={MOCK_USER_ID} 
-          questionId={currentMistake.question_id}
-        />
       </div>
     )
   }
@@ -538,7 +532,6 @@ export default function MistakesPage() {
         </div>
       )}
       
-      <AIAssistantButton userId={MOCK_USER_ID} />
     </div>
   )
 }

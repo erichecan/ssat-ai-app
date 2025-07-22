@@ -9,10 +9,8 @@ import {
   Bookmark,
   User,
   BookOpen,
-  Bot,
   Loader2
 } from 'lucide-react'
-import AIAssistantButton from '@/components/ui/ai-assistant-button'
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 
 interface Question {
@@ -352,12 +350,6 @@ export default function TestPage() {
             <Search size={24} />
           </div>
           <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
-        </Link>
-        <Link href="/aitutor" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <Bot size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">AI Tutor</p>
         </Link>
         <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
           <div className="text-[#4e7397] flex h-8 items-center justify-center">

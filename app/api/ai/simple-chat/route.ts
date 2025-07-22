@@ -36,7 +36,9 @@ If they ask about specific subjects:
 
 Respond in a friendly, tutor-like tone.`
 
-      const response = await generateText(prompt, 10000) // 10秒超时
+      console.log('Calling generateText with prompt length:', prompt.length)
+      const response = await generateText(prompt, 15000) // 增加到15秒超时
+      console.log('AI response received, length:', response.length)
       
       return NextResponse.json({
         answer: response.trim(),
@@ -44,16 +46,24 @@ Respond in a friendly, tutor-like tone.`
         confidence: 0.9,
         isAI: true
       })
-    } catch (aiError) {
-      console.error('AI generation failed, using fallback:', aiError)
+    } catch (aiError: any) {
+      console.error('AI generation failed with detailed error:', {
+        name: aiError.name,
+        message: aiError.message,
+        stack: aiError.stack,
+        cause: aiError.cause
+      })
+      
       // 如果AI失败，使用智能备用回复
       const fallbackResponse = generateContextualFallback(message)
+      console.log('Using fallback response, length:', fallbackResponse.length)
       
       return NextResponse.json({
         answer: fallbackResponse,
         sources: [],
         confidence: 0.6,
-        isFallback: true
+        isFallback: true,
+        error: aiError.message // 添加错误信息用于调试
       })
     }
   } catch (error) {
@@ -84,14 +94,36 @@ function generateContextualFallback(message: string): string {
 你有具体的词汇问题吗？`
   }
   
-  if (lowerMessage.includes('math') || lowerMessage.includes('数学') || lowerMessage.includes('algebra')) {
+  if (lowerMessage.includes('math') || lowerMessage.includes('数学') || lowerMessage.includes('algebra') || 
+      lowerMessage.includes('勾股定理') || lowerMessage.includes('几何') || lowerMessage.includes('triangle')) {
+    
+    // 针对具体数学概念给出详细解答
+    if (lowerMessage.includes('勾股定理') || lowerMessage.includes('pythagorean')) {
+      return `勾股定理（Pythagorean Theorem）是SSAT数学的重要考点：
+
+**定理内容**：在直角三角形中，两直角边的平方和等于斜边的平方
+**公式**：a² + b² = c²（其中c是斜边）
+
+**SSAT考试中的应用**：
+1. 求直角三角形的边长
+2. 判断三角形是否为直角三角形
+3. 计算平面图形中的距离
+
+**解题技巧**：
+- 确认是直角三角形
+- 明确哪条边是斜边（最长边）
+- 代入公式计算
+
+你想练习一些勾股定理的题目吗？`
+    }
+    
     return `SSAT数学备考策略：
 1. 掌握基础概念（代数、几何、数据分析）
 2. 多做练习题，熟悉题型
 3. 学会时间管理
 4. 记录错题并分析原因
 
-需要具体数学概念的帮助吗？`
+你提到了"${message}"，需要这个具体概念的帮助吗？`
   }
   
   if (lowerMessage.includes('reading') || lowerMessage.includes('阅读')) {
@@ -104,14 +136,19 @@ function generateContextualFallback(message: string): string {
 你在阅读的哪个方面需要帮助？`
   }
   
-  // 默认智能回复
-  return `我收到了你的消息："${message.length > 50 ? message.substring(0, 50) + '...' : message}"
+  // 默认智能回复 - 针对用户具体问题
+  return `关于"${message.length > 30 ? message.substring(0, 30) + '...' : message}"，我来为你提供SSAT学习指导：
 
-虽然AI服务暂时不可用，但我仍然可以帮助你：
-📚 词汇学习策略
-🔢 数学解题技巧  
-📖 阅读理解方法
-🎯 考试应试技巧
+我可以帮助你：
+📚 **词汇学习** - 单词记忆、词根词缀、语境理解
+🔢 **数学概念** - 代数、几何、勾股定理、方程式解法
+📖 **阅读技巧** - 文章分析、主旨理解、推理题解答
+🎯 **考试策略** - 时间管理、答题技巧、心态调整
 
-请告诉我你需要哪方面的帮助！`
+请具体告诉我你在哪个方面需要帮助，我会提供详细的学习建议和解题方法！
+
+比如你可以问：
+• "如何记忆SSAT词汇？"
+• "勾股定理怎么应用？" 
+• "阅读理解怎么找主旨？"`
 }

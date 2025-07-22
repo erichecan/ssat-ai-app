@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         question_count: questionCount || 10,
         time_limit: timeLimit
       },
-      questions,
+      questions: questions,  // Store full question objects, not just IDs
       status: 'active',
       current_question_index: 0,
       score: 0,

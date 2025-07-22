@@ -6,19 +6,21 @@ import {
   Settings, 
   House, 
   BookOpen, 
-  Search, 
-  Bot, 
   User,
   Clock,
-  TrendingUp,
-  CreditCard,
-  Calculator
+  FileText
 } from 'lucide-react';
 
 export default function HomePage() {
   const [overallProgress] = useState(65);
 
   const recommendedCards = [
+    {
+      title: 'My Files',
+      description: '我的文件',
+      link: '/files',
+      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=300&h=300&fit=crop&crop=center'
+    },
     {
       title: 'Reading Speed Boost',
       description: 'Improve reading speed',
@@ -39,26 +41,6 @@ export default function HomePage() {
     }
   ];
 
-  const recentActivities = [
-    {
-      icon: BookOpen,
-      title: 'Practice Session',
-      subtitle: 'Reading Comprehension',
-      time: '2d ago'
-    },
-    {
-      icon: CreditCard,
-      title: 'Flashcard Review',
-      subtitle: 'Vocabulary',
-      time: '3d ago'
-    },
-    {
-      icon: Calculator,
-      title: 'Practice Test',
-      subtitle: 'Math',
-      time: '5d ago'
-    }
-  ];
 
   return (
     <div
@@ -120,57 +102,30 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <h2 className="text-[#0e141b] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
-          Recent Activity
-        </h2>
-        
-        <div className="space-y-0">
-          {recentActivities.map((activity, index) => (
-            <div key={index} className="flex items-center gap-4 bg-slate-50 px-4 min-h-[72px] py-2 justify-between">
-              <div className="flex items-center gap-4">
-                <div className="text-[#0e141b] flex items-center justify-center rounded-lg bg-[#e7edf3] shrink-0 size-12">
-                  <activity.icon size={24} />
-                </div>
-                <div className="flex flex-col justify-center">
-                  <p className="text-[#0e141b] text-base font-medium leading-normal line-clamp-1">
-                    {activity.title}
-                  </p>
-                  <p className="text-[#4e7397] text-sm font-normal leading-normal line-clamp-2">
-                    {activity.subtitle}
-                  </p>
-                </div>
-              </div>
-              <div className="shrink-0">
-                <p className="text-[#4e7397] text-sm font-normal leading-normal">{activity.time}</p>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Quick Actions */}
         <div className="px-4 py-6">
           <div className="grid grid-cols-2 gap-3">
             <Link 
               href="/practice"
-              className="bg-white rounded-lg p-4 border border-[#d0dbe7] hover:shadow-md transition-shadow"
+              className="bg-white rounded-lg p-3 border border-[#d0dbe7] hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center gap-3 mb-2">
-                <Clock className="text-[#197fe5]" size={20} />
-                <span className="text-[#0e141b] font-medium">Quick Practice</span>
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="text-[#197fe5]" size={18} />
+                <span className="text-[#0e141b] font-medium text-sm">Practice</span>
               </div>
-              <p className="text-[#4e7397] text-sm">Start a 15-min session</p>
+              <p className="text-[#4e7397] text-xs">15-min session</p>
             </Link>
-            
+
             <Link 
-              href="/aitutor"
-              className="bg-white rounded-lg p-4 border border-[#d0dbe7] hover:shadow-md transition-shadow"
+              href="/files"
+              className="bg-white rounded-lg p-3 border border-[#d0dbe7] hover:shadow-md transition-shadow"
             >
-                             <div className="flex items-center gap-3 mb-2">
-                 <Bot className="text-[#197fe5]" size={20} />
-                 <span className="text-[#0e141b] font-medium">AI Tutor</span>
-               </div>
-              <p className="text-[#4e7397] text-sm">Get instant help</p>
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="text-[#197fe5]" size={18} />
+                <span className="text-[#0e141b] font-medium text-sm">我的文件</span>
+              </div>
+              <p className="text-[#4e7397] text-xs">Manage files</p>
             </Link>
           </div>
         </div>
@@ -191,18 +146,12 @@ export default function HomePage() {
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/review" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+          <Link href="/files" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <Search size={24} />
+              <FileText size={24} />
             </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">我的文件</p>
           </Link>
-                     <Link href="/aitutor" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-               <Bot size={24} />
-             </div>
-             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">AI Tutor</p>
-           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
               <User size={24} />

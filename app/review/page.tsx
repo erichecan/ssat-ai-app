@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, House, List, File, Bot, User, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { ArrowLeft, House, List, File, User, ChevronLeft, ChevronRight, RefreshCw, Bot } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 interface ReviewQuestion {
@@ -266,7 +266,7 @@ export default function ReviewPage() {
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h4 className="text-[#0e141b] text-sm font-semibold mb-2 flex items-center gap-2">
               <Bot size={16} className="text-[#197fe5]" />
-              AI Tutor Feedback
+              Explanation
             </h4>
             <p className="text-[#0e141b] text-sm leading-relaxed">
               {currentQuestion.explanation}
@@ -326,12 +326,6 @@ export default function ReviewPage() {
               <File size={24} fill="currentColor" />
             </div>
             <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
-          </Link>
-          <Link href="/aitutor" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-            <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <Bot size={24} />
-            </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">AI Tutor</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">

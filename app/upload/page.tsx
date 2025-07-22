@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, House, BookOpen, File, Bot, User, Upload, X, Check } from 'lucide-react';
+import { ArrowLeft, House, BookOpen, File, User, Upload, X, Check } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 interface UploadedFile {
@@ -315,12 +315,6 @@ export default function UploadPage() {
               <File size={24} />
             </div>
             <p className="text-[#4c739a] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
-          </Link>
-          <Link href="/aitutor" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4c739a]">
-            <div className="text-[#4c739a] flex h-8 items-center justify-center">
-              <Bot size={24} />
-            </div>
-            <p className="text-[#4c739a] text-xs font-medium leading-normal tracking-[0.015em]">AI Tutor</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4c739a]">
             <div className="text-[#4c739a] flex h-8 items-center justify-center">

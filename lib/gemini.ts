@@ -19,23 +19,42 @@ export const geminiModel = genAI.getGenerativeModel({ model })
 
 export async function generateText(prompt: string, timeout: number = 15000): Promise<string> {
   try {
-    console.log('Generating text with timeout:', timeout)
+    console.log('Generating text with timeout:', timeout, 'prompt length:', prompt.length)
     
     // 创建超时Promise
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('AI request timeout')), timeout)
+      setTimeout(() => reject(new Error('AI request timeout after ' + timeout + 'ms')), timeout)
     )
     
     // 创建生成Promise
-    const generatePromise = geminiModel.generateContent(prompt).then(result => result.response.text())
+    const generatePromise = geminiModel.generateContent(prompt).then(result => {
+      console.log('Gemini API call completed successfully')
+      const text = result.response.text()
+      console.log('Response text extracted, length:', text.length)
+      return text
+    }).catch(geminiError => {
+      console.error('Gemini API call failed:', {
+        name: geminiError.name,
+        message: geminiError.message,
+        status: geminiError.status,
+        statusText: geminiError.statusText,
+        details: geminiError.details
+      })
+      throw geminiError
+    })
     
     // 竞争超时
     const response = await Promise.race([generatePromise, timeoutPromise]) as string
     
-    console.log('AI response generated successfully, length:', response.length)
+    console.log('AI response generated successfully, final length:', response.length)
     return response
-  } catch (error) {
-    console.error('Error generating text with Gemini:', error)
+  } catch (error: any) {
+    console.error('Error in generateText function:', {
+      name: error.name,
+      message: error.message,
+      isTimeout: error.message?.includes('timeout'),
+      stack: error.stack
+    })
     throw error
   }
 }

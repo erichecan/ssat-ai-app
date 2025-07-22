@@ -238,9 +238,6 @@ export default function PracticeResultsPage() {
                 </p>
               )}
               <p className="text-[#0e141b] text-sm">
-                • Use the AI Tutor to ask questions about topics you found challenging
-              </p>
-              <p className="text-[#0e141b] text-sm">
                 • Review your mistakes in the Review section for targeted practice
               </p>
             </div>
@@ -266,10 +263,10 @@ export default function PracticeResultsPage() {
             Review Mistakes
           </Link>
           <Link
-            href="/aitutor"
+            href="/flashcard"
             className="flex items-center justify-center h-10 px-4 bg-white text-[#197fe5] border border-[#197fe5] rounded-lg text-sm font-semibold hover:bg-blue-50"
           >
-            Ask AI Tutor
+            Study Flashcards
           </Link>
         </div>
       </div>

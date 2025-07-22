@@ -160,7 +160,34 @@ export default function ReadingQuestionsPage() {
     } else {
       // 所有问题完成
       setCompleted(true)
+      saveTestResults()
     }
+  }
+
+  const saveTestResults = () => {
+    const questionsWithResults = questions.map((q, index) => ({
+      id: q.id,
+      question: q.question,
+      userAnswer: selectedAnswers[index] || '',
+      correctAnswer: q.correct_answer,
+      isCorrect: selectedAnswers[index] === q.correct_answer,
+      explanation: q.explanation,
+      type: q.type
+    }))
+
+    const results = {
+      overallScore: Math.round((score / questions.length) * 100),
+      correctAnswers: score,
+      incorrectAnswers: questions.length - score,
+      totalQuestions: questions.length,
+      timeSpent: readingData ? `${Math.round(readingData.timeSpent / 60)} minutes` : 'Unknown',
+      questions: questionsWithResults,
+      readingSpeed: readingData?.actualWPM || 0,
+      material: readingData?.material?.title || 'Reading Practice'
+    }
+
+    sessionStorage.setItem('testResults', JSON.stringify(results))
+    console.log('Test results saved:', results)
   }
 
   const handleRestart = () => {
@@ -214,19 +241,27 @@ export default function ReadingQuestionsPage() {
           </div>
         )}
 
-        <div className="flex gap-3 w-full max-w-md">
+        <div className="flex flex-col gap-3 w-full max-w-md">
           <button
-            onClick={handleRestart}
-            className="flex-1 bg-[#197fe5] text-white rounded-lg h-12 px-4 text-sm font-bold hover:bg-[#1668c7]"
+            onClick={() => router.push('/test/results')}
+            className="w-full bg-green-500 text-white rounded-lg h-12 px-4 text-sm font-bold hover:bg-green-600"
           >
-            Review Questions
+            View Detailed Results
           </button>
-          <button
-            onClick={handleBackToReading}
-            className="flex-1 bg-gray-200 text-gray-900 rounded-lg h-12 px-4 text-sm font-bold hover:bg-gray-300"
-          >
-            New Reading
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleRestart}
+              className="flex-1 bg-[#197fe5] text-white rounded-lg h-12 px-4 text-sm font-bold hover:bg-[#1668c7]"
+            >
+              Review Questions
+            </button>
+            <button
+              onClick={handleBackToReading}
+              className="flex-1 bg-gray-200 text-gray-900 rounded-lg h-12 px-4 text-sm font-bold hover:bg-gray-300"
+            >
+              New Reading
+            </button>
+          </div>
         </div>
       </div>
     )

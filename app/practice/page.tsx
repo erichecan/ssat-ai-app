@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, GraduationCap, House, File, Bot, User } from 'lucide-react';
+import { ArrowLeft, GraduationCap, House, File, User } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 export default function PracticePage() {
@@ -273,12 +273,6 @@ export default function PracticePage() {
               <File size={24} />
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
-          </Link>
-          <Link href="/aitutor" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-            <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <Bot size={24} />
-            </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">AI Tutor</p>
           </Link>
           <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">

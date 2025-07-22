@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
   X,
@@ -8,40 +10,138 @@ import {
   List,
   Search,
   User,
-  BookOpen,
-  Bot
+  BookOpen
 } from 'lucide-react'
 
 interface QuestionResult {
-  id: number
+  id: string
   question: string
   isCorrect: boolean
   userAnswer: string
   correctAnswer: string
   explanation: string
+  type?: string
 }
 
-const mockResults = {
-  overallScore: 75,
-  correctAnswers: 60,
-  incorrectAnswers: 20,
-  totalQuestions: 80,
-  timeSpent: '45 minutes',
-  questions: [
-    { id: 1, question: "Question 1", isCorrect: true, userAnswer: "A", correctAnswer: "A", explanation: "..." },
-    { id: 2, question: "Question 2", isCorrect: false, userAnswer: "B", correctAnswer: "C", explanation: "..." },
-    { id: 3, question: "Question 3", isCorrect: true, userAnswer: "C", correctAnswer: "C", explanation: "..." },
-    { id: 4, question: "Question 4", isCorrect: false, userAnswer: "A", correctAnswer: "D", explanation: "..." },
-    { id: 5, question: "Question 5", isCorrect: true, userAnswer: "B", correctAnswer: "B", explanation: "..." },
-    { id: 6, question: "Question 6", isCorrect: true, userAnswer: "A", correctAnswer: "A", explanation: "..." },
-    { id: 7, question: "Question 7", isCorrect: false, userAnswer: "C", correctAnswer: "B", explanation: "..." },
-    { id: 8, question: "Question 8", isCorrect: true, userAnswer: "D", correctAnswer: "D", explanation: "..." },
-    { id: 9, question: "Question 9", isCorrect: true, userAnswer: "A", correctAnswer: "A", explanation: "..." },
-    { id: 10, question: "Question 10", isCorrect: false, userAnswer: "B", correctAnswer: "C", explanation: "..." },
-  ]
+interface TestResults {
+  overallScore: number
+  correctAnswers: number
+  incorrectAnswers: number
+  totalQuestions: number
+  timeSpent: string
+  questions: QuestionResult[]
 }
 
 export default function TestResultsPage() {
+  const router = useRouter()
+  const [results, setResults] = useState<TestResults | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // 尝试从sessionStorage获取真实的测试结果
+    const loadTestResults = () => {
+      try {
+        const sessionResults = sessionStorage.getItem('testResults')
+        const readingData = sessionStorage.getItem('readingData')
+        
+        if (sessionResults) {
+          const parsedResults = JSON.parse(sessionResults)
+          setResults(parsedResults)
+        } else if (readingData) {
+          // 如果有阅读数据，从中构造结果
+          const readingSession = JSON.parse(readingData)
+          const mockResults = createResultsFromReadingData(readingSession)
+          setResults(mockResults)
+        } else {
+          // 如果没有真实数据，使用默认值但标记为演示
+          setResults(createDemoResults())
+        }
+      } catch (error) {
+        console.error('Error loading test results:', error)
+        setResults(createDemoResults())
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadTestResults()
+  }, [])
+
+  const createResultsFromReadingData = (readingData: any): TestResults => {
+    // 从阅读数据创建结果
+    const questions = readingData.questions || []
+    const correctCount = questions.filter((q: any) => q.isCorrect).length
+    const totalCount = questions.length
+    const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
+    
+    return {
+      overallScore: score,
+      correctAnswers: correctCount,
+      incorrectAnswers: totalCount - correctCount,
+      totalQuestions: totalCount,
+      timeSpent: readingData.timeSpent || 'Unknown',
+      questions: questions
+    }
+  }
+
+  const createDemoResults = (): TestResults => {
+    // 创建演示结果（标记为演示）
+    return {
+      overallScore: 80,
+      correctAnswers: 4,
+      incorrectAnswers: 1,
+      totalQuestions: 5,
+      timeSpent: '3 minutes',
+      questions: [
+        { id: '1', question: "Demo Question 1", isCorrect: true, userAnswer: "A", correctAnswer: "A", explanation: "Correct answer", type: "reading" },
+        { id: '2', question: "Demo Question 2", isCorrect: true, userAnswer: "B", correctAnswer: "B", explanation: "Correct answer", type: "reading" },
+        { id: '3', question: "Demo Question 3", isCorrect: false, userAnswer: "C", correctAnswer: "D", explanation: "The correct answer was D", type: "reading" },
+        { id: '4', question: "Demo Question 4", isCorrect: true, userAnswer: "A", correctAnswer: "A", explanation: "Correct answer", type: "reading" },
+        { id: '5', question: "Demo Question 5", isCorrect: true, userAnswer: "B", correctAnswer: "B", explanation: "Correct answer", type: "reading" },
+      ]
+    }
+  }
+
+  const handleReviewMistakes = () => {
+    if (!results) return
+    
+    const mistakes = results.questions.filter(q => !q.isCorrect)
+    if (mistakes.length === 0) {
+      alert('Congratulations! You got all questions correct!')
+      return
+    }
+    
+    // 将错误问题存储到sessionStorage
+    sessionStorage.setItem('reviewQuestions', JSON.stringify(mistakes))
+    router.push('/review/mistakes')
+  }
+
+  const handleTakeAgain = () => {
+    // 清除之前的结果并重新开始测试
+    sessionStorage.removeItem('testResults')
+    sessionStorage.removeItem('readingData')
+    router.push('/reading')
+  }
+
+  if (loading) {
+    return (
+      <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600">Loading results...</p>
+      </div>
+    )
+  }
+
+  if (!results) {
+    return (
+      <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
+        <p className="text-gray-600">No test results found</p>
+        <Link href="/reading" className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">
+          Take a Test
+        </Link>
+      </div>
+    )
+  }
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600'
     if (score >= 60) return 'text-yellow-600'
@@ -73,24 +173,24 @@ export default function TestResultsPage() {
       {/* Main Content */}
       <div className="flex-1">
         {/* Overall Score */}
-        <h2 className={`text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5 ${getScoreColor(mockResults.overallScore)}`}>
-          Overall Score: {mockResults.overallScore}%
+        <h2 className={`text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5 ${getScoreColor(results.overallScore)}`}>
+          Overall Score: {results.overallScore}%
         </h2>
 
         {/* Score Message */}
         <p className="text-gray-600 text-center px-4 pb-4">
-          {getScoreMessage(mockResults.overallScore)}
+          {getScoreMessage(results.overallScore)}
         </p>
 
         {/* Stats Cards */}
         <div className="flex flex-wrap gap-4 p-4">
           <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-gray-300 bg-white">
             <p className="text-gray-900 text-base font-medium leading-normal">Correct Answers</p>
-            <p className="text-green-600 text-2xl font-bold leading-tight">{mockResults.correctAnswers}</p>
+            <p className="text-green-600 text-2xl font-bold leading-tight">{results.correctAnswers}</p>
           </div>
           <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-gray-300 bg-white">
             <p className="text-gray-900 text-base font-medium leading-normal">Incorrect Answers</p>
-            <p className="text-red-600 text-2xl font-bold leading-tight">{mockResults.incorrectAnswers}</p>
+            <p className="text-red-600 text-2xl font-bold leading-tight">{results.incorrectAnswers}</p>
           </div>
         </div>
 
@@ -98,11 +198,11 @@ export default function TestResultsPage() {
         <div className="flex flex-wrap gap-4 px-4 pb-4">
           <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-gray-300 bg-white">
             <p className="text-gray-900 text-base font-medium leading-normal">Total Questions</p>
-            <p className="text-gray-900 text-2xl font-bold leading-tight">{mockResults.totalQuestions}</p>
+            <p className="text-gray-900 text-2xl font-bold leading-tight">{results.totalQuestions}</p>
           </div>
           <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 border border-gray-300 bg-white">
             <p className="text-gray-900 text-base font-medium leading-normal">Time Spent</p>
-            <p className="text-gray-900 text-2xl font-bold leading-tight">{mockResults.timeSpent}</p>
+            <p className="text-gray-900 text-2xl font-bold leading-tight">{results.timeSpent}</p>
           </div>
         </div>
 
@@ -146,10 +246,10 @@ export default function TestResultsPage() {
         </h2>
         
         <div className="space-y-1 px-4">
-          {mockResults.questions.map((question) => (
+          {results.questions.map((question, index) => (
             <div key={question.id} className="flex items-center gap-4 bg-gray-50 px-4 min-h-14 justify-between rounded-lg">
               <p className="text-gray-900 text-base font-normal leading-normal flex-1 truncate">
-                Question {question.id}
+                Question {index + 1}: {question.question.substring(0, 40)}...
               </p>
               <div className="shrink-0">
                 {question.isCorrect ? (
@@ -168,10 +268,16 @@ export default function TestResultsPage() {
 
         {/* Action Buttons */}
         <div className="flex gap-3 px-4 py-6">
-          <button className="flex-1 py-3 px-4 bg-primary-500 text-white rounded-lg font-medium">
+          <button 
+            onClick={handleReviewMistakes}
+            className="flex-1 py-3 px-4 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+          >
             Review Mistakes
           </button>
-          <button className="flex-1 py-3 px-4 bg-gray-200 text-gray-900 rounded-lg font-medium">
+          <button 
+            onClick={handleTakeAgain}
+            className="flex-1 py-3 px-4 bg-gray-200 text-gray-900 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+          >
             Take Again
           </button>
         </div>
@@ -218,15 +324,6 @@ export default function TestResultsPage() {
             <Search size={24} />
           </div>
           <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Review</p>
-        </Link>
-        <Link 
-          href="/aitutor" 
-          className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]"
-        >
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <Bot size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">AI Tutor</p>
         </Link>
         <Link 
           href="/profile" 
