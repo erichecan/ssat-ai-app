@@ -329,7 +329,12 @@ export async function addKnowledgeToBase(
         difficulty,
         type,
         tags,
-        source
+        source,
+        file_name: source || 'unknown', // 添加file_name字段
+        file_path: `/uploads/${source || 'unknown'}`, // 添加file_path字段
+        file_size: content.length, // 添加file_size字段
+        file_type: 'text/plain', // 添加file_type字段
+        status: 'processed' // 添加status字段
       })
       .select()
       .single()

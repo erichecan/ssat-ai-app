@@ -187,7 +187,7 @@ export default function FlashCardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-3 max-h-[calc(100vh-140px)] overflow-y-auto">
+      <div className="flex-1 p-3 overflow-y-auto">
         <div className="flex flex-col items-stretch justify-start rounded-xl">
           {/* Card Container */}
           <div className="relative w-full min-h-80 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-3">
@@ -218,7 +218,7 @@ export default function FlashCardPage() {
             {/* Answer Side (Full Details) */}
             {isFlipped && (
               <div className="absolute inset-0 p-4 bg-gradient-to-br from-blue-50 to-blue-100 overflow-y-auto">
-                <div className="h-full flex flex-col">
+                <div className="min-h-full flex flex-col">
                   {/* Header */}
                   <div className="text-center mb-3">
                     <div className="flex items-center justify-center gap-2 mb-2">
@@ -244,7 +244,7 @@ export default function FlashCardPage() {
                   </div>
                   
                   {/* Content Sections */}
-                  <div className="flex-1 space-y-2 overflow-y-auto">
+                  <div className="flex-1 space-y-2">
                     {/* Hint Sentence */}
                     {currentCard.memory_tip && (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">

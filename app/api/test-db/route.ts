@@ -33,16 +33,21 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // 测试插入一条记录
-    const testRecord = {
-      title: 'Test Record',
-      content: 'This is a test record',
-      topic: 'test',
-      difficulty: 'medium',
-      type: 'concept',
-      tags: ['test'],
-      source: 'test-api'
-    }
+           // 测试插入一条记录
+       const testRecord = {
+         title: 'Test Record',
+         content: 'This is a test record',
+         topic: 'test',
+         difficulty: 'medium',
+         type: 'concept',
+         tags: ['test'],
+         source: 'test-api',
+         file_name: 'test-file.txt', // 添加file_name字段
+         file_path: '/uploads/test-file.txt', // 添加file_path字段
+         file_size: 1024, // 添加file_size字段
+         file_type: 'text/plain', // 添加file_type字段
+         status: 'processed' // 添加status字段
+       }
     
     const { data: insertData, error: insertError } = await supabase
       .from('knowledge_base')

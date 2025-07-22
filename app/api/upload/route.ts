@@ -175,7 +175,12 @@ export async function POST(request: NextRequest) {
               difficulty: 'medium',
               type: 'concept',
               tags: ['user_upload', userId],
-              source: file.name
+              source: file.name,
+              file_name: file.name, // 添加file_name字段
+              file_path: `/uploads/${file.name}`, // 添加file_path字段
+              file_size: file.size, // 添加file_size字段
+              file_type: file.type, // 添加file_type字段
+              status: 'processed' // 添加status字段
             })
             .select()
             .single()

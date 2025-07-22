@@ -34,6 +34,14 @@ export default function PracticePage() {
     }
   };
 
+  // 当切换到Custom模式时，确保至少有一个科目被选中 - 更新于 2024-01-21 02:30:00
+  const handlePracticeTypeChange = (type: 'adaptive' | 'custom') => {
+    setPracticeType(type);
+    if (type === 'custom' && selectedSubjects.length === 0) {
+      setSelectedSubjects(['Reading Comprehension']);
+    }
+  };
+
   const handleStartPractice = async () => {
     setIsCreating(true);
     setError('');
@@ -128,7 +136,7 @@ export default function PracticePage() {
                 className="invisible w-0"
                 value="adaptive"
                 checked={practiceType === 'adaptive'}
-                onChange={(e) => setPracticeType(e.target.value as 'adaptive' | 'custom')}
+                onChange={(e) => handlePracticeTypeChange(e.target.value as 'adaptive' | 'custom')}
               />
             </label>
             <label className="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-slate-50 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0e141b] text-[#4e7397] text-sm font-medium leading-normal">
@@ -139,7 +147,7 @@ export default function PracticePage() {
                 className="invisible w-0"
                 value="custom"
                 checked={practiceType === 'custom'}
-                onChange={(e) => setPracticeType(e.target.value as 'adaptive' | 'custom')}
+                onChange={(e) => handlePracticeTypeChange(e.target.value as 'adaptive' | 'custom')}
               />
             </label>
           </div>

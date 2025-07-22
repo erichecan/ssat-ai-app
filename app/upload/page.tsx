@@ -261,9 +261,9 @@ export default function UploadPage() {
                 <p className="text-[#4e7397] text-sm">Upload your first document to get started</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3" data-testid="uploaded-files-list">
               {uploadedFiles.map((file) => (
-                <div key={file.id} className="bg-white rounded-lg p-4 border border-[#d0dbe7]">
+                <div key={file.id} className="bg-white rounded-lg p-4 border border-[#d0dbe7]" data-testid="file-item">
                   <div className="flex items-center gap-3 mb-3">
                     <FileText size={24} className="text-[#197fe5]" />
                     <div className="flex-1">
