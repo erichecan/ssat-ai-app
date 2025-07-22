@@ -190,7 +190,7 @@ export default function FlashCardPage() {
       <div className="flex-1 p-3 overflow-y-auto">
         <div className="flex flex-col items-stretch justify-start rounded-xl">
           {/* Card Container */}
-          <div className="relative w-full min-h-80 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-3">
+          <div className="relative w-full h-96 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-3">
             {/* Question Side (Word Only) */}
             {!isFlipped && (
               <div className="absolute inset-0 flex flex-col justify-center items-center p-6">
@@ -295,34 +295,6 @@ export default function FlashCardPage() {
             />
           </div>
 
-          {/* Card Info */}
-          <div className="flex w-full flex-col gap-1 py-2">
-            <div className="flex justify-between items-center">
-              <p className="text-gray-600 text-sm font-normal">{currentCard.category}</p>
-              <div className="flex items-center gap-2">
-                {currentCard.userProgress && (
-                  <span className="text-xs text-gray-500">
-                    Seen {currentCard.userProgress.times_seen} times
-                  </span>
-                )}
-              </div>
-            </div>
-            <p className="text-gray-900 text-lg font-bold">{currentCard.word}</p>
-            <div className="flex items-end gap-3 justify-between">
-              <p className="text-gray-500 text-base">{currentCard.part_of_speech}</p>
-              {currentCard.userProgress && (
-                <div className="flex items-center gap-1">
-                  <div className="w-16 bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-[#197fe5] h-2 rounded-full transition-all" 
-                      style={{ width: `${(currentCard.userProgress.mastery_level / 5) * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-500">Mastery</span>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Action Buttons */}

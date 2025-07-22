@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { questionBank } from '@/lib/question-bank'
+import { questionBank, filterQuestions } from '@/lib/question-bank'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -19,65 +19,31 @@ export async function GET(
     
     let session: any = null
     
-    // 首先尝试从数据库获取session
-    try {
-      const { data: dbSession, error } = await supabase
-        .from('practice_sessions')
-        .select('*')
-        .eq('id', sessionId)
-        .single()
-
-      if (!error && dbSession) {
-        session = dbSession
-        console.log('Found session in database')
-      }
-    } catch (dbError) {
-      console.log('Database session not found, checking for temporary session')
-    }
-
-    // 如果数据库中没有，检查是否是临时session（以session_或fallback_开头）
-    if (!session && (sessionId.startsWith('session_') || sessionId.startsWith('fallback_'))) {
+    // 对于practice开头的sessionId，创建临时session使用question bank
+    if (sessionId.startsWith('practice_')) {
       console.log('Creating temporary session for:', sessionId)
       
-      // 重新生成题目来模拟session
-      try {
-        const questionResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: 'temp_user',
-            questionType: 'mixed', 
-            count: 10
-          })
-        })
-
-        if (questionResponse.ok) {
-          const questionsData = await questionResponse.json()
-          
-          if (questionsData.success && questionsData.questions) {
-            session = {
-              id: sessionId,
-              user_id: 'temp_user',
-              session_type: 'adaptive',
-              settings: {
-                subjects: ['all'],
-                difficulty: 'medium',
-                question_count: questionsData.questions.length,
-                time_limit: undefined
-              },
-              questions: questionsData.questions,
-              status: 'active',
-              current_question_index: 0,
-              score: 0,
-              start_time: new Date().toISOString(),
-              created_at: new Date().toISOString()
-            }
-            console.log('Created temporary session with', questionsData.questions.length, 'questions')
-          }
-        }
-      } catch (questionError) {
-        console.error('Error generating questions for temp session:', questionError)
+      // 使用question bank生成题目
+      const questions = filterQuestions(undefined, 'medium', undefined, 10)
+      
+      session = {
+        id: sessionId,
+        user_id: 'temp_user',
+        session_type: 'adaptive',
+        settings: {
+          subjects: ['all'],
+          difficulty: 'medium',
+          question_count: questions.length,
+          time_limit: undefined
+        },
+        questions: questions,
+        status: 'active',
+        current_question_index: 0,
+        score: 0,
+        start_time: new Date().toISOString(),
+        created_at: new Date().toISOString()
       }
+      console.log('Created temporary session with', questions.length, 'questions from question bank')
     }
 
     if (!session) {

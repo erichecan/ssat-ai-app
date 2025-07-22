@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
         try {
           console.log(`Attempting to add chunk ${i + 1} to knowledge base...`)
           
-          // 使用最基本的字段进行测试
+          // 只使用数据库表中存在的字段
           const { data, error } = await supabase
             .from('knowledge_base')
             .insert({
@@ -175,12 +175,7 @@ export async function POST(request: NextRequest) {
               difficulty: 'medium',
               type: 'concept',
               tags: ['user_upload', userId],
-              source: file.name,
-              file_name: file.name, // 添加file_name字段
-              file_path: `/uploads/${file.name}`, // 添加file_path字段
-              file_size: file.size, // 添加file_size字段
-              file_type: file.type, // 添加file_type字段
-              status: 'processed' // 添加status字段
+              source: file.name
             })
             .select()
             .single()

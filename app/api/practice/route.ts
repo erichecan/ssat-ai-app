@@ -46,12 +46,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 简化版本：直接使用question bank避免AI调用超时
-    console.log('Creating practice session for user:', userId)
+    console.log('Creating practice session for user:', userId, 'type:', sessionType, 'subjects:', subjects)
     
-    // 直接使用fallback模式以确保稳定性
-    console.log('Using question bank for reliable question generation...')
-      
     let questions: any[] = []
     
     if (sessionType === 'adaptive') {
@@ -63,7 +59,7 @@ export async function POST(request: NextRequest) {
         .sort(() => Math.random() - 0.5)
         .slice(0, questionCount || 10)
     } else {
-      // 将用户友好的主题名称映射到question bank中的type
+      // 处理多个科目选择
       const subjectTypeMap: Record<string, string> = {
         'Reading Comprehension': 'reading',
         'Math': 'math', 
@@ -71,25 +67,35 @@ export async function POST(request: NextRequest) {
         'Essay Writing': 'writing'
       }
       
-      const selectedSubject = subjects?.[0]
-      const questionType = subjectTypeMap[selectedSubject] || undefined
+      // 如果选择了多个科目，按比例分配问题
+      if (subjects && subjects.length > 0) {
+        const questionsPerSubject = Math.ceil((questionCount || 10) / subjects.length)
+        
+        subjects.forEach((subject: string) => {
+          const questionType = subjectTypeMap[subject]
+          if (questionType) {
+            const subjectQuestions = filterQuestions(
+              questionType,
+              difficulty || 'medium',
+              undefined,
+              questionsPerSubject
+            )
+            questions.push(...subjectQuestions)
+          }
+        })
+        
+        // 如果总数超过要求，随机选择
+        if (questions.length > (questionCount || 10)) {
+          questions = questions.sort(() => Math.random() - 0.5).slice(0, questionCount || 10)
+        }
+      }
       
-      console.log('Custom practice - selected subject:', selectedSubject, 'mapped to type:', questionType)
-      
-      questions = filterQuestions(
-        questionType,
-        difficulty || 'medium',
-        undefined,
-        questionCount || 10
-      )
-      
-      console.log('Generated', questions.length, 'questions for custom practice')
+      console.log('Generated', questions.length, 'questions for custom practice from subjects:', subjects)
     }
 
     // 确保至少有一些问题
     if (questions.length === 0) {
       console.error('No questions generated! Using fallback questions...')
-      // 使用混合的默认问题作为备用
       questions = filterQuestions(undefined, 'medium', undefined, Math.min(questionCount || 10, 5))
     }
 
@@ -105,7 +111,7 @@ export async function POST(request: NextRequest) {
         question_count: questionCount || 10,
         time_limit: timeLimit
       },
-      questions: questions,  // Store full question objects, not just IDs
+      questions: questions,
       status: 'active',
       current_question_index: 0,
       score: 0,
@@ -113,12 +119,11 @@ export async function POST(request: NextRequest) {
       created_at: new Date().toISOString()
     }
 
-    console.log('Practice session created successfully:', sessionId)
+    console.log('Practice session created successfully:', sessionId, 'with', questions.length, 'questions')
 
     return NextResponse.json({
       success: true,
       session,
-      questions,
       message: 'Practice session created successfully'
     })
 
