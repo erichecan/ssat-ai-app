@@ -144,7 +144,7 @@ function generateFallbackQuestions(material: any) {
   }
   
   // 提取文本中的关键短语
-  const sentences = material.content.split(/[.!?]+/).filter(s => s.trim().length > 10)
+  const sentences = material.content.split(/[.!?]+/).filter((s: string) => s.trim().length > 10)
   const firstSentence = sentences[0]?.trim() || ''
   const lastSentence = sentences[sentences.length - 1]?.trim() || ''
   
@@ -253,7 +253,8 @@ function generateOptionFromContent(content: string, topicType: string, optionTyp
     }
   }
   
-  return options[topicType as keyof typeof options]?.[optionType as keyof typeof options[typeof topicType]] || options.general[optionType as keyof typeof options['general']]
+  const topicOptions = options[topicType as keyof typeof options] || options.general
+  return topicOptions[optionType as keyof typeof topicOptions] || options.general[optionType as keyof typeof options.general]
 }
 
 function getComprehensionFocus(topicType: string, content: string): string {
