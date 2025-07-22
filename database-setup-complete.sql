@@ -28,7 +28,6 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
   type VARCHAR(50) DEFAULT 'concept',
   tags TEXT[] DEFAULT '{}',
   source VARCHAR(255),
-  vector_embedding VECTOR(1536), -- 用于向量搜索
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

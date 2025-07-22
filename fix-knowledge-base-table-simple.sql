@@ -1,8 +1,6 @@
--- 修复knowledge_base表结构
+-- 简化版knowledge_base表结构修复
 -- 2024-01-21 02:05:00
-
--- 首先启用pgvector扩展（如果还没有启用）
-CREATE EXTENSION IF NOT EXISTS vector;
+-- 不包含vector_embedding列，避免pgvector扩展问题
 
 -- 检查表是否存在，如果不存在则创建
 CREATE TABLE IF NOT EXISTS knowledge_base (
@@ -14,7 +12,6 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
   type VARCHAR(50) DEFAULT 'concept',
   tags TEXT[] DEFAULT '{}',
   source VARCHAR(255),
-  vector_embedding vector(1536), -- 用于向量搜索
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -62,13 +59,6 @@ BEGIN
                    WHERE table_name = 'knowledge_base' AND column_name = 'source') THEN
         ALTER TABLE knowledge_base ADD COLUMN source VARCHAR(255);
         RAISE NOTICE 'Added source column to knowledge_base table';
-    END IF;
-    
-    -- 添加vector_embedding列（如果不存在）
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
-                   WHERE table_name = 'knowledge_base' AND column_name = 'vector_embedding') THEN
-        ALTER TABLE knowledge_base ADD COLUMN vector_embedding vector(1536);
-        RAISE NOTICE 'Added vector_embedding column to knowledge_base table';
     END IF;
     
     -- 添加created_at列（如果不存在）

@@ -330,7 +330,6 @@ export async function addKnowledgeToBase(
         type,
         tags,
         source
-        // vector_embedding: embedding // 暂时注释掉
       })
       .select()
       .single()

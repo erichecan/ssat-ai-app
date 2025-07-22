@@ -165,12 +165,17 @@ export async function POST(request: NextRequest) {
         try {
           console.log(`Attempting to add chunk ${i + 1} to knowledge base...`)
           
-          // 使用最简单的字段进行测试
+          // 使用最基本的字段进行测试
           const { data, error } = await supabase
             .from('knowledge_base')
             .insert({
-              title: chunkTitle
-              // 暂时只使用title字段，其他字段可能不存在
+              title: chunkTitle,
+              content: chunk,
+              topic: 'uploaded_document',
+              difficulty: 'medium',
+              type: 'concept',
+              tags: ['user_upload', userId],
+              source: file.name
             })
             .select()
             .single()
