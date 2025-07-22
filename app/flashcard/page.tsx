@@ -215,14 +215,14 @@ export default function FlashCardPage() {
         <div className="flex flex-col items-stretch justify-start rounded-xl">
           {/* Card Container - 触屏滑动优化 */}
           <div 
-            className="relative w-full h-80 bg-white rounded-3xl shadow-xl border border-zinc-200 overflow-hidden mb-6 transition-all duration-300 hover:shadow-2xl"
+            className="relative w-full min-h-80 bg-white rounded-3xl shadow-xl border border-zinc-200 mb-6 transition-all duration-300 hover:shadow-2xl"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
           >
             {/* Question Side (Word Only) - 紧凑布局 */}
             {!isFlipped && (
-              <div className="absolute inset-0 flex flex-col justify-center items-center p-6 bg-gradient-to-br from-slate-50 to-white">
+              <div className="flex flex-col justify-center items-center p-6 bg-gradient-to-br from-slate-50 to-white rounded-3xl min-h-80">
                 <div className="text-center max-w-sm">
                   <div className="flex items-center justify-center gap-2 mb-6">
                     <span className="px-3 py-1.5 bg-zinc-100 text-zinc-700 text-xs font-medium rounded-2xl border border-zinc-200 shadow-sm">
@@ -254,7 +254,7 @@ export default function FlashCardPage() {
 
             {/* Answer Side (Full Details) - 紧凑布局 */}
             {isFlipped && (
-              <div className="absolute inset-0 p-4 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 overflow-y-auto">
+              <div className="p-4 bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 rounded-3xl">
                 <div className="min-h-full flex flex-col space-y-3">
                   {/* Header */}
                   <div className="text-center pb-3 border-b border-zinc-200">
@@ -348,9 +348,9 @@ export default function FlashCardPage() {
               </div>
             )}
 
-            {/* Flip Animation */}
+            {/* Flip Animation - positioned to not interfere with content flow */}
             <div 
-              className="absolute inset-0 cursor-pointer"
+              className="absolute inset-0 cursor-pointer rounded-3xl z-10"
               onClick={handleFlip}
             />
           </div>
