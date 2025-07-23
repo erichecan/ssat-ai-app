@@ -52,6 +52,30 @@ export default function FlashCardPage() {
     loadFlashcards()
   }, [])
 
+  // 添加键盘事件监听 - 支持空格键翻转flashcard (2024-12-19 15:30:00)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 检查是否在输入框中，如果是则不处理空格键
+      const target = event.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
+        return
+      }
+
+      if (event.code === 'Space') {
+        event.preventDefault() // 阻止默认的空格键行为（页面滚动）
+        handleFlip()
+      }
+    }
+
+    // 添加事件监听器
+    document.addEventListener('keydown', handleKeyDown)
+
+    // 清理函数
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isFlipped]) // 依赖isFlipped状态
+
   const loadFlashcards = async () => {
     try {
       const currentUser = SessionManager.getCurrentUser()
@@ -503,7 +527,7 @@ export default function FlashCardPage() {
 
           {/* 滑动提示 */}
           <div className="text-center mt-4">
-            <p className="text-zinc-400 text-sm">👈 Swipe to navigate • Tap to flip 👆</p>
+            <p className="text-zinc-400 text-sm">👈 Swipe to navigate • Tap to flip • Spacebar to flip 👆</p>
           </div>
 
           {/* 学习统计 - 简化版本 */}
