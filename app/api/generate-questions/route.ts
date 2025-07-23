@@ -65,52 +65,93 @@ export async function POST(request: NextRequest) {
 
     const userWeaknesses = analyzeUserWeaknesses(userAnswers || [])
     
-    let prompt = `You are an expert SSAT/SAT test question generator. Generate ${count} high-quality questions in JSON format that closely match the official SSAT/SAT style and difficulty.`
+    let prompt = `You are an expert SSAT (Secondary School Admission Test) question generation engine. Your SOLE aim is to create ${count} high-quality, authentic SSAT-style questions in a strict JSON format, based PRIMARILY on the context provided.
 
-    if (contextContent) {
-      prompt += `
+## --------------------
+## ❗ CORE DIRECTIVE ❗
+## --------------------
+**HIGHEST PRIORITY**: You MUST base the generated questions on the **[CONTEXT FROM RAG]** provided below. This context contains vectorized excerpts from official SSAT materials. Your task is to use these specific passages, vocabulary, and problem structures to create new questions. Do NOT generate questions from your general knowledge if relevant context is available.
 
-## UPLOADED STUDY MATERIALS:
-${contextContent.substring(0, 3000)}${contextContent.length > 3000 ? '\n... (content truncated for length)' : ''}
+## --------------------
+## SSAT STYLE GUIDE & RULES
+## --------------------
+You MUST adhere to the following style guide, which is derived from official SSAT standards.
 
-## USER PERFORMANCE ANALYSIS:
+1.  **Vocabulary**:
+    *   **Synonyms**: A single capitalized word followed by five single-word choices. The correct answer is the closest synonym.
+    *   **Analogies**: A pair of capitalized words with a clear logical relationship (e.g., Part:Whole, Cause:Effect, Type:Kind). The answer is the pair with the most similar relationship.
+
+2.  **Reading Comprehension**:
+    *   **Passage Style**: Short, dense passages (150-300 words) from literature, humanities, and science.
+    *   **Question Types**: Focus on Main Idea, Inference, Author's Tone, Vocabulary in Context, and Specific Detail.
+
+3.  **Quantitative (Math)**:
+    *   **Format**: Word problems testing conceptual understanding are preferred over simple calculations.
+    *   **Content**: Pre-algebra, Algebra I, Geometry (areas, angles, coordinates), Data Analysis (charts, mean, median), and Probability.
+
+4.  **Writing Sample**:
+    *   **Format**: Provide a thought-provoking, open-ended prompt that requires the user to form an argument or narrative supported by examples. Avoid simple "what is your favorite" questions.
+
+## --------------------
+## ⭐ GOLDEN EXAMPLES (Your output MUST match this style and quality) ⭐
+## --------------------
+
+**1. Vocabulary (Analogy) Example:**
+{
+  "question": "MICROSCOPE : SEE ::",
+  "options": { "A": "LOUDSPEAKER : HEAR", "B": "CAMERA : RECORD", "C": "TELESCOPE : MAGNIFY", "D": "SONG : LISTEN", "E": "BANDAGE : HEAL" },
+  "answer": "A",
+  "metadata": {
+    "questionType": "Vocabulary-Analogy", "difficulty": "Medium", "keyConcept": "Tool:Function Relationship",
+    "explanation": "A MICROSCOPE is a tool used to SEE things that are too small. A LOUDSPEAKER is a tool used to HEAR sounds that are too quiet. This 'Tool for Enhancing a Sense' relationship is the strongest match. While a telescope magnifies, its primary function is to see distant objects, making 'HEAR' a more parallel verb to 'SEE'."
+  }
+}
+
+**2. Reading (Inference) Example:**
+{
+  "question": "Based on the passage, which of the following can be inferred about the author's attitude toward the subject?",
+  "options": { "A": "Skeptical disapproval", "B": "Cautious optimism", "C": "Enthusiastic endorsement", "D": "Objective neutrality", "E": "Resigned acceptance" },
+  "answer": "B",
+  "passage": "While the new technology shows promise, researchers emphasize the need for extensive testing before implementation. The potential benefits are significant, but we must proceed carefully to ensure safety and effectiveness.",
+  "metadata": {
+    "questionType": "Reading-Inference", "difficulty": "Medium", "keyConcept": "Author's Tone and Attitude",
+    "explanation": "The author uses phrases like 'shows promise' and 'potential benefits are significant' indicating optimism, but also emphasizes 'need for extensive testing' and 'proceed carefully,' showing caution. This combination indicates cautious optimism."
+  }
+}
+
+**3. Quantitative (Math) Example:**
+{
+  "question": "A rectangular garden has a length of 12 feet and a width of 5 feet. A fence is to be built around the garden, and a gate 3 feet wide will be installed. If the fencing costs $10 per foot, what is the total cost of the fencing required?",
+  "options": { "A": "$310", "B": "$340", "C": "$570", "D": "$600", "E": "$630" },
+  "answer": "A",
+  "metadata": {
+    "questionType": "Math-Geometry", "difficulty": "Easy", "keyConcept": "Perimeter and Problem Solving",
+    "explanation": "First, calculate the total perimeter of the garden: P = 2 * (length + width) = 2 * (12 + 5) = 2 * 17 = 34 feet. The fence will cover the entire perimeter except for the 3-foot gate. So, the length of the fencing needed is 34 - 3 = 31 feet. The total cost is the length of the fencing multiplied by the cost per foot: 31 feet * $10/foot = $310."
+  }
+}
+
+**4. Writing Sample Example:**
+{
+  "question": "Is it more important to be a good listener or a good speaker? Support your position with examples from your own experience, history, or literature.",
+  "options": {}, "answer": null,
+  "metadata": { "questionType": "Writing-Prompt", "difficulty": "N/A", "keyConcept": "Argumentation and Support" }
+}
+
+## --------------------
+## 🎯 GENERATION TASK 🎯
+## --------------------
+
+### [CONTEXT FROM RAG]:
+${contextContent || 'No specific context provided - generate standard SSAT questions targeting user weaknesses.'}
+
+### [USER PERFORMANCE ANALYSIS]:
 ${userWeaknesses}
 
-## QUESTION GENERATION REQUIREMENTS:
-
-**PRIORITY 1 - Use Uploaded Materials:**
-- Extract key vocabulary words from the uploaded content for vocabulary questions
-- Use passages or concepts from the materials for reading comprehension questions
-- Base math word problems on scenarios mentioned in the materials when possible
-- Reference specific facts, ideas, or examples from the uploaded content
-
-**PRIORITY 2 - SSAT Format Adherence:**
-- Vocabulary: Test word meaning, synonyms, analogies in context
-- Reading: Ask about main ideas, inference, author's tone, literary devices
-- Math: Include algebra, geometry, data analysis with clear problem-solving steps
-- Writing: Test grammar, sentence structure, paragraph organization
-
-**PRIORITY 3 - User-Targeted Difficulty:**
-Focus extra attention on areas identified as weak: ${userWeaknesses}`
-    } else {
-      prompt += `
-
-## NO UPLOADED MATERIALS - GENERATE STANDARD SSAT QUESTIONS
-
-## USER PERFORMANCE ANALYSIS:
-${userWeaknesses}
-
-## QUESTION GENERATION REQUIREMENTS:
-Generate authentic SSAT-style questions covering:
-- **Vocabulary**: Advanced words typical for grades 8-11 with context clues
-- **Reading**: Passages with main idea, inference, and literary analysis questions  
-- **Math**: Pre-algebra through geometry problems similar to actual SSAT
-- **Writing**: Grammar and usage questions testing standard conventions
-
-Focus on areas where the user needs improvement: ${userWeaknesses}`
-    }
-
-    prompt += `
+### [FINAL INSTRUCTIONS]:
+1.  Generate **${count}** questions.
+2.  **PRIORITY #1**: Base your questions **DIRECTLY** on the provided **[CONTEXT FROM RAG]**. Use its text for reading passages, its words for vocabulary, and its scenarios for math problems.
+3.  **PRIORITY #2**: If the context is insufficient for a certain question type, generate a standard question but ensure it targets the user's weak areas: **${userWeaknesses}**.
+4.  **STRICTLY** follow the JSON format and style of the **Golden Examples**. Every question MUST have a detailed \`explanation\`.
 
 ## OUTPUT FORMAT (JSON only - no markdown):
 {
@@ -118,32 +159,22 @@ Focus on areas where the user needs improvement: ${userWeaknesses}`
     {
       "id": "q1",
       "type": "vocabulary|reading|math|writing",
-      "question": "Actual question text exactly as it would appear on the SSAT",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correctAnswer": "Option A",
-      "explanation": "Clear explanation of why the answer is correct and others are wrong",
+      "question": "Question text exactly as it would appear on the SSAT",
+      "options": {"A": "Option A", "B": "Option B", "C": "Option C", "D": "Option D", "E": "Option E"},
+      "correctAnswer": "A",
+      "explanation": "Detailed explanation of why the answer is correct and others are wrong",
       "difficulty": "easy|medium|hard",
       "passage": "Include only for reading questions - the passage text",
-      "tags": ["keyword1", "keyword2"]
+      "tags": ["keyword1", "keyword2"],
+      "metadata": {
+        "questionType": "Specific-Type",
+        "keyConcept": "Main concept being tested"
+      }
     }
   ]
 }
 
-## EXAMPLES OF GOOD SSAT QUESTIONS:
-
-**Vocabulary Example:**
-"The politician's speech was so VERBOSE that many audience members left before it ended. VERBOSE most nearly means:"
-A) Brief  B) Wordy  C) Unclear  D) Persuasive
-
-**Reading Example:** 
-[Passage about nature/history/science] "The author's primary purpose in this passage is to:"
-A) Entertain readers with anecdotes  B) Argue for policy changes  C) Explain a scientific concept  D) Compare different viewpoints
-
-**Math Example:**
-"If 3x + 7 = 22, what is the value of x - 4?"
-A) 1  B) 3  C) 5  D) 11
-
-Generate exactly ${count} questions with this level of quality and authenticity.`
+Begin generation.`
 
     // 首先尝试AI生成，如果失败使用备用题目
     let aiResponse: string
