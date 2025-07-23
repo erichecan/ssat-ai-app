@@ -88,18 +88,48 @@ export async function GET(
           // 3. 合并vocabulary-focused和AI题目
           questions = [...vocabQuestions, ...aiQuestions]
           
-          // 4. 如果题目不够，用静态question bank补充
-          if (questions.length < 10) {
-            const remainingCount = 10 - questions.length
-            const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount)
-            questions.push(...staticQuestions)
-            console.log('Added', staticQuestions.length, 'static questions as fallback')
+          // 4. 如果题目不够，用静态question bank补充 - 修复题目数量问题
+          const targetCount = 20 // 确保生成20道题
+          if (questions.length < targetCount) {
+            const remainingCount = targetCount - questions.length
+            console.log(`Need ${remainingCount} more questions to reach target of ${targetCount}`)
+            
+            // 尝试从多个来源获取题目
+            let additionalQuestions: any[] = []
+            
+            // 首先尝试从question bank获取
+            const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount + 5) // 多获取一些以防重复
+            additionalQuestions.push(...staticQuestions)
+            
+            // 如果还不够，尝试生成更多vocabulary题目
+            if (additionalQuestions.length < remainingCount) {
+              const moreVocabCount = remainingCount - additionalQuestions.length
+              const moreVocabQuestions = filterQuestions('vocabulary', 'medium', undefined, moreVocabCount)
+              additionalQuestions.push(...moreVocabQuestions)
+            }
+            
+            // 去重处理
+            const existingIds = new Set(questions.map(q => q.id))
+            const uniqueAdditional = additionalQuestions.filter(q => !existingIds.has(q.id))
+            
+            questions.push(...uniqueAdditional)
+            console.log(`Added ${uniqueAdditional.length} additional questions from static bank`)
           }
 
-          // 5. 随机打乱题目顺序，根据用户设置的数量
-          const targetCount = 20 // 默认20题，可以从session参数中获取
+          // 5. 随机打乱题目顺序，确保达到目标数量
           questions = questions.sort(() => Math.random() - 0.5).slice(0, targetCount)
-          console.log('Final question set:', questions.length, 'questions')
+          console.log(`Final question set: ${questions.length} questions (target: ${targetCount})`)
+          
+          // 6. 如果仍然不够，警告并补充
+          if (questions.length < targetCount) {
+            console.warn(`Warning: Only ${questions.length} questions available, but ${targetCount} were requested`)
+            const finalRemaining = targetCount - questions.length
+            const emergencyQuestions = filterQuestions(undefined, undefined, undefined, finalRemaining + 10)
+            const emergencyIds = new Set(questions.map(q => q.id))
+            const uniqueEmergency = emergencyQuestions.filter(q => !emergencyIds.has(q.id))
+            questions.push(...uniqueEmergency.slice(0, finalRemaining))
+            console.log(`Added ${Math.min(uniqueEmergency.length, finalRemaining)} emergency questions`)
+          }
           
         } catch (aiError) {
           console.log('Advanced question generation failed, falling back to question bank:', aiError)
@@ -257,14 +287,47 @@ export async function PUT(
 
           questions = [...vocabQuestions, ...aiQuestions]
           
-          const targetCount = 20 // 与GET部分保持一致
+          // 修复题目数量问题 - 与GET部分保持一致
+          const targetCount = 20
           if (questions.length < targetCount) {
             const remainingCount = targetCount - questions.length
-            const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount)
-            questions.push(...staticQuestions)
+            console.log(`PUT: Need ${remainingCount} more questions to reach target of ${targetCount}`)
+            
+            // 尝试从多个来源获取题目
+            let additionalQuestions: any[] = []
+            
+            // 首先尝试从question bank获取
+            const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount + 5)
+            additionalQuestions.push(...staticQuestions)
+            
+            // 如果还不够，尝试生成更多vocabulary题目
+            if (additionalQuestions.length < remainingCount) {
+              const moreVocabCount = remainingCount - additionalQuestions.length
+              const moreVocabQuestions = filterQuestions('vocabulary', 'medium', undefined, moreVocabCount)
+              additionalQuestions.push(...moreVocabQuestions)
+            }
+            
+            // 去重处理
+            const existingIds = new Set(questions.map(q => q.id))
+            const uniqueAdditional = additionalQuestions.filter(q => !existingIds.has(q.id))
+            
+            questions.push(...uniqueAdditional)
+            console.log(`PUT: Added ${uniqueAdditional.length} additional questions`)
           }
 
           questions = questions.sort(() => Math.random() - 0.5).slice(0, targetCount)
+          console.log(`PUT: Final question set: ${questions.length} questions (target: ${targetCount})`)
+          
+          // 如果仍然不够，警告并补充
+          if (questions.length < targetCount) {
+            console.warn(`PUT: Warning: Only ${questions.length} questions available, but ${targetCount} were requested`)
+            const finalRemaining = targetCount - questions.length
+            const emergencyQuestions = filterQuestions(undefined, undefined, undefined, finalRemaining + 10)
+            const emergencyIds = new Set(questions.map(q => q.id))
+            const uniqueEmergency = emergencyQuestions.filter(q => !emergencyIds.has(q.id))
+            questions.push(...uniqueEmergency.slice(0, finalRemaining))
+            console.log(`PUT: Added ${Math.min(uniqueEmergency.length, finalRemaining)} emergency questions`)
+          }
           
         } catch (error) {
           questions = filterQuestions(undefined, 'medium', undefined, 20)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateTextOptimized } from '@/lib/gemini-optimized'
+import { generateTextOptimized, generateTextFast } from '@/lib/gemini-optimized'
 import { generateTextWithCache } from '@/lib/ai-cache'
 import { supabase } from '@/lib/supabase'
 
@@ -328,26 +328,47 @@ Begin generation.`
     let aiResponse: string
     try {
       console.log('Calling optimized Gemini API with cache and retry mechanism...')
+      console.log(`Requesting ${count} questions with enhanced timeout handling...`)
+      
+      // 优化超时配置 - 针对题目生成场景
+      const enhancedTimeoutConfig = {
+        initialTimeout: 20000,  // 增加到20秒
+        retryTimeout: 25000,    // 增加到25秒
+        maxTimeout: 35000       // 增加到35秒
+      }
+      
+      const enhancedRetryConfig = {
+        maxRetries: 4,          // 增加重试次数
+        baseDelay: 2000,        // 增加基础延迟
+        maxDelay: 8000,         // 增加最大延迟
+        backoffMultiplier: 1.5  // 减少退避倍数，更快重试
+      }
+      
       aiResponse = await generateTextWithCache(
         prompt,
         generateTextOptimized,
-        15000,
-        {
-          maxRetries: 3,
-          baseDelay: 1000,
-          maxDelay: 5000
-        },
-        {
-          initialTimeout: 15000,
-          retryTimeout: 20000,
-          maxTimeout: 30000
-        },
+        20000, // 增加基础超时
+        enhancedRetryConfig,
+        enhancedTimeoutConfig,
         1800000 // 30分钟缓存
       )
-      console.log('AI response received, length:', aiResponse.length)
+      console.log('AI response received successfully, length:', aiResponse.length)
     } catch (aiError) {
-      console.log('AI generation failed, using fallback questions:', aiError)
-      return await getFallbackQuestions(count, userId, questionType)
+      console.log('AI generation failed with enhanced retry, using fallback questions:', aiError)
+      console.log('Error details:', {
+        message: aiError instanceof Error ? aiError.message : 'Unknown error',
+        stack: aiError instanceof Error ? aiError.stack : undefined
+      })
+      
+      // 尝试使用更快的AI生成方法
+      try {
+        console.log('Attempting fast AI generation as secondary fallback...')
+        aiResponse = await generateTextFast(prompt, 10000) // 10秒快速生成
+        console.log('Fast AI generation succeeded, length:', aiResponse.length)
+      } catch (fastError) {
+        console.log('Fast AI generation also failed, using static fallback:', fastError)
+        return await getFallbackQuestions(count, userId, questionType)
+      }
     }
     
     try {
@@ -447,6 +468,7 @@ function analyzeUserWeaknesses(userAnswers: any[]): string {
 // 动态备用题目生成函数
 async function getFallbackQuestions(count: number, userId: string, questionType: string) {
   console.log('AI generation failed, using dynamic fallback system...')
+  console.log(`Requested ${count} questions, ensuring adequate fallback coverage...`)
   
   try {
     // 调用动态题目生成API
@@ -456,7 +478,7 @@ async function getFallbackQuestions(count: number, userId: string, questionType:
       body: JSON.stringify({
         userId,
         questionType,
-        count,
+        count: Math.max(count, 20), // 确保至少生成20道题
         difficulty: 'mixed',
         avoidRecent: true
       })
@@ -464,12 +486,12 @@ async function getFallbackQuestions(count: number, userId: string, questionType:
 
     if (dynamicResponse.ok) {
       const dynamicData = await dynamicResponse.json()
-      if (dynamicData.success && dynamicData.questions) {
+      if (dynamicData.success && dynamicData.questions && dynamicData.questions.length >= count) {
         console.log(`Generated ${dynamicData.questions.length} dynamic fallback questions`)
         
         return NextResponse.json({
           success: true,
-          questions: dynamicData.questions.map((q: any) => ({
+          questions: dynamicData.questions.slice(0, count).map((q: any) => ({
             id: q.id,
             type: q.type,
             question: q.question,
@@ -485,7 +507,8 @@ async function getFallbackQuestions(count: number, userId: string, questionType:
             userWeaknesses: 'Using dynamic fallback questions due to AI timeout',
             isFallback: true,
             fallbackType: 'dynamic_varied',
-            originalRequestedCount: count
+            originalRequestedCount: count,
+            actualGeneratedCount: dynamicData.questions.length
           }
         })
       }
@@ -494,37 +517,111 @@ async function getFallbackQuestions(count: number, userId: string, questionType:
     console.error('Dynamic fallback failed:', dynamicError)
   }
 
-  // 如果动态系统也失败，使用最基础的静态备用
-  console.log('Dynamic fallback failed, using basic static questions...')
-  const basicQuestions = [
+  // 如果动态系统也失败，使用增强的静态备用
+  console.log('Dynamic fallback failed, using enhanced static questions...')
+  
+  // 增强的静态题目库 - 确保有足够的题目
+  const enhancedBasicQuestions = [
+    // Vocabulary questions
     {
       id: `basic_${Date.now()}_1`,
       type: 'vocabulary',
       question: "Which word means 'to make better'?",
-      options: ["Improve", "Worsen", "Ignore", "Complicate"],
+      options: ["Improve", "Worsen", "Ignore", "Complicate", "Simplify"],
       correctAnswer: "Improve",
       explanation: "Improve means to make or become better."
     },
     {
       id: `basic_${Date.now()}_2`,
+      type: 'vocabulary',
+      question: "What is the synonym for 'enormous'?",
+      options: ["Tiny", "Huge", "Average", "Small", "Medium"],
+      correctAnswer: "Huge",
+      explanation: "Enormous and huge both mean very large in size."
+    },
+    {
+      id: `basic_${Date.now()}_3`,
+      type: 'vocabulary',
+      question: "Which word means 'to examine carefully'?",
+      options: ["Ignore", "Scrutinize", "Forget", "Avoid", "Skip"],
+      correctAnswer: "Scrutinize",
+      explanation: "Scrutinize means to examine or inspect closely and thoroughly."
+    },
+    // Math questions
+    {
+      id: `basic_${Date.now()}_4`,
       type: 'math',
       question: "What is 25% of 80?",
-      options: ["20", "25", "30", "40"],
+      options: ["20", "25", "30", "40", "15"],
       correctAnswer: "20",
       explanation: "25% of 80 = 0.25 × 80 = 20"
+    },
+    {
+      id: `basic_${Date.now()}_5`,
+      type: 'math',
+      question: "If 3x + 7 = 22, what is x?",
+      options: ["3", "5", "7", "9", "11"],
+      correctAnswer: "5",
+      explanation: "3x + 7 = 22 → 3x = 15 → x = 5"
+    },
+    {
+      id: `basic_${Date.now()}_6`,
+      type: 'math',
+      question: "What is the area of a rectangle with length 8 and width 6?",
+      options: ["14", "28", "48", "56", "64"],
+      correctAnswer: "48",
+      explanation: "Area = length × width = 8 × 6 = 48"
+    },
+    // Reading questions
+    {
+      id: `basic_${Date.now()}_7`,
+      type: 'reading',
+      question: "What is the main idea of this passage?",
+      options: ["Technology is harmful", "Education is important", "Nature is beautiful", "Sports are fun", "Music is relaxing"],
+      correctAnswer: "Education is important",
+      explanation: "The passage emphasizes the importance of education in personal development.",
+      passage: "Education plays a crucial role in shaping individuals and societies. Through learning, people develop critical thinking skills, gain knowledge, and prepare for future challenges. The benefits of education extend beyond academic achievement to include personal growth and social responsibility."
+    },
+    {
+      id: `basic_${Date.now()}_8`,
+      type: 'reading',
+      question: "Based on the passage, what can be inferred about the author's opinion?",
+      options: ["Negative", "Positive", "Neutral", "Confused", "Uncertain"],
+      correctAnswer: "Positive",
+      explanation: "The author uses positive language and emphasizes benefits, indicating a positive opinion.",
+      passage: "Regular exercise provides numerous health benefits. It strengthens the heart, improves mood, and increases energy levels. Studies show that people who exercise regularly live longer and have better quality of life."
+    },
+    // Writing questions
+    {
+      id: `basic_${Date.now()}_9`,
+      type: 'writing',
+      question: "Which sentence is grammatically correct?",
+      options: ["Me and him went to the store", "Him and I went to the store", "He and I went to the store", "Me and he went to the store", "Him and me went to the store"],
+      correctAnswer: "He and I went to the store",
+      explanation: "When using compound subjects, use subject pronouns (he, I) rather than object pronouns (him, me)."
+    },
+    {
+      id: `basic_${Date.now()}_10`,
+      type: 'writing',
+      question: "What is the best way to combine these sentences: 'The weather was cold. We decided to stay inside.'",
+      options: ["The weather was cold, we decided to stay inside", "The weather was cold; we decided to stay inside", "The weather was cold and we decided to stay inside", "The weather was cold so we decided to stay inside", "The weather was cold, so we decided to stay inside"],
+      correctAnswer: "The weather was cold, so we decided to stay inside",
+      explanation: "Use a comma and coordinating conjunction 'so' to properly connect two independent clauses."
     }
   ]
 
-  // 随机选择和重复以满足count要求
+  // 确保生成足够数量的题目
   const selectedQuestions = []
   for (let i = 0; i < count; i++) {
-    const baseQuestion = basicQuestions[i % basicQuestions.length]
+    const baseQuestion = enhancedBasicQuestions[i % enhancedBasicQuestions.length]
     selectedQuestions.push({
       ...baseQuestion,
-      id: `basic_${Date.now()}_${i}`,
+      id: `basic_${Date.now()}_${i + 1}`,
       generatedAt: new Date().toISOString()
     })
   }
+  
+  console.log(`Generated ${selectedQuestions.length} enhanced static fallback questions`)
   
   return NextResponse.json({
     success: true,
@@ -532,9 +629,11 @@ async function getFallbackQuestions(count: number, userId: string, questionType:
     metadata: {
       generatedAt: new Date().toISOString(),
       basedOnUserMaterials: false,
-      userWeaknesses: 'Using basic static fallback due to system failures',
+      userWeaknesses: 'Using enhanced static fallback due to system failures',
       isFallback: true,
-      fallbackType: 'basic_static'
+      fallbackType: 'enhanced_static',
+      originalRequestedCount: count,
+      actualGeneratedCount: selectedQuestions.length
     }
   })
 }
