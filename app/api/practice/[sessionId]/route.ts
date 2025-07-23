@@ -14,6 +14,9 @@ declare global {
     score: number
     questions: any[]
     questionCount: number
+    startTime: string
+    endTime?: string
+    status: string
   }> | undefined
 }
 
@@ -111,7 +114,9 @@ export async function GET(
           currentIndex: 0,
           score: 0,
           questions: questions,
-          questionCount: questions.length
+          questionCount: questions.length,
+          startTime: new Date().toISOString(),
+          status: 'active'
         }
         
         if (!global.temporarySessions) {
@@ -134,10 +139,11 @@ export async function GET(
           time_limit: undefined
         },
         questions: sessionState.questions,
-        status: sessionState.currentIndex >= sessionState.questionCount ? 'completed' : 'active',
+        status: sessionState.status || (sessionState.currentIndex >= sessionState.questionCount ? 'completed' : 'active'),
         current_question_index: sessionState.currentIndex,
         score: sessionState.score,
-        start_time: new Date().toISOString(),
+        start_time: sessionState.startTime,
+        end_time: sessionState.endTime,
         created_at: new Date().toISOString()
       }
     }
@@ -268,7 +274,9 @@ export async function PUT(
           currentIndex: 0,
           score: 0,
           questions: questions,
-          questionCount: questions.length
+          questionCount: questions.length,
+          startTime: new Date().toISOString(),
+          status: 'active'
         }
         
         // 简单的内存缓存（生产环境应该使用Redis等）
@@ -340,6 +348,16 @@ export async function PUT(
         nextQuestion = questions[currentIndex]
       }
       
+      // 如果session完成，添加结束时间
+      if (status === 'completed' && !sessionState.endTime) {
+        sessionState.endTime = new Date().toISOString()
+        sessionState.status = 'completed'
+        if (!global.temporarySessions) {
+          global.temporarySessions = {}
+        }
+        global.temporarySessions[sessionId] = sessionState
+      }
+      
       return NextResponse.json({
         success: true,
         session: {
@@ -356,7 +374,8 @@ export async function PUT(
           status: status,
           current_question_index: currentIndex,
           score: score,
-          start_time: new Date().toISOString(),
+          start_time: sessionState.startTime || new Date().toISOString(),
+          end_time: sessionState.endTime,
           created_at: new Date().toISOString()
         },
         nextQuestion,
