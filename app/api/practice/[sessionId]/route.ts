@@ -26,32 +26,65 @@ export async function GET(
       let questions = []
       
       try {
-        // 首先尝试使用AI生成问题
-        console.log('Attempting to generate AI questions...')
+        // 1. 首先尝试生成基于flashcard的重点词汇题目
+        console.log('Attempting to generate vocabulary-focused questions...')
+        const vocabResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/questions/vocabulary-focused`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: 'demo-user-123',
+            count: 6 // 6道重点词汇题
+          })
+        })
+        
+        let vocabQuestions: any[] = []
+        if (vocabResponse.ok) {
+          const vocabData = await vocabResponse.json()
+          if (vocabData.success && vocabData.questions) {
+            vocabQuestions = vocabData.questions
+            console.log('Generated', vocabQuestions.length, 'vocabulary-focused questions')
+          }
+        }
+
+        // 2. 再尝试使用AI生成其他类型问题
+        console.log('Attempting to generate AI questions for mixed topics...')
         const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: 'demo-user-123', // 使用固定用户ID获取上传的材料
+            userId: 'demo-user-123',
             questionType: 'mixed',
-            count: 10
+            count: 4 // 4道其他题目
           })
         })
         
+        let aiQuestions: any[] = []
         if (generateResponse.ok) {
           const generateData = await generateResponse.json()
           if (generateData.success && generateData.questions) {
-            questions = generateData.questions
-            console.log('Successfully generated', questions.length, 'AI questions')
-          } else {
-            throw new Error('AI question generation failed')
+            aiQuestions = generateData.questions
+            console.log('Successfully generated', aiQuestions.length, 'AI questions')
           }
-        } else {
-          throw new Error('AI API request failed')
         }
+
+        // 3. 合并vocabulary-focused和AI题目
+        questions = [...vocabQuestions, ...aiQuestions]
+        
+        // 4. 如果题目不够，用静态question bank补充
+        if (questions.length < 10) {
+          const remainingCount = 10 - questions.length
+          const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount)
+          questions.push(...staticQuestions)
+          console.log('Added', staticQuestions.length, 'static questions as fallback')
+        }
+
+        // 5. 随机打乱题目顺序
+        questions = questions.sort(() => Math.random() - 0.5).slice(0, 10)
+        console.log('Final question set:', questions.length, 'questions')
+        
       } catch (aiError) {
-        console.log('AI generation failed, falling back to question bank:', aiError)
-        // 回退到静态question bank
+        console.log('Advanced question generation failed, falling back to question bank:', aiError)
+        // 完全回退到静态question bank
         questions = filterQuestions(undefined, 'medium', undefined, 10)
         console.log('Using fallback question bank with', questions.length, 'questions')
       }

@@ -114,23 +114,84 @@ export default function TestPage() {
         console.error('Error loading questions:', error)
         setError(error instanceof Error ? error.message : 'Failed to load questions')
         
-        // 如果AI生成失败，使用备用题目
+        // 如果AI生成失败，使用动态题目系统
+        console.log('AI generation failed, trying dynamic question system...')
+        try {
+          const dynamicResponse = await fetch('/api/questions/dynamic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: 'test-user',
+              questionType: 'mixed',
+              count: 10,
+              difficulty: 'mixed'
+            })
+          })
+
+          if (dynamicResponse.ok) {
+            const dynamicData = await dynamicResponse.json()
+            if (dynamicData.success && dynamicData.questions) {
+              const formattedQuestions = dynamicData.questions.map((q: any) => ({
+                id: q.id,
+                type: q.type,
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.correct_answer,
+                explanation: q.explanation,
+                passage: q.passage
+              }))
+              setQuestions(formattedQuestions)
+              console.log('Loaded dynamic questions successfully:', formattedQuestions.length)
+              return
+            }
+          }
+        } catch (dynamicError) {
+          console.error('Dynamic questions also failed:', dynamicError)
+        }
+
+        // 最终回退：使用questions API
+        console.log('Trying questions API as final fallback...')
+        try {
+          const questionsResponse = await fetch('/api/questions?dynamic=true&limit=10')
+          if (questionsResponse.ok) {
+            const questionsData = await questionsResponse.json()
+            if (questionsData.success && questionsData.questions) {
+              const formattedQuestions = questionsData.questions.map((q: any) => ({
+                id: q.id,
+                type: q.type,
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.correct_answer,
+                explanation: q.explanation,
+                passage: q.passage
+              }))
+              setQuestions(formattedQuestions)
+              console.log('Loaded questions from API:', formattedQuestions.length)
+              return
+            }
+          }
+        } catch (apiError) {
+          console.error('Questions API also failed:', apiError)
+        }
+
+        // 绝对最后的备用
+        console.log('All systems failed, using minimal static questions...')
         setQuestions([
           {
-            id: 'fallback_1',
+            id: `emergency_${Date.now()}_1`,
             type: 'vocabulary',
-            question: "Which word is closest in meaning to 'meticulous'?",
-            options: ["Careless", "Detailed", "Quick", "Loud"],
-            correctAnswer: "Detailed",
-            explanation: "Meticulous means showing great attention to detail; very careful and precise."
+            question: "What does 'enhance' mean?",
+            options: ["To decrease", "To improve", "To ignore", "To copy"],
+            correctAnswer: "To improve",
+            explanation: "Enhance means to improve or increase the quality, value, or extent of something."
           },
           {
-            id: 'fallback_2',
+            id: `emergency_${Date.now()}_2`,
             type: 'math',
-            question: "If x + 5 = 12, what is x?",
-            options: ["5", "7", "17", "12"],
-            correctAnswer: "7",
-            explanation: "To solve x + 5 = 12, subtract 5 from both sides: x = 7."
+            question: "What is 15% of 60?",
+            options: ["6", "9", "12", "15"],
+            correctAnswer: "9",
+            explanation: "15% of 60 = 0.15 × 60 = 9"
           }
         ])
       } finally {

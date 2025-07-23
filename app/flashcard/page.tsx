@@ -11,7 +11,11 @@ import {
   RotateCcw,
   Volume2,
   RefreshCw,
-  CheckSquare
+  CheckSquare,
+  Star,
+  Trophy,
+  Clock,
+  Target
 } from 'lucide-react'
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 import { Flashcard } from '@/lib/flashcard-bank'
@@ -22,7 +26,11 @@ interface FlashcardWithProgress extends Flashcard {
     times_seen: number
     times_correct: number
     difficulty_rating: number
+    is_mastered?: boolean
+    next_review?: string
+    interval_days?: number
   } | null
+  source?: 'static' | 'dynamic'
 }
 
 export default function FlashCardPage() {
@@ -34,6 +42,8 @@ export default function FlashCardPage() {
   const [showingAnswer, setShowingAnswer] = useState(true)  // 默认显示答案
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
+  const [showMastery, setShowMastery] = useState(false) // 显示掌握按钮
+  const [stats, setStats] = useState<any>(null)
   
   const currentCard = flashcards[currentIndex]
 
@@ -44,13 +54,21 @@ export default function FlashCardPage() {
   const loadFlashcards = async () => {
     try {
       const currentUser = SessionManager.getCurrentUser()
-      if (!currentUser) return
+      const userId = currentUser?.id || 'demo-user-123'
 
-      const response = await fetch(`/api/flashcards?userId=${currentUser.id}&limit=20&random=true`)
-      const result = await response.json()
+      // 优先加载需要复习的flashcards，如果没有则加载随机的
+      let response = await fetch(`/api/flashcards/enhanced?userId=${userId}&dueOnly=true&limit=20`)
+      let result = await response.json()
+
+      if (response.ok && result.flashcards.length === 0) {
+        // 如果没有需要复习的，加载随机的进行学习
+        response = await fetch(`/api/flashcards?userId=${userId}&limit=20&random=true`)
+        result = await response.json()
+      }
 
       if (response.ok) {
-        setFlashcards(result.flashcards)
+        setFlashcards(result.flashcards || [])
+        setStats(result.stats)
       } else {
         setError('Failed to load flashcards')
       }
@@ -113,6 +131,76 @@ export default function FlashCardPage() {
     setTimeout(() => {
       handleNext()
     }, 500)
+  }
+
+  const handleMaster = async () => {
+    if (!currentCard) return
+    
+    try {
+      const currentUser = SessionManager.getCurrentUser()
+      const userId = currentUser?.id || 'demo-user-123'
+
+      const response = await fetch('/api/flashcards/enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          flashcardId: currentCard.id,
+          action: 'master'
+        })
+      })
+
+      if (response.ok) {
+        // 更新当前卡片状态
+        const updatedFlashcards = [...flashcards]
+        if (updatedFlashcards[currentIndex]) {
+          if (updatedFlashcards[currentIndex].userProgress) {
+            updatedFlashcards[currentIndex].userProgress!.is_mastered = true
+          }
+        }
+        setFlashcards(updatedFlashcards)
+        
+        // 自动跳到下一张卡片
+        setTimeout(() => {
+          handleNext()
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Error mastering flashcard:', error)
+    }
+  }
+
+  const handleReview = async (quality: number) => {
+    if (!currentCard) return
+    
+    try {
+      const currentUser = SessionManager.getCurrentUser()
+      const userId = currentUser?.id || 'demo-user-123'
+
+      const response = await fetch('/api/flashcards/enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          flashcardId: currentCard.id,
+          action: 'review',
+          quality: quality, // 0-5 质量评分
+          isCorrect: quality >= 3
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Review updated:', result.message)
+        
+        // 自动跳到下一张卡片
+        setTimeout(() => {
+          handleNext()
+        }, 800)
+      }
+    } catch (error) {
+      console.error('Error reviewing flashcard:', error)
+    }
   }
 
   const handlePronounce = () => {
@@ -348,6 +436,14 @@ export default function FlashCardPage() {
               </div>
             )}
 
+            {/* 掌握状态指示器 */}
+            {currentCard?.userProgress?.is_mastered && (
+              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-lg">
+                <Trophy size={16} />
+                已掌握
+              </div>
+            )}
+
             {/* Flip Animation - positioned to not interfere with content flow */}
             <div 
               className="absolute inset-0 cursor-pointer rounded-3xl z-10"
@@ -359,6 +455,70 @@ export default function FlashCardPage() {
           <div className="text-center mt-4">
             <p className="text-zinc-400 text-sm">👈 Swipe to navigate • Tap to flip 👆</p>
           </div>
+
+          {/* 复习质量评分和掌握控制 */}
+          {showingAnswer && currentCard && (
+            <div className="mt-6 space-y-4">
+              {/* 复习质量评分 */}
+              <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm">
+                <h4 className="text-zinc-700 text-sm font-semibold mb-3 text-center">复习效果如何？</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => handleReview(1)}
+                    className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium hover:bg-red-100 transition-colors"
+                  >
+                    😰 很难
+                  </button>
+                  <button
+                    onClick={() => handleReview(3)}
+                    className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-700 text-xs font-medium hover:bg-yellow-100 transition-colors"
+                  >
+                    🤔 一般
+                  </button>
+                  <button
+                    onClick={() => handleReview(5)}
+                    className="p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-xs font-medium hover:bg-green-100 transition-colors"
+                  >
+                    😊 简单
+                  </button>
+                </div>
+              </div>
+
+              {/* 掌握控制 */}
+              {!currentCard?.userProgress?.is_mastered && (
+                <div className="text-center">
+                  <button
+                    onClick={handleMaster}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold rounded-xl shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                  >
+                    <Star size={16} />
+                    标记为已掌握
+                  </button>
+                  <p className="text-zinc-400 text-xs mt-2">已掌握的词汇不会再出现在复习中</p>
+                </div>
+              )}
+
+              {/* 学习统计 */}
+              {stats && (
+                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+                  <h4 className="text-blue-800 text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Target size={16} />
+                    学习进度
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <p className="text-blue-900 text-lg font-bold">{stats.dueForReview || 0}</p>
+                      <p className="text-blue-600 text-xs">待复习</p>
+                    </div>
+                    <div>
+                      <p className="text-green-600 text-lg font-bold">{stats.mastered || 0}</p>
+                      <p className="text-green-600 text-xs">已掌握</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
       </div>

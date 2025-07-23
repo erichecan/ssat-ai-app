@@ -153,7 +153,7 @@ Generate exactly ${count} questions with this level of quality and authenticity.
       console.log('AI response received, length:', aiResponse.length)
     } catch (aiError) {
       console.log('AI generation failed, using fallback questions:', aiError)
-      return getFallbackQuestions(count)
+      return await getFallbackQuestions(count, userId, questionType)
     }
     
     try {
@@ -248,65 +248,97 @@ function analyzeUserWeaknesses(userAnswers: any[]): string {
   return analysis
 }
 
-// 备用题目生成函数
-function getFallbackQuestions(count: number) {
-  const fallbackQuestions: Question[] = [
+// 动态备用题目生成函数
+async function getFallbackQuestions(count: number, userId: string, questionType: string) {
+  console.log('AI generation failed, using dynamic fallback system...')
+  
+  try {
+    // 调用动态题目生成API
+    const dynamicResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/questions/dynamic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        questionType,
+        count,
+        difficulty: 'mixed',
+        avoidRecent: true
+      })
+    })
+
+    if (dynamicResponse.ok) {
+      const dynamicData = await dynamicResponse.json()
+      if (dynamicData.success && dynamicData.questions) {
+        console.log(`Generated ${dynamicData.questions.length} dynamic fallback questions`)
+        
+        return NextResponse.json({
+          success: true,
+          questions: dynamicData.questions.map((q: any) => ({
+            id: q.id,
+            type: q.type,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correct_answer,
+            explanation: q.explanation,
+            passage: q.passage,
+            generatedAt: new Date().toISOString()
+          })),
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            basedOnUserMaterials: false,
+            userWeaknesses: 'Using dynamic fallback questions due to AI timeout',
+            isFallback: true,
+            fallbackType: 'dynamic_varied',
+            originalRequestedCount: count
+          }
+        })
+      }
+    }
+  } catch (dynamicError) {
+    console.error('Dynamic fallback failed:', dynamicError)
+  }
+
+  // 如果动态系统也失败，使用最基础的静态备用
+  console.log('Dynamic fallback failed, using basic static questions...')
+  const basicQuestions = [
     {
-      id: 'fallback_1',
+      id: `basic_${Date.now()}_1`,
       type: 'vocabulary',
-      question: "Which word is closest in meaning to 'abundant'?",
-      options: ["Scarce", "Plentiful", "Difficult", "Simple"],
-      correctAnswer: "Plentiful",
-      explanation: "Abundant means existing in large quantities; plentiful."
+      question: "Which word means 'to make better'?",
+      options: ["Improve", "Worsen", "Ignore", "Complicate"],
+      correctAnswer: "Improve",
+      explanation: "Improve means to make or become better."
     },
     {
-      id: 'fallback_2',
+      id: `basic_${Date.now()}_2`,
       type: 'math',
-      question: "If x + 8 = 15, what is x?",
-      options: ["7", "8", "15", "23"],
-      correctAnswer: "7",
-      explanation: "To solve x + 8 = 15, subtract 8 from both sides: x = 7."
-    },
-    {
-      id: 'fallback_3',
-      type: 'vocabulary',
-      question: "What does 'meticulous' mean?",
-      options: ["Careless", "Very careful and precise", "Fast", "Loud"],
-      correctAnswer: "Very careful and precise",
-      explanation: "Meticulous means showing great attention to detail; very careful and precise."
-    },
-    {
-      id: 'fallback_4',
-      type: 'reading',
-      question: "In the phrase 'a deafening silence,' what literary device is being used?",
-      options: ["Simile", "Metaphor", "Oxymoron", "Alliteration"],
-      correctAnswer: "Oxymoron",
-      explanation: "An oxymoron combines contradictory terms. 'Deafening silence' combines loud (deafening) with quiet (silence)."
-    },
-    {
-      id: 'fallback_5',
-      type: 'math',
-      question: "What is 30% of 50?",
-      options: ["15", "20", "25", "30"],
-      correctAnswer: "15",
-      explanation: "30% of 50 = 0.30 × 50 = 15."
+      question: "What is 25% of 80?",
+      options: ["20", "25", "30", "40"],
+      correctAnswer: "20",
+      explanation: "25% of 80 = 0.25 × 80 = 20"
     }
   ]
 
-  const selectedQuestions = fallbackQuestions.slice(0, count)
+  // 随机选择和重复以满足count要求
+  const selectedQuestions = []
+  for (let i = 0; i < count; i++) {
+    const baseQuestion = basicQuestions[i % basicQuestions.length]
+    selectedQuestions.push({
+      ...baseQuestion,
+      id: `basic_${Date.now()}_${i}`,
+      generatedAt: new Date().toISOString()
+    })
+  }
   
   return NextResponse.json({
     success: true,
-    questions: selectedQuestions.map((q, index) => ({
-      ...q,
-      id: `fallback_${Date.now()}_${index}`,
-      generatedAt: new Date().toISOString()
-    })),
+    questions: selectedQuestions,
     metadata: {
       generatedAt: new Date().toISOString(),
       basedOnUserMaterials: false,
-      userWeaknesses: 'Using fallback questions due to AI timeout',
-      isFallback: true
+      userWeaknesses: 'Using basic static fallback due to system failures',
+      isFallback: true,
+      fallbackType: 'basic_static'
     }
   })
 }
