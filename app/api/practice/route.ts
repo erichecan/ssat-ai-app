@@ -59,57 +59,121 @@ export async function POST(request: NextRequest) {
         .sort(() => Math.random() - 0.5)
         .slice(0, questionCount || 10)
     } else {
-      // 处理多个科目选择
-      const subjectTypeMap: Record<string, string> = {
-        'Reading Comprehension': 'reading',
-        'Math': 'math', 
-        'Vocabulary': 'vocabulary',
-        'Essay Writing': 'writing'
-      }
+      // Custom Practice: 优先使用AI生成题目
+      const targetCount = questionCount || 10
       
-      // 如果选择了多个科目，按比例分配问题
-      if (subjects && subjects.length > 0) {
-        const targetCount = questionCount || 10
-        const questionsPerSubject = Math.ceil(targetCount / subjects.length)
+      try {
+        console.log('Attempting to generate', targetCount, 'AI questions for custom practice...')
         
-        subjects.forEach((subject: string) => {
-          const questionType = subjectTypeMap[subject]
-          if (questionType) {
-            const subjectQuestions = filterQuestions(
-              questionType,
-              difficulty || 'medium',
-              undefined,
-              questionsPerSubject
-            )
-            questions.push(...subjectQuestions)
-          }
+        // 调用AI生成题目 API
+        const aiResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userId,
+            questionType: 'mixed',
+            count: targetCount
+          })
         })
         
-        // 如果总数超过要求，随机选择
-        if (questions.length > targetCount) {
-          questions = questions.sort(() => Math.random() - 0.5).slice(0, targetCount)
+        if (aiResponse.ok) {
+          const aiData = await aiResponse.json()
+          if (aiData.success && aiData.questions && aiData.questions.length > 0) {
+            // 将AI生成的问题转换为需要的格式
+            questions = aiData.questions.map((q: any) => ({
+              id: q.id,
+              type: q.type,
+              question: q.question,
+              options: Array.isArray(q.options) ? q.options : Object.values(q.options || {}),
+              correct_answer: q.correctAnswer || q.correct_answer,
+              explanation: q.explanation,
+              difficulty: q.difficulty || 'medium',
+              topic: q.metadata?.keyConcept || q.type,
+              passage: q.passage,
+              tags: q.tags || [q.type],
+              time_limit: 90,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }))
+            
+            console.log(`Successfully generated ${questions.length} AI questions for custom practice`)
+          } else {
+            throw new Error('AI API returned empty or invalid questions')
+          }
+        } else {
+          throw new Error(`AI API failed with status: ${aiResponse.status}`)
+        }
+      } catch (aiError) {
+        console.warn('AI generation failed, falling back to static questions:', aiError)
+        
+        // 如果AI生成失败，使用静态题目库作为备用
+        const subjectTypeMap: Record<string, string> = {
+          'Reading Comprehension': 'reading',
+          'Math': 'math', 
+          'Vocabulary': 'vocabulary',
+          'Essay Writing': 'writing'
         }
         
-        // 如果题目不够，用不同难度的题目补充
-        if (questions.length < targetCount) {
-          const remainingCount = targetCount - questions.length
-          const additionalQuestions = filterQuestions(
-            undefined,
-            difficulty || 'medium',
-            undefined,
-            remainingCount
-          )
-          questions.push(...additionalQuestions)
+        if (subjects && subjects.length > 0) {
+          const questionsPerSubject = Math.ceil(targetCount / subjects.length)
+          
+          subjects.forEach((subject: string) => {
+            const questionType = subjectTypeMap[subject]
+            if (questionType) {
+              const subjectQuestions = filterQuestions(
+                questionType,
+                difficulty || 'medium',
+                undefined,
+                questionsPerSubject
+              )
+              questions.push(...subjectQuestions)
+            }
+          })
+        } else {
+          // 如果没有指定科目，使用所有可用题目
+          questions = filterQuestions(undefined, difficulty || 'medium', undefined, targetCount)
         }
+        
+        // 去重处理
+        const uniqueQuestions = Array.from(
+          new Map(questions.map(q => [q.id, q])).values()
+        )
+        
+        // 如果题目仍然不够，添加更多题目不考虑科目限制
+        if (uniqueQuestions.length < targetCount) {
+          const existingIds = new Set(uniqueQuestions.map(q => q.id))
+          const allQuestions = filterQuestions(undefined, undefined, undefined, 100)
+          const additionalQuestions = allQuestions
+            .filter(q => !existingIds.has(q.id))
+            .slice(0, targetCount - uniqueQuestions.length)
+          uniqueQuestions.push(...additionalQuestions)
+        }
+        
+        // 随机排序
+        const shuffleArray = (array: any[]) => {
+          const result = [...array]
+          for (let i = result.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[result[i], result[j]] = [result[j], result[i]]
+          }
+          return result
+        }
+        
+        questions = shuffleArray(uniqueQuestions).slice(0, targetCount)
       }
       
-      console.log('Generated', questions.length, 'questions for custom practice from subjects:', subjects)
+      console.log('Generated', questions.length, 'questions for custom practice (AI + fallback)')
     }
 
     // 确保至少有一些问题
     if (questions.length === 0) {
       console.error('No questions generated! Using fallback questions...')
-      questions = filterQuestions(undefined, 'medium', undefined, Math.min(questionCount || 10, 5))
+      questions = filterQuestions(undefined, undefined, undefined, Math.min(questionCount || 10, 16))
+    }
+    
+    // 如果仍然题目数量不足，警告用户
+    if (questions.length < (questionCount || 10)) {
+      console.warn(`Warning: Only ${questions.length} questions available, but ${questionCount || 10} were requested. Consider adding more questions to the question bank.`)
     }
 
     const sessionId = `practice_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`

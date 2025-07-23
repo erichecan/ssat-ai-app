@@ -285,6 +285,238 @@ export const questionBank: Question[] = [
     time_limit: 120,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
+  },
+
+  // Additional Vocabulary Questions
+  {
+    id: 'vocab_007',
+    type: 'vocabulary',
+    question: "What does 'eloquent' mean?",
+    options: [
+      "Speaking or writing fluently and persuasively.",
+      "Speaking quietly and hesitantly.",
+      "Using complex and difficult words.",
+      "Avoiding direct communication."
+    ],
+    correct_answer: "Speaking or writing fluently and persuasively.",
+    explanation: "Eloquent means speaking or writing fluently and persuasively. It comes from the Latin 'eloqui', meaning 'to speak out'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['communication', 'latin_roots'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_008',
+    type: 'vocabulary',
+    question: "Which of the following best defines 'pragmatic'?",
+    options: [
+      "Dealing with things sensibly and realistically.",
+      "Being extremely idealistic and dreamy.",
+      "Acting in a dramatic and emotional way.",
+      "Following strict rules without exception."
+    ],
+    correct_answer: "Dealing with things sensibly and realistically.",
+    explanation: "Pragmatic means dealing with things sensibly and realistically in a way that is based on practical rather than idealistic considerations.",
+    difficulty: 'hard',
+    topic: 'vocabulary',
+    tags: ['philosophy', 'practical'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_009',
+    type: 'vocabulary',
+    question: "What does 'tenacious' mean?",
+    options: [
+      "Holding fast; persistent and determined.",
+      "Easily giving up when faced with challenges.",
+      "Acting in a careless and reckless manner.",
+      "Being extremely flexible and adaptable."
+    ],
+    correct_answer: "Holding fast; persistent and determined.",
+    explanation: "Tenacious means holding fast, persistent and determined. It comes from the Latin 'tenax', meaning 'holding fast'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['persistence', 'latin_roots'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_010',
+    type: 'vocabulary',
+    question: "Which word means 'to make less severe or harsh'?",
+    options: [
+      "Mitigate",
+      "Aggravate", 
+      "Complicate",
+      "Accelerate"
+    ],
+    correct_answer: "Mitigate",
+    explanation: "Mitigate means to make less severe, serious, or painful. It comes from the Latin 'mitigatus', meaning 'made mild'.",
+    difficulty: 'hard',
+    topic: 'vocabulary',
+    tags: ['latin_roots', 'reduction'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+
+  // Additional Math Questions
+  {
+    id: 'math_006',
+    type: 'math',
+    question: "If 3x + 7 = 22, what is the value of x?",
+    options: ["3", "5", "7", "15"],
+    correct_answer: "5",
+    explanation: "To solve 3x + 7 = 22: First subtract 7 from both sides: 3x = 15. Then divide both sides by 3: x = 5.",
+    difficulty: 'easy',
+    topic: 'algebra',
+    tags: ['equations', 'solving'],
+    time_limit: 90,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_007',
+    type: 'math',
+    question: "What is 25% of 80?",
+    options: ["15", "20", "25", "30"],
+    correct_answer: "20",
+    explanation: "25% of 80 = 0.25 × 80 = 20. Alternatively, 25% = 1/4, so 1/4 × 80 = 20.",
+    difficulty: 'easy',
+    topic: 'percentages',
+    tags: ['percentage', 'calculation'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_008',
+    type: 'math',
+    question: "If a triangle has angles of 45° and 60°, what is the third angle?",
+    options: ["75°", "85°", "90°", "105°"],
+    correct_answer: "75°",
+    explanation: "The sum of angles in a triangle is always 180°. So the third angle = 180° - 45° - 60° = 75°.",
+    difficulty: 'medium',
+    topic: 'geometry',
+    tags: ['triangles', 'angles'],
+    time_limit: 90,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_009',
+    type: 'math',
+    question: "What is the area of a rectangle with length 8 and width 5?",
+    options: ["13", "26", "40", "80"],
+    correct_answer: "40",
+    explanation: "The area of a rectangle = length × width = 8 × 5 = 40 square units.",
+    difficulty: 'easy',
+    topic: 'geometry',
+    tags: ['area', 'rectangle'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_010',
+    type: 'math',
+    question: "If y = 2x + 3 and x = 4, what is the value of y?",
+    options: ["8", "9", "11", "14"],
+    correct_answer: "11",
+    explanation: "Substitute x = 4 into the equation: y = 2(4) + 3 = 8 + 3 = 11.",
+    difficulty: 'medium',
+    topic: 'algebra',
+    tags: ['substitution', 'linear_equations'],
+    time_limit: 90,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+
+  // Additional Reading Questions  
+  {
+    id: 'reading_004',
+    type: 'reading',
+    question: "Based on the passage, what can be inferred about the character's motivation?",
+    passage: "Sarah stared at the acceptance letter for hours, her hands trembling slightly. The prestigious university had accepted her, but the scholarship offer was less than she had hoped. She thought of her parents working double shifts at the factory, their faces lined with exhaustion but always encouraging her dreams. The decision that had seemed so clear now felt impossibly complex.",
+    options: [
+      "She is torn between financial concerns and her educational aspirations.",
+      "She is simply excited about being accepted to the university.",
+      "She wants to work at a factory like her parents.",
+      "She is ungrateful for the scholarship offer she received."
+    ],
+    correct_answer: "She is torn between financial concerns and her educational aspirations.",
+    explanation: "The passage shows Sarah's internal conflict: she's been accepted to her dream university, but the insufficient scholarship and awareness of her parents' financial struggles create a complex decision between her aspirations and practical concerns.",
+    difficulty: 'medium',
+    topic: 'inference',
+    tags: ['character_motivation', 'inference'],
+    time_limit: 120,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'reading_005',
+    type: 'reading',
+    question: "What is the main theme of this passage?",
+    passage: "The old library stood like a sentinel in the town square, its weathered brick facade telling stories of generations who had sought knowledge within its walls. Despite the rise of digital media, Mrs. Henderson noticed that teenagers still gathered there after school, not just for homework, but for the community it provided—a quiet sanctuary where different worlds collided and friendships were born over shared books.",
+    options: [
+      "The enduring value of physical spaces for learning and community.",
+      "The superiority of digital media over traditional books.", 
+      "The historical significance of old buildings.",
+      "The social problems facing modern teenagers."
+    ],
+    correct_answer: "The enduring value of physical spaces for learning and community.",
+    explanation: "The passage emphasizes how the library continues to serve as an important community space despite technological changes, highlighting its lasting value for bringing people together and fostering connections.",
+    difficulty: 'medium',
+    topic: 'theme',
+    tags: ['main_idea', 'community'],
+    time_limit: 120,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+
+  // Additional Writing Questions
+  {
+    id: 'writing_003',
+    type: 'writing',
+    question: "Which sentence is grammatically correct?",
+    options: [
+      "Neither the teacher nor the students was prepared for the surprise quiz.",
+      "Neither the teacher nor the students were prepared for the surprise quiz.",
+      "Neither the teacher or the students were prepared for the surprise quiz.",
+      "Neither the teacher and the students was prepared for the surprise quiz."
+    ],
+    correct_answer: "Neither the teacher nor the students were prepared for the surprise quiz.",
+    explanation: "With 'neither...nor' constructions, the verb agrees with the subject closest to it. Since 'students' (plural) is closer to the verb than 'teacher' (singular), we use 'were' (plural verb).",
+    difficulty: 'hard',
+    topic: 'grammar',
+    tags: ['subject_verb_agreement', 'correlative_conjunctions'],
+    time_limit: 90,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'writing_004',
+    type: 'writing',
+    question: "Choose the best revision for this sentence: 'The book that I read it was very interesting.'",
+    options: [
+      "The book that I read was very interesting.",
+      "The book which I read it was very interesting.",
+      "The book that I read it were very interesting.",
+      "The book I read it was very interesting and good."
+    ],
+    correct_answer: "The book that I read was very interesting.",
+    explanation: "The original sentence has a redundant pronoun 'it'. When using a relative pronoun like 'that', you don't need an additional pronoun referring to the same noun.",
+    difficulty: 'medium',
+    topic: 'grammar',
+    tags: ['relative_pronouns', 'redundancy'],
+    time_limit: 90,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ]
 
@@ -309,8 +541,17 @@ export function filterQuestions(
     filtered = filtered.filter(q => q.topic === topic)
   }
 
-  // 随机排序并限制数量
-  const shuffled = filtered.sort(() => Math.random() - 0.5)
+  // 使用Fisher-Yates洗牌算法进行真正的随机排序
+  const shuffleArray = (array: Question[]) => {
+    const result = [...array]
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[result[i], result[j]] = [result[j], result[i]]
+    }
+    return result
+  }
+  
+  const shuffled = shuffleArray(filtered)
   return shuffled.slice(0, limit)
 }
 

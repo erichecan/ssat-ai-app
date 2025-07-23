@@ -7,8 +7,7 @@ import { ArrowLeft, BookOpen, House, Brain, User } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 export default function PracticePage() {
-  const [practiceType, setPracticeType] = useState<'adaptive' | 'custom'>('adaptive');
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(['Reading Comprehension']);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>(['Vocabulary']);
   const [difficulty, setDifficulty] = useState('medium');
   const [questionCount, setQuestionCount] = useState(20);
   const [isCreating, setIsCreating] = useState(false);
@@ -34,13 +33,6 @@ export default function PracticePage() {
     }
   };
 
-  // 当切换到Custom模式时，确保至少有一个科目被选中 - 更新于 2024-01-21 02:30:00
-  const handlePracticeTypeChange = (type: 'adaptive' | 'custom') => {
-    setPracticeType(type);
-    if (type === 'custom' && selectedSubjects.length === 0) {
-      setSelectedSubjects(['Reading Comprehension']);
-    }
-  };
 
   const handleStartPractice = async () => {
     setIsCreating(true);
@@ -66,11 +58,11 @@ export default function PracticePage() {
       const user = SessionManager.getCurrentUser()!;
       const sessionData = {
         userId: user.id,
-        sessionType: practiceType,
-        subjects: practiceType === 'custom' ? selectedSubjects : ['all'],
-        difficulty: practiceType === 'custom' ? difficulty : 'adaptive',
-        questionCount: practiceType === 'custom' ? questionCount : 10,
-        timeLimit: practiceType === 'custom' ? questionCount * 90 : undefined // 90 seconds per question
+        sessionType: 'custom',
+        subjects: selectedSubjects,
+        difficulty: difficulty,
+        questionCount: questionCount,
+        timeLimit: questionCount * 90 // 90 seconds per question
       };
 
       console.log('Creating session with data:', sessionData);
@@ -118,42 +110,20 @@ export default function PracticePage() {
             <ArrowLeft size={24} />
           </Link>
           <h2 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">
-            Practice
+            AI Practice
           </h2>
         </div>
 
-        {/* Practice Type Selection */}
-        <h3 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
-          Choose your practice
-        </h3>
-        <div className="flex px-4 py-3">
-          <div className="flex h-10 flex-1 items-center justify-center rounded-lg bg-[#e7edf3] p-1">
-            <label className="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-slate-50 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0e141b] text-[#4e7397] text-sm font-medium leading-normal">
-              <span className="truncate">Adaptive</span>
-              <input
-                type="radio"
-                name="practiceType"
-                className="invisible w-0"
-                value="adaptive"
-                checked={practiceType === 'adaptive'}
-                onChange={(e) => handlePracticeTypeChange(e.target.value as 'adaptive' | 'custom')}
-              />
-            </label>
-            <label className="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-slate-50 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0e141b] text-[#4e7397] text-sm font-medium leading-normal">
-              <span className="truncate">Custom</span>
-              <input
-                type="radio"
-                name="practiceType"
-                className="invisible w-0"
-                value="custom"
-                checked={practiceType === 'custom'}
-                onChange={(e) => handlePracticeTypeChange(e.target.value as 'adaptive' | 'custom')}
-              />
-            </label>
-          </div>
+        {/* AI Practice Description */}
+        <div className="px-4 py-3">
+          <h3 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] pb-2">
+            AI-Powered Vocabulary Practice
+          </h3>
+          <p className="text-[#4e7397] text-sm font-normal leading-normal">
+            Based on spaced repetition and your vocabulary progress, AI generates personalized SSAT-style questions to maximize your learning efficiency.
+          </p>
         </div>
 
-        {/* Practice Content */}
         {/* Error Message */}
         {error && (
           <div className="mx-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -161,38 +131,15 @@ export default function PracticePage() {
           </div>
         )}
 
-        {practiceType === 'adaptive' ? (
-          <>
-            <h3 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
-              Adaptive Practice
-            </h3>
-            <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              Based on your current level, we'll generate questions to help you improve your reading speed and question familiarity.
-            </p>
-            <div className="flex px-4 py-3 justify-end">
-              <button
-                onClick={handleStartPractice}
-                disabled={isCreating}
-                className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
-                  isCreating 
-                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-                    : 'bg-[#197fe5] text-slate-50 hover:bg-[#1668c7]'
-                }`}
-              >
-                <span className="truncate">
-                  {isCreating ? 'Creating...' : 'Start Practice'}
-                </span>
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <h3 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">
-              Custom Practice
-            </h3>
-            <p className="text-[#0e141b] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              Choose specific topics and difficulty levels for your practice session. Customize your learning experience.
-            </p>
+        {/* Practice Configuration */}
+        <div className="px-4 py-3">
+          <h4 className="text-[#0e141b] text-base font-medium leading-normal pb-2">
+            Practice Configuration
+          </h4>
+          <p className="text-[#4e7397] text-sm font-normal leading-normal pb-3">
+            Select topics and settings for your AI-generated practice session.
+          </p>
+        </div>
 
             {/* Subject Selection */}
             <div className="px-4 py-3">
@@ -247,23 +194,22 @@ export default function PracticePage() {
               </select>
             </div>
 
-            <div className="flex px-4 py-3 justify-end">
-              <button
-                onClick={handleStartPractice}
-                disabled={isCreating || selectedSubjects.length === 0}
-                className={`flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] ${
-                  isCreating || selectedSubjects.length === 0
-                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-[#197fe5] text-slate-50 hover:bg-[#1668c7]'
-                }`}
-              >
-                <span className="truncate">
-                  {isCreating ? 'Creating...' : 'Start Custom Practice'}
-                </span>
-              </button>
-            </div>
-          </>
-        )}
+        {/* Start Practice Button */}
+        <div className="flex px-4 py-6 justify-center">
+          <button
+            onClick={handleStartPractice}
+            disabled={isCreating || selectedSubjects.length === 0}
+            className={`flex min-w-[200px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 text-base font-bold leading-normal tracking-[0.015em] ${
+              isCreating || selectedSubjects.length === 0
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-[#197fe5] text-slate-50 hover:bg-[#1668c7] shadow-lg'
+            }`}
+          >
+            <span className="truncate">
+              {isCreating ? 'Generating AI Questions...' : 'Start AI Practice'}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Bottom Navigation */}

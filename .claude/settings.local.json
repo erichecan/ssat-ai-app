@@ -28,7 +28,10 @@
       "Bash(npx:*)",
       "Bash(git commit:*)",
       "Bash(npm run lint)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(psql:*)",
+      "Bash(supabase db push:*)",
+      "Bash(supabase link:*)"
     ],
     "deny": []
   }

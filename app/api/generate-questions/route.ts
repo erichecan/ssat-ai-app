@@ -41,14 +41,19 @@ export async function POST(request: NextRequest) {
       console.log('Found', knowledgeData?.length || 0, 'knowledge entries for user')
     }
 
-    // 获取用户的答题历史以了解弱点
+    // 获取用户的答题历史以了解弱点 - 使用正确的UUID格式
+    let answersUserId = userId
+    if (userId === 'demo-user-123') {
+      answersUserId = '00000000-0000-0000-0000-000000000001'
+    }
+    
     const { data: userAnswers, error: answersError } = await supabase
       .from('user_answers')
       .select(`
         *,
         questions!inner(type, difficulty)
       `)
-      .eq('user_id', userId)
+      .eq('user_id', answersUserId)
       .order('created_at', { ascending: false })
       .limit(20)
 
@@ -59,33 +64,118 @@ export async function POST(request: NextRequest) {
     }
 
     // 获取需要复习的flashcard词汇（艾宾浩斯曲线）
-    console.log('Fetching due flashcard vocabulary...')
-    const { data: dueVocabulary, error: vocabError } = await supabase
-      .from('flashcards_due_for_review')
+    console.log('Fetching vocabulary due for spaced repetition review...')
+    
+    // 确保使用正确的UUID格式 - demo-user-123会导致UUID错误
+    let finalUserId = userId
+    if (userId === 'demo-user-123') {
+      finalUserId = '00000000-0000-0000-0000-000000000001'
+    }
+    
+    console.log(`Using user ID: ${finalUserId} (original: ${userId})`)
+    
+    // 直接从 flashcards 表获取用户的词汇
+    const { data: vocabularyWords, error: vocabError } = await supabase
+      .from('flashcards')
       .select('*')
-      .eq('user_id', userId)
-      .limit(15)
-
-    if (vocabError) {
-      console.error('Vocabulary fetch error:', vocabError)
-    } else {
-      console.log('Found', dueVocabulary?.length || 0, 'vocabulary words due for review')
+      .eq('user_id', finalUserId)
+      .eq('type', 'vocabulary')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      
+    // 如果有词汇，尝试获取进度信息 - 先尝试user_flashcard_progress，失败则尝试user_flashcard_reviews
+    let vocabularyProgress: any[] = []
+    if (!vocabError && vocabularyWords && vocabularyWords.length > 0) {
+      const flashcardIds = vocabularyWords.map(w => w.id)
+      
+      // 尝试从user_flashcard_progress获取进度
+      let { data: progressData, error: progressError } = await supabase
+        .from('user_flashcard_progress')
+        .select('*')
+        .eq('user_id', finalUserId)
+        .in('flashcard_id', flashcardIds)
+      
+      // 如果表不存在，尝试user_flashcard_reviews（根据错误提示）
+      if (progressError && progressError.message?.includes('user_flashcard_reviews')) {
+        const { data: reviewsData } = await supabase
+          .from('user_flashcard_reviews')
+          .select('*')
+          .eq('user_id', finalUserId)
+          .in('flashcard_id', flashcardIds)
+        progressData = reviewsData
+        progressError = null
+      }
+      
+      vocabularyProgress = progressData || []
+      
+      if (progressError) {
+        console.error('Progress fetch error details:', progressError)
+      }
     }
 
-    // 获取flashcard详细信息
-    let vocabularyWords: any[] = []
-    if (dueVocabulary && dueVocabulary.length > 0) {
-      const flashcardIds = dueVocabulary.map(v => v.flashcard_id)
-      const { data: flashcardDetails, error: flashcardError } = await supabase
-        .from('flashcards')
-        .select('*')
-        .in('word', flashcardIds)
-        .limit(10)
-
-      if (!flashcardError && flashcardDetails) {
-        vocabularyWords = flashcardDetails
-        console.log('Retrieved', vocabularyWords.length, 'vocabulary word details')
-      }
+    let prioritizedVocabulary: any[] = []
+    if (!vocabError && vocabularyWords) {
+      console.log('Found', vocabularyWords.length, 'vocabulary words for user')
+      
+      const now = new Date()
+      
+      // 按照艾宾浩斯曲线优先级排序
+      prioritizedVocabulary = vocabularyWords
+        .map(word => {
+          // 查找对应的进度信息
+          const progress = vocabularyProgress.find(p => p.flashcard_id === word.id) || {
+            mastery_level: 0,
+            times_seen: 0,
+            times_correct: 0,
+            last_seen: null,
+            next_review_date: now.toISOString(),
+            difficulty_rating: 3,
+            interval_days: 1,
+            ease_factor: 2.5,
+            is_mastered: false
+          }
+          
+          // 计算优先级（越小越优先）
+          let priority = 0
+          
+          // 1. 首次学习的单词最优先
+          if (progress.times_seen === 0) {
+            priority = 1
+          }
+          // 2. 已到复习时间的单词
+          else if (new Date(progress.next_review_date) <= now) {
+            priority = 2 + (5 - progress.mastery_level) // 掌握度越低越优先
+          }
+          // 3. 错误率高的单词
+          else if (progress.times_seen > 0 && (progress.times_correct / progress.times_seen) < 0.6) {
+            priority = 8
+          }
+          // 4. 其他单词
+          else {
+            priority = 10
+          }
+          
+          return {
+            ...word,
+            progress,
+            priority,
+            isOverdue: new Date(progress.next_review_date) <= now
+          }
+        })
+        .sort((a, b) => a.priority - b.priority)
+        .slice(0, Math.min(10, count || 5)) // 取最高优先级的单词
+      
+      console.log(`Prioritized ${prioritizedVocabulary.length} vocabulary words for spaced repetition`)
+      console.log('Priority breakdown:', {
+        newWords: prioritizedVocabulary.filter(w => w.priority === 1).length,
+        overdueWords: prioritizedVocabulary.filter(w => w.priority >= 2 && w.priority <= 7).length,
+        difficultWords: prioritizedVocabulary.filter(w => w.priority === 8).length,
+        otherWords: prioritizedVocabulary.filter(w => w.priority === 10).length
+      })
+    } else if (vocabError) {
+      console.error('Vocabulary fetch error:', vocabError)
+    } else {
+      console.log('No vocabulary words found for user')
     }
 
     // 构建基于用户材料的提示词
@@ -95,11 +185,14 @@ export async function POST(request: NextRequest) {
 
     const userWeaknesses = analyzeUserWeaknesses(userAnswers || [])
     
-    // 构建词汇复习内容
-    const vocabularyContext = vocabularyWords.length > 0 
-      ? vocabularyWords.map(word => 
-          `Word: ${word.word || word.front_text}\nDefinition: ${word.definition || word.back_text}\nExample: ${word.example_sentence || ''}`
-        ).join('\n\n')
+    // 构建词汇复习内容（优先使用艾宾浩斯曲线单词）
+    const vocabularyContext = prioritizedVocabulary.length > 0 
+      ? prioritizedVocabulary.map(word => {
+          const reviewStatus = word.isOverdue ? 'OVERDUE' : 
+                              word.priority === 1 ? 'NEW' : 
+                              word.priority === 8 ? 'DIFFICULT' : 'REVIEW'
+          return `Word: ${word.word}\nDefinition: ${word.definition}\nPronunciation: ${word.pronunciation || ''}\nExample: ${word.example_sentence || ''}\nSynonyms: ${word.synonyms || ''}\nMastery Level: ${word.progress.mastery_level}/5\nReview Status: ${reviewStatus}\nTimes Seen: ${word.progress.times_seen}\nSuccess Rate: ${word.progress.times_seen > 0 ? Math.round((word.progress.times_correct / word.progress.times_seen) * 100) : 0}%`
+        }).join('\n\n')
       : ''
     
     let prompt = `You are an expert SSAT (Secondary School Admission Test) question generation engine. Your SOLE aim is to create ${count} high-quality, authentic SSAT-style questions in a strict JSON format, based PRIMARILY on the context provided.
@@ -184,15 +277,28 @@ ${contextContent || 'No specific context provided - generate standard SSAT quest
 ### [VOCABULARY WORDS DUE FOR SPACED REPETITION REVIEW]:
 ${vocabularyContext || 'No vocabulary words currently due for review.'}
 
+**SPACED REPETITION PRIORITY**: ${prioritizedVocabulary.length > 0 ? `${prioritizedVocabulary.length} words found` : 'None'}
+**REQUIRED VOCABULARY QUESTIONS**: ${Math.min(prioritizedVocabulary.length, Math.ceil(count * 0.6))} out of ${count} total questions
+
 ### [USER PERFORMANCE ANALYSIS]:
 ${userWeaknesses}
 
 ### [FINAL INSTRUCTIONS]:
 1.  Generate **${count}** questions.
-2.  **PRIORITY #1**: If vocabulary words are provided in **[VOCABULARY WORDS DUE FOR SPACED REPETITION REVIEW]**, create vocabulary questions using these specific words. Use them for synonyms, analogies, or vocabulary-in-context questions.
-3.  **PRIORITY #2**: Base your questions **DIRECTLY** on the provided **[CONTEXT FROM RAG]**. Use its text for reading passages, its words for vocabulary, and its scenarios for math problems.
-4.  **PRIORITY #3**: If neither vocabulary nor context is sufficient, generate standard questions but ensure they target the user's weak areas: **${userWeaknesses}**.
-5.  **STRICTLY** follow the JSON format and style of the **Golden Examples**. Every question MUST have a detailed \`explanation\`.
+2.  **PRIORITY #1 - SPACED REPETITION VOCABULARY**: If vocabulary words are provided in **[VOCABULARY WORDS DUE FOR SPACED REPETITION REVIEW]**, you MUST create ${Math.min(prioritizedVocabulary.length, Math.ceil(count * 0.6))} vocabulary questions using these EXACT words. For each word:
+   - Create SSAT-style synonym questions ("WORD : SYNONYM" format)
+   - Create analogy questions if the word fits well
+   - Create sentence completion questions using the word in context
+   - Use the provided definition, pronunciation, and examples
+   - Pay attention to the mastery level and review status to adjust difficulty
+3.  **PRIORITY #2**: Use remaining question slots for questions based on **[CONTEXT FROM RAG]**.
+4.  **PRIORITY #3**: Fill any remaining slots with questions targeting user weaknesses: **${userWeaknesses}**.
+5.  **VOCABULARY QUESTION REQUIREMENTS**:
+   - NEW words (first time): Create easier synonym or definition questions
+   - OVERDUE words: Create more challenging analogy or context questions  
+   - DIFFICULT words (low success rate): Create multiple formats to reinforce learning
+   - Use EXACT words from the vocabulary list - do not substitute or modify them
+6.  **STRICTLY** follow the JSON format and style of the **Golden Examples**. Every question MUST have a detailed \`explanation\`.
 
 ## OUTPUT FORMAT (JSON only - no markdown):
 {

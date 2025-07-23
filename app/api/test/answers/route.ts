@@ -29,7 +29,9 @@ export async function POST(request: NextRequest) {
       selectedAnswer, 
       correctAnswer, 
       timeSpent,
-      sessionId 
+      sessionId,
+      questionType,
+      vocabularyWord // 添加vocabulary word字段
     } = await request.json()
     
     if (!userId || !questionId || !selectedAnswer || !correctAnswer) {
@@ -67,6 +69,40 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 如果是vocabulary题目且提供了单词，更新艾宾浩斯曲线进度
+    let vocabularyProgress = null
+    if (questionType === 'vocabulary' && vocabularyWord) {
+      try {
+        console.log('Updating vocabulary progress for word:', vocabularyWord)
+        const progressResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/vocabulary/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: userId,
+            word: vocabularyWord,
+            isCorrect: isCorrect,
+            responseTime: timeSpent,
+            difficulty: timeSpent < 3000 ? 'easy' : timeSpent > 10000 ? 'hard' : 'medium'
+          })
+        })
+        
+        if (progressResponse.ok) {
+          const progressData = await progressResponse.json()
+          if (progressData.success) {
+            vocabularyProgress = {
+              masteryLevel: progressData.masteryLevel,
+              nextReviewDate: progressData.nextReviewDate,
+              message: progressData.message
+            }
+            console.log('Updated vocabulary progress:', vocabularyProgress)
+          }
+        }
+      } catch (progressError) {
+        console.error('Error updating vocabulary progress:', progressError)
+        // 不影响主流程，继续执行
+      }
+    }
+
     // Calculate user performance for this session
     const { data: sessionAnswers, error: sessionError } = await supabase
       .from('user_answers')
@@ -86,6 +122,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       answer: savedAnswer,
+      vocabularyProgress: vocabularyProgress, // 添加vocabulary进度信息
       sessionStats: {
         totalAnswered: totalAnswers,
         correctCount,
