@@ -327,7 +327,9 @@ export default function FlashCardPage() {
                       <p className="text-zinc-500 text-lg font-mono tracking-wide">{currentCard.pronunciation}</p>
                       <button
                         onClick={handlePronounce}
-                        className="p-1.5 bg-white text-zinc-700 rounded-xl border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50 hover:shadow-md"
+                        className="p-1.5 bg-white text-zinc-700 rounded-xl border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50 hover:shadow-md z-30"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
                       >
                         <Volume2 size={16} />
                       </button>
@@ -361,7 +363,9 @@ export default function FlashCardPage() {
                         <p className="text-zinc-500 text-sm font-mono tracking-wide">{currentCard.pronunciation}</p>
                         <button
                           onClick={handlePronounce}
-                          className="p-1 bg-white text-zinc-700 rounded-lg border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50"
+                          className="p-1 bg-white text-zinc-700 rounded-lg border border-zinc-200 shadow-sm transition-all duration-200 hover:bg-zinc-50 z-30"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onTouchStart={(e) => e.stopPropagation()}
                         >
                           <Volume2 size={14} />
                         </button>
@@ -437,13 +441,25 @@ export default function FlashCardPage() {
               </div>
             )}
 
-            {/* 掌握状态指示器 */}
-            {currentCard?.userProgress?.is_mastered && (
-              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-1 shadow-lg">
-                <Trophy size={16} />
-                已掌握
-              </div>
-            )}
+            {/* 掌握控制按钮 - 移到右上角 */}
+            <div className="absolute top-4 right-4 z-20">
+              {!currentCard?.userProgress?.is_mastered ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleMaster()
+                  }}
+                  className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                  title="标记为已掌握"
+                >
+                  <Star size={16} />
+                </button>
+              ) : (
+                <div className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-md">
+                  <Trophy size={16} />
+                </div>
+              )}
+            </div>
 
             {/* Flip Animation - positioned to not interfere with content flow */}
             <div 
@@ -457,69 +473,25 @@ export default function FlashCardPage() {
             <p className="text-zinc-400 text-sm">👈 Swipe to navigate • Tap to flip 👆</p>
           </div>
 
-          {/* 复习质量评分和掌握控制 */}
-          {showingAnswer && currentCard && (
-            <div className="mt-6 space-y-4">
-              {/* 复习质量评分 */}
-              <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm">
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => handleReview(1)}
-                    className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium hover:bg-red-100 transition-colors"
-                  >
-                    😰 很难
-                  </button>
-                  <button
-                    onClick={() => handleReview(3)}
-                    className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-700 text-xs font-medium hover:bg-yellow-100 transition-colors"
-                  >
-                    🤔 一般
-                  </button>
-                  <button
-                    onClick={() => handleReview(5)}
-                    className="p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-xs font-medium hover:bg-green-100 transition-colors"
-                  >
-                    😊 简单
-                  </button>
-                </div>
-              </div>
-
-              {/* 掌握控制 */}
-              <div className="flex justify-center">
-                {!currentCard?.userProgress?.is_mastered ? (
-                  <button
-                    onClick={handleMaster}
-                    className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
-                    title="标记为已掌握"
-                  >
-                    <Star size={20} />
-                  </button>
-                ) : (
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full shadow-md">
-                    <Trophy size={20} />
+          {/* 学习统计 - 简化版本 */}
+          {showingAnswer && currentCard && stats && (
+            <div className="mt-6">
+              <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+                <h4 className="text-blue-800 text-sm font-semibold mb-2 flex items-center gap-2">
+                  <Target size={16} />
+                  学习进度
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <p className="text-blue-900 text-lg font-bold">{stats.dueForReview || 0}</p>
+                    <p className="text-blue-600 text-xs">待复习</p>
                   </div>
-                )}
-              </div>
-
-              {/* 学习统计 */}
-              {stats && (
-                <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
-                  <h4 className="text-blue-800 text-sm font-semibold mb-2 flex items-center gap-2">
-                    <Target size={16} />
-                    学习进度
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <p className="text-blue-900 text-lg font-bold">{stats.dueForReview || 0}</p>
-                      <p className="text-blue-600 text-xs">待复习</p>
-                    </div>
-                    <div>
-                      <p className="text-green-600 text-lg font-bold">{stats.mastered || 0}</p>
-                      <p className="text-green-600 text-xs">已掌握</p>
-                    </div>
+                  <div>
+                    <p className="text-green-600 text-lg font-bold">{stats.mastered || 0}</p>
+                    <p className="text-green-600 text-xs">已掌握</p>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           )}
 
