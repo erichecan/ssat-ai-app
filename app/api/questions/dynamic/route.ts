@@ -156,7 +156,7 @@ function generateVariedQuestionsFromBank(
 // 创建题目变体
 function createQuestionVariant(baseQuestion: any, variantIndex: number, userId: string): Question {
   const timestamp = Date.now()
-  const newQuestion = { ...baseQuestion }
+  let newQuestion = { ...baseQuestion }
 
   // 生成唯一ID
   newQuestion.id = `varied_${baseQuestion.id}_${timestamp}_${variantIndex}`
