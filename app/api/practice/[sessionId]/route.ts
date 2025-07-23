@@ -7,6 +7,16 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
+// 为global对象添加类型声明
+declare global {
+  var temporarySessions: Record<string, {
+    currentIndex: number
+    score: number
+    questions: any[]
+    questionCount: number
+  }> | undefined
+}
+
 // 修复Next.js 15的API路由参数类型 - 更新于 2024-01-20 23:45:00
 // Get specific practice session with current question
 export async function GET(
@@ -23,70 +33,94 @@ export async function GET(
     if (sessionId.startsWith('practice_')) {
       console.log('Creating temporary session for:', sessionId)
       
-      let questions = []
+      // 检查是否已经有缓存的session
+      let sessionState = global.temporarySessions?.[sessionId]
       
-      try {
-        // 1. 首先尝试生成基于flashcard的重点词汇题目
-        console.log('Attempting to generate vocabulary-focused questions...')
-        const vocabResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/questions/vocabulary-focused`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: 'demo-user-123',
-            count: 6 // 6道重点词汇题
+      if (!sessionState) {
+        // 创建新的session状态
+        let questions = []
+        
+        try {
+          // 1. 首先尝试生成基于flashcard的重点词汇题目
+          console.log('Attempting to generate vocabulary-focused questions...')
+          const vocabResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/questions/vocabulary-focused`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: 'demo-user-123',
+              count: 6 // 6道重点词汇题
+            })
           })
-        })
-        
-        let vocabQuestions: any[] = []
-        if (vocabResponse.ok) {
-          const vocabData = await vocabResponse.json()
-          if (vocabData.success && vocabData.questions) {
-            vocabQuestions = vocabData.questions
-            console.log('Generated', vocabQuestions.length, 'vocabulary-focused questions')
+          
+          let vocabQuestions: any[] = []
+          if (vocabResponse.ok) {
+            const vocabData = await vocabResponse.json()
+            if (vocabData.success && vocabData.questions) {
+              vocabQuestions = vocabData.questions
+              console.log('Generated', vocabQuestions.length, 'vocabulary-focused questions')
+            }
           }
-        }
 
-        // 2. 再尝试使用AI生成其他类型问题
-        console.log('Attempting to generate AI questions for mixed topics...')
-        const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: 'demo-user-123',
-            questionType: 'mixed',
-            count: 4 // 4道其他题目
+          // 2. 再尝试使用AI生成其他类型问题
+          console.log('Attempting to generate AI questions for mixed topics...')
+          const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: 'demo-user-123',
+              questionType: 'mixed',
+              count: 4 // 4道其他题目
+            })
           })
-        })
-        
-        let aiQuestions: any[] = []
-        if (generateResponse.ok) {
-          const generateData = await generateResponse.json()
-          if (generateData.success && generateData.questions) {
-            aiQuestions = generateData.questions
-            console.log('Successfully generated', aiQuestions.length, 'AI questions')
+          
+          let aiQuestions: any[] = []
+          if (generateResponse.ok) {
+            const generateData = await generateResponse.json()
+            if (generateData.success && generateData.questions) {
+              aiQuestions = generateData.questions
+              console.log('Successfully generated', aiQuestions.length, 'AI questions')
+            }
           }
-        }
 
-        // 3. 合并vocabulary-focused和AI题目
-        questions = [...vocabQuestions, ...aiQuestions]
-        
-        // 4. 如果题目不够，用静态question bank补充
-        if (questions.length < 10) {
-          const remainingCount = 10 - questions.length
-          const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount)
-          questions.push(...staticQuestions)
-          console.log('Added', staticQuestions.length, 'static questions as fallback')
-        }
+          // 3. 合并vocabulary-focused和AI题目
+          questions = [...vocabQuestions, ...aiQuestions]
+          
+          // 4. 如果题目不够，用静态question bank补充
+          if (questions.length < 10) {
+            const remainingCount = 10 - questions.length
+            const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount)
+            questions.push(...staticQuestions)
+            console.log('Added', staticQuestions.length, 'static questions as fallback')
+          }
 
-        // 5. 随机打乱题目顺序
-        questions = questions.sort(() => Math.random() - 0.5).slice(0, 10)
-        console.log('Final question set:', questions.length, 'questions')
+          // 5. 随机打乱题目顺序，根据用户设置的数量
+          const targetCount = 20 // 默认20题，可以从session参数中获取
+          questions = questions.sort(() => Math.random() - 0.5).slice(0, targetCount)
+          console.log('Final question set:', questions.length, 'questions')
+          
+        } catch (aiError) {
+          console.log('Advanced question generation failed, falling back to question bank:', aiError)
+          // 完全回退到静态question bank
+          const targetCount = 20
+          questions = filterQuestions(undefined, 'medium', undefined, targetCount)
+          console.log('Using fallback question bank with', questions.length, 'questions')
+        }
         
-      } catch (aiError) {
-        console.log('Advanced question generation failed, falling back to question bank:', aiError)
-        // 完全回退到静态question bank
-        questions = filterQuestions(undefined, 'medium', undefined, 10)
-        console.log('Using fallback question bank with', questions.length, 'questions')
+        // 创建并缓存session状态
+        sessionState = {
+          currentIndex: 0,
+          score: 0,
+          questions: questions,
+          questionCount: questions.length
+        }
+        
+        if (!global.temporarySessions) {
+          global.temporarySessions = {}
+        }
+        global.temporarySessions[sessionId] = sessionState
+        console.log('Created and cached temporary session with', questions.length, 'questions')
+      } else {
+        console.log('Using cached session state with', sessionState.questions.length, 'questions')
       }
       
       session = {
@@ -96,17 +130,16 @@ export async function GET(
         settings: {
           subjects: ['all'],
           difficulty: 'medium',
-          question_count: questions.length,
+          question_count: sessionState.questionCount,
           time_limit: undefined
         },
-        questions: questions,
-        status: 'active',
-        current_question_index: 0,
-        score: 0,
+        questions: sessionState.questions,
+        status: sessionState.currentIndex >= sessionState.questionCount ? 'completed' : 'active',
+        current_question_index: sessionState.currentIndex,
+        score: sessionState.score,
         start_time: new Date().toISOString(),
         created_at: new Date().toISOString()
       }
-      console.log('Created temporary session with', questions.length, 'questions')
     }
 
     if (!session) {
@@ -168,67 +201,142 @@ export async function PUT(
     
     console.log('Updating practice session:', sessionId, 'action:', action)
     
-    // 对于临时session，我们需要重新加载并更新状态
+    // 对于临时session，我们需要重新加载session来获取一致的状态
     if (sessionId.startsWith('practice_')) {
       console.log('Processing temporary session update for:', sessionId)
       
-      // 重新生成session来获取当前状态
-      const questions = filterQuestions(undefined, 'medium', undefined, 10)
+      // 获取存储在内存/localStorage中的session状态，或重新生成相同的questions
+      let sessionState = global.temporarySessions?.[sessionId]
       
-      let currentIndex = 0
-      let score = 0
+      if (!sessionState) {
+        // 如果没有缓存状态，重新生成相同的session（保持一致性）
+        let questions = []
+        
+        try {
+          // 重新生成与GET请求相同的题目组合
+          const vocabResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/questions/vocabulary-focused`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: 'demo-user-123',
+              count: 6
+            })
+          })
+          
+          let vocabQuestions: any[] = []
+          if (vocabResponse.ok) {
+            const vocabData = await vocabResponse.json()
+            if (vocabData.success && vocabData.questions) {
+              vocabQuestions = vocabData.questions
+            }
+          }
+
+          const generateResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: 'demo-user-123',
+              questionType: 'mixed',
+              count: 4
+            })
+          })
+          
+          let aiQuestions: any[] = []
+          if (generateResponse.ok) {
+            const generateData = await generateResponse.json()
+            if (generateData.success && generateData.questions) {
+              aiQuestions = generateData.questions
+            }
+          }
+
+          questions = [...vocabQuestions, ...aiQuestions]
+          
+          const targetCount = 20 // 与GET部分保持一致
+          if (questions.length < targetCount) {
+            const remainingCount = targetCount - questions.length
+            const staticQuestions = filterQuestions(undefined, 'medium', undefined, remainingCount)
+            questions.push(...staticQuestions)
+          }
+
+          questions = questions.sort(() => Math.random() - 0.5).slice(0, targetCount)
+          
+        } catch (error) {
+          questions = filterQuestions(undefined, 'medium', undefined, 20)
+        }
+        
+        sessionState = {
+          currentIndex: 0,
+          score: 0,
+          questions: questions,
+          questionCount: questions.length
+        }
+        
+        // 简单的内存缓存（生产环境应该使用Redis等）
+        if (!global.temporarySessions) {
+          global.temporarySessions = {}
+        }
+        global.temporarySessions[sessionId] = sessionState
+      }
+      
+      let { currentIndex, score, questions, questionCount } = sessionState
       
       if (action === 'answer') {
-        // 简单的内存状态管理：基于sessionId生成一致的状态
-        const sessionHash = sessionId.split('_')[1] || '0'
-        const baseIndex = parseInt(sessionHash.slice(-1)) || 0
-        currentIndex = Math.min(baseIndex + 1, questions.length - 1)
-        
         // 检查答案是否正确
-        const currentQuestion = questions[Math.min(baseIndex, questions.length - 1)]
+        const currentQuestion = questions[currentIndex]
         const isCorrect = currentQuestion && answer === currentQuestion.correct_answer
         if (isCorrect) {
-          score = 1
+          score += 1
         }
         
-        // 保存答题记录到数据库（用于review功能）
-        if (currentQuestion) {
-          try {
-            await supabase
-              .from('user_answers')
-              .insert({
-                user_id: 'demo-user-123',
-                question_id: currentQuestion.id,
-                session_id: sessionId,
-                selected_answer: answer,
-                user_answer: answer,
-                correct_answer: currentQuestion.correct_answer,
-                is_correct: isCorrect,
-                time_spent: timeSpent || 0,
-                question_text: currentQuestion.question,
-                question_type: currentQuestion.type,
-                difficulty: currentQuestion.difficulty,
-                options: JSON.stringify(currentQuestion.options),
-                explanation: currentQuestion.explanation,
-                passage_text: currentQuestion.passage,
-                answered_at: new Date().toISOString()
-              })
-            
-            console.log('Answer record saved to database')
-          } catch (saveError) {
-            console.error('Failed to save answer record:', saveError)
-            // 不阻断答题流程，只是记录错误
-          }
-        }
+        // 移动到下一题
+        currentIndex += 1
         
-        console.log('Answer processed:', { answer, currentQuestion: currentQuestion?.correct_answer, isCorrect: score > 0 })
+        // 更新缓存状态
+        sessionState.currentIndex = currentIndex
+        sessionState.score = score
+        if (!global.temporarySessions) {
+          global.temporarySessions = {}
+        }
+        global.temporarySessions[sessionId] = sessionState
+        
+        console.log('Answer processed:', { answer, currentQuestion: currentQuestion?.correct_answer, isCorrect })
+      }
+      
+      // 保存答题记录到数据库（用于review功能）
+      if (action === 'answer' && questions[currentIndex - 1]) {
+        const answeredQuestion = questions[currentIndex - 1]
+        try {
+          await supabase
+            .from('user_answers')
+            .insert({
+              user_id: 'demo-user-123',
+              question_id: answeredQuestion.id,
+              session_id: sessionId,
+              selected_answer: answer,
+              user_answer: answer,
+              correct_answer: answeredQuestion.correct_answer,
+              is_correct: answeredQuestion.correct_answer === answer,
+              time_spent: timeSpent || 0,
+              question_text: answeredQuestion.question,
+              question_type: answeredQuestion.type,
+              difficulty: answeredQuestion.difficulty,
+              options: JSON.stringify(answeredQuestion.options),
+              explanation: answeredQuestion.explanation,
+              passage_text: answeredQuestion.passage,
+              answered_at: new Date().toISOString()
+            })
+          
+          console.log('Answer record saved to database')
+        } catch (saveError) {
+          console.error('Failed to save answer record:', saveError)
+        }
       }
       
       // 获取下一题
       let nextQuestion = null
-      const status = currentIndex >= questions.length - 1 ? 'completed' : 'active'
+      const status = currentIndex >= questions.length ? 'completed' : 'active'
       
-      if (status === 'active') {
+      if (status === 'active' && currentIndex < questions.length) {
         nextQuestion = questions[currentIndex]
       }
       
@@ -241,7 +349,7 @@ export async function PUT(
           settings: {
             subjects: ['all'],
             difficulty: 'medium',
-            question_count: questions.length,
+            question_count: questionCount,
             time_limit: undefined
           },
           questions: questions,
@@ -253,9 +361,9 @@ export async function PUT(
         },
         nextQuestion,
         progress: {
-          current: currentIndex + 1,
-          total: questions.length,
-          percentage: Math.round(((currentIndex + 1) / questions.length) * 100)
+          current: currentIndex,
+          total: questionCount,
+          percentage: Math.round((currentIndex / questionCount) * 100)
         },
         isTemporary: true
       })

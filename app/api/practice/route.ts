@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
       
       // 如果选择了多个科目，按比例分配问题
       if (subjects && subjects.length > 0) {
-        const questionsPerSubject = Math.ceil((questionCount || 10) / subjects.length)
+        const targetCount = questionCount || 10
+        const questionsPerSubject = Math.ceil(targetCount / subjects.length)
         
         subjects.forEach((subject: string) => {
           const questionType = subjectTypeMap[subject]
@@ -85,8 +86,20 @@ export async function POST(request: NextRequest) {
         })
         
         // 如果总数超过要求，随机选择
-        if (questions.length > (questionCount || 10)) {
-          questions = questions.sort(() => Math.random() - 0.5).slice(0, questionCount || 10)
+        if (questions.length > targetCount) {
+          questions = questions.sort(() => Math.random() - 0.5).slice(0, targetCount)
+        }
+        
+        // 如果题目不够，用不同难度的题目补充
+        if (questions.length < targetCount) {
+          const remainingCount = targetCount - questions.length
+          const additionalQuestions = filterQuestions(
+            undefined,
+            difficulty || 'medium',
+            undefined,
+            remainingCount
+          )
+          questions.push(...additionalQuestions)
         }
       }
       
