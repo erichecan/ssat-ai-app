@@ -164,6 +164,20 @@ const GrammarPracticePage: React.FC = () => {
                 Practice Area
               </h2>
 
+              {/* Current Grammar Rule Indicator - Enhanced for targeted practice (2024-12-19 16:35:00) */}
+              {selectedRule && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-800">Current Focus:</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-blue-900 mb-1">{selectedRule.title}</h3>
+                  <p className="text-sm text-blue-700">
+                    Practice questions are specifically generated to test your understanding of this grammar rule.
+                  </p>
+                </div>
+              )}
+
               {/* Regenerate Button */}
               {selectedRuleId && !isLoading && (
                 <div className="mb-4 flex justify-end">

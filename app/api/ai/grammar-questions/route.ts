@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build AI prompt
+    // Build AI prompt - Enhanced for targeted grammar practice (2024-12-19 16:30:00)
     const prompt = `
-You are a professional SSAT grammar teaching expert. Please generate ${count} high-quality practice questions based on the following grammar rule.
+You are a professional SSAT grammar teaching expert. Please generate ${count} high-quality, targeted practice questions specifically focused on the following grammar rule.
 
 Grammar Rule Information:
 - Rule ID: ${ruleId}
@@ -29,12 +29,38 @@ Grammar Rule Information:
 - Rule Description: ${ruleDescription}
 - Examples: ${examples?.map((ex: any) => ex.sentence).join('; ') || 'None'}
 
-Requirements:
-1. Generate ${count} questions, with ${Math.ceil(count/2)} multiple-choice questions and ${Math.floor(count/2)} fill-in-the-blank questions
-2. Question difficulty should be appropriate for SSAT exam level
-3. Each question must have a clear correct answer and detailed explanation
-4. Multiple-choice questions should provide 4 options with only 1 correct answer
-5. Fill-in-the-blank questions should provide 2 options to choose from
+CRITICAL REQUIREMENTS:
+1. Generate ${count} questions that are SPECIFICALLY focused on the grammar rule "${ruleTitle}"
+2. Each question must directly test understanding of the concepts explained in the rule description
+3. Use the provided examples as reference for question difficulty and style
+4. Questions should be appropriate for SSAT exam level (middle school to high school)
+5. Mix question types: ${Math.ceil(count/2)} multiple-choice and ${Math.floor(count/2)} fill-in-the-blank
+6. Multiple-choice questions must have exactly 4 options with only 1 correct answer
+7. Fill-in-the-blank questions must provide exactly 2 options to choose from
+8. Each question must include a detailed explanation that references the specific grammar rule
+9. Questions should test both recognition and application of the grammar concept
+10. Avoid questions that test unrelated grammar concepts
+
+Question Focus Guidelines:
+- If the rule is about "Parts of Speech": Focus on identifying parts of speech in sentences
+- If the rule is about "Nouns": Focus on noun types, singular/plural, proper/common nouns
+- If the rule is about "Verbs": Focus on verb types, tense, subject-verb agreement
+- If the rule is about "Pronouns": Focus on pronoun types, case, antecedent agreement
+- If the rule is about "Adjectives": Focus on adjective placement, comparison, types
+- If the rule is about "Adverbs": Focus on adverb placement, types, comparison
+- If the rule is about "Prepositions": Focus on preposition usage, common phrases
+- If the rule is about "Subject-Verb Agreement": Focus on matching subjects and verbs
+- If the rule is about "Pronoun-Antecedent Agreement": Focus on pronoun-antecedent matching
+- If the rule is about "Parallel Structure": Focus on maintaining parallel form
+- If the rule is about "Modifier Placement": Focus on correct modifier positioning
+- If the rule is about "Run-on Sentences": Focus on identifying and fixing run-ons
+- If the rule is about "Sentence Fragments": Focus on identifying and completing fragments
+- If the rule is about "Comma Usage": Focus on proper comma placement rules
+- If the rule is about "Apostrophe Usage": Focus on possessive forms and contractions
+- If the rule is about "Quotation Marks": Focus on dialogue and quotation rules
+- If the rule is about "Capitalization": Focus on proper noun and title capitalization
+- If the rule is about "Commonly Confused Words": Focus on distinguishing similar words
+- If the rule is about "Idiomatic Expressions": Focus on correct phrase usage
 
 Please return in JSON format as follows:
 {
@@ -43,19 +69,19 @@ Please return in JSON format as follows:
       "id": "unique-id-1",
       "ruleId": "${ruleId}",
       "type": "multiple-choice",
-      "question": "Question content",
+      "question": "Question content that specifically tests the grammar rule",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "answer": "Correct answer",
-      "explanation": "Detailed explanation"
+      "explanation": "Detailed explanation that references the specific grammar rule and why the answer is correct"
     },
     {
       "id": "unique-id-2", 
       "ruleId": "${ruleId}",
       "type": "fill-in-the-blank",
-      "question": "Question content ___ (option1/option2)",
+      "question": "Question content ___ (option1/option2) that tests the grammar rule",
       "options": ["option1", "option2"],
       "answer": "Correct answer",
-      "explanation": "Detailed explanation"
+      "explanation": "Detailed explanation that references the specific grammar rule and why the answer is correct"
     }
   ]
 }
