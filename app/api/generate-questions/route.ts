@@ -356,8 +356,8 @@ Begin generation.`
             userMaterialsCount: knowledgeData?.length || 0,
             userHistoryAnalyzed: (userAnswers?.length || 0) > 0,
             userWeaknesses: userWeaknesses,
-            vocabularyWordsCount: vocabularyWords.length,
-            hasVocabularyWords: vocabularyWords.length > 0,
+            vocabularyWordsCount: vocabularyWords?.length || 0,
+            hasVocabularyWords: (vocabularyWords?.length || 0) > 0,
             isFallback: false
           }
         })
