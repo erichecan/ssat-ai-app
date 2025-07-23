@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import GlobalWordSelector from '@/components/GlobalWordSelector'
 
 export const metadata: Metadata = {
   title: 'SSAT Master - AI-Powered Learning Platform',
@@ -34,6 +35,7 @@ export default function RootLayout({
         <div id="root">
           {children}
         </div>
+        <GlobalWordSelector />
       </body>
     </html>
   )

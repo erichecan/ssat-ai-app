@@ -108,19 +108,19 @@ export default function FlashCardPage() {
   }
 
   const handleNext = () => {
-    if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-      setIsFlipped(true)
-      setShowingAnswer(true)
-    }
+    // 循环到第一张卡片如果已经是最后一张
+    const nextIndex = currentIndex >= flashcards.length - 1 ? 0 : currentIndex + 1
+    setCurrentIndex(nextIndex)
+    setIsFlipped(true)
+    setShowingAnswer(true)
   }
 
   const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-      setIsFlipped(true)
-      setShowingAnswer(true)
-    }
+    // 循环到最后一张卡片如果已经是第一张
+    const prevIndex = currentIndex <= 0 ? flashcards.length - 1 : currentIndex - 1
+    setCurrentIndex(prevIndex)
+    setIsFlipped(true)
+    setShowingAnswer(true)
   }
 
   const handleDifficultyRating = async (rating: number) => {
@@ -228,11 +228,11 @@ export default function FlashCardPage() {
     const isLeftSwipe = distance > minSwipeDistance
     const isRightSwipe = distance < -minSwipeDistance
     
-    if (isLeftSwipe && currentIndex < flashcards.length - 1) {
-      handleNext()
+    if (isLeftSwipe) {
+      handleNext() // 循环处理已在handleNext中实现
     }
-    if (isRightSwipe && currentIndex > 0) {
-      handlePrevious()
+    if (isRightSwipe) {
+      handlePrevious() // 循环处理已在handlePrevious中实现
     }
   }
 
