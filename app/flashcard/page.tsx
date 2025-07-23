@@ -462,23 +462,35 @@ export default function FlashCardPage() {
               </div>
             )}
 
-            {/* 掌握控制按钮 - 移到右上角 */}
-            <div className="absolute top-4 right-4 z-20">
+            {/* Mastery and Review Control Buttons - Top Right */}
+            <div className="absolute top-4 right-4 z-20 flex gap-2">
               {!currentCard?.userProgress?.is_mastered ? (
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     handleMaster()
                   }}
-                  className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
-                  title="标记为已掌握"
+                  className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-full shadow-md hover:from-green-500 hover:to-green-600 transition-all duration-200"
+                  title="Mark as Mastered"
                 >
-                  <Star size={16} />
+                  <CheckSquare size={16} />
                 </button>
               ) : (
-                <div className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-md">
-                  <Trophy size={16} />
-                </div>
+                <>
+                  <div className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-md">
+                    <CheckSquare size={16} />
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleReview(3) // Medium quality review
+                    }}
+                    className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                    title="Review Again"
+                  >
+                    <Star size={16} />
+                  </button>
+                </>
               )}
             </div>
 

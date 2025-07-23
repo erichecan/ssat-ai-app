@@ -1,7 +1,264 @@
-// Grammar Rules Data Structure - 2024-12-19 16:00:00
+// Grammar Rules Data Structure - 2024-12-19 16:30:00
 // Core data definition for SSAT grammar learning functionality
 
 export const grammarRules = [
+  // Basic Grammar Concepts - For Beginners
+  {
+    id: 'parts-of-speech',
+    title: 'Parts of Speech',
+    explanation: `Parts of speech are the basic building blocks of English grammar. Understanding these fundamental categories helps you construct and analyze sentences correctly.
+
+Key Parts of Speech:
+1. Nouns: Words that name people, places, things, or ideas (cat, school, happiness)
+2. Verbs: Words that express actions, states, or occurrences (run, is, think)
+3. Adjectives: Words that describe or modify nouns (big, red, beautiful)
+4. Adverbs: Words that describe or modify verbs, adjectives, or other adverbs (quickly, very, well)
+5. Pronouns: Words that replace nouns (he, she, it, they)
+6. Prepositions: Words that show relationships between words (in, on, at, with)
+7. Conjunctions: Words that connect words, phrases, or clauses (and, but, or, because)
+8. Interjections: Words that express emotion (wow, oh, hey)
+
+Common Mistakes:
+- Confusing adjectives with adverbs
+- Using wrong pronouns
+- Misplacing prepositions`,
+    examples: [
+      { 
+        sentence: 'The beautiful cat runs quickly.', 
+        isCorrect: true,
+        note: 'beautiful (adjective) describes cat (noun), quickly (adverb) describes runs (verb)'
+      },
+      { 
+        sentence: 'The cat beautiful runs quick.', 
+        isCorrect: false,
+        note: 'Adjective beautiful should come before noun cat, and quick should be quickly (adverb)'
+      },
+      { 
+        sentence: 'She gave the book to him.', 
+        isCorrect: true,
+        note: 'She (pronoun), gave (verb), book (noun), to (preposition), him (pronoun)'
+      },
+      { 
+        sentence: 'Her gave the book to he.', 
+        isCorrect: false,
+        note: 'Her should be She (subject pronoun), he should be him (object pronoun)'
+      }
+    ]
+  },
+  {
+    id: 'nouns',
+    title: 'Nouns',
+    explanation: `Nouns are words that name people, places, things, or ideas. They are essential building blocks of sentences and can function as subjects, objects, or complements.
+
+Types of Nouns:
+1. Common Nouns: General names (dog, city, book)
+2. Proper Nouns: Specific names (John, London, Harry Potter)
+3. Concrete Nouns: Things you can see, touch, hear, smell, or taste (table, music, flower)
+4. Abstract Nouns: Ideas, feelings, or concepts (love, freedom, happiness)
+5. Collective Nouns: Groups of people or things (team, family, flock)
+6. Countable Nouns: Can be counted (apple, car, idea)
+7. Uncountable Nouns: Cannot be counted (water, air, information)
+
+Common Mistakes:
+- Forgetting to capitalize proper nouns
+- Using singular verbs with plural nouns
+- Confusing countable and uncountable nouns`,
+    examples: [
+      { 
+        sentence: 'The students in the library are studying quietly.', 
+        isCorrect: true,
+        note: 'students (countable noun, plural), library (common noun), studying (verb)'
+      },
+      { 
+        sentence: 'The student in the library is studying quietly.', 
+        isCorrect: true,
+        note: 'student (countable noun, singular), is (singular verb)'
+      },
+      { 
+        sentence: 'The informations are helpful.', 
+        isCorrect: false,
+        note: 'information is uncountable, should be "The information is helpful"'
+      },
+      { 
+        sentence: 'I love paris and london.', 
+        isCorrect: false,
+        note: 'Paris and London are proper nouns and should be capitalized'
+      }
+    ]
+  },
+  {
+    id: 'verbs',
+    title: 'Verbs',
+    explanation: `Verbs are words that express actions, states, or occurrences. They are the heart of a sentence and show what the subject is doing or what is happening.
+
+Types of Verbs:
+1. Action Verbs: Show physical or mental actions (run, think, write)
+2. Linking Verbs: Connect subject to description (is, are, was, become, seem)
+3. Helping Verbs: Help main verbs (have, has, had, will, would, can, could)
+4. Regular Verbs: Follow standard conjugation patterns (walk/walked/walked)
+5. Irregular Verbs: Have unique conjugation patterns (go/went/gone)
+
+Verb Tenses:
+- Present: I walk, I am walking
+- Past: I walked, I was walking
+- Future: I will walk, I will be walking
+
+Common Mistakes:
+- Using wrong verb forms
+- Confusing action and linking verbs
+- Incorrect tense usage`,
+    examples: [
+      { 
+        sentence: 'She runs every morning and feels energetic.', 
+        isCorrect: true,
+        note: 'runs (action verb), feels (linking verb)'
+      },
+      { 
+        sentence: 'She run every morning and feel energetic.', 
+        isCorrect: false,
+        note: 'Should be runs (third person singular) and feels'
+      },
+      { 
+        sentence: 'The cake tastes delicious.', 
+        isCorrect: true,
+        note: 'tastes is a linking verb connecting cake to delicious'
+      },
+      { 
+        sentence: 'I have went to the store.', 
+        isCorrect: false,
+        note: 'Should be "I have gone" (past participle of irregular verb go)'
+      }
+    ]
+  },
+  {
+    id: 'pronouns',
+    title: 'Pronouns',
+    explanation: `Pronouns are words that replace nouns to avoid repetition and make sentences flow better. They must agree with their antecedents in number, gender, and person.
+
+Types of Pronouns:
+1. Personal Pronouns: I, you, he, she, it, we, they
+2. Possessive Pronouns: mine, yours, his, hers, its, ours, theirs
+3. Reflexive Pronouns: myself, yourself, himself, herself, itself, ourselves, themselves
+4. Demonstrative Pronouns: this, that, these, those
+5. Interrogative Pronouns: who, what, which, whose, whom
+6. Relative Pronouns: who, which, that, whose, whom
+7. Indefinite Pronouns: everyone, someone, anybody, nothing, all, some
+
+Common Mistakes:
+- Using wrong case (I vs me, he vs him)
+- Confusing possessive pronouns with contractions (its vs it's)
+- Unclear pronoun references`,
+    examples: [
+      { 
+        sentence: 'John gave the book to me, and I thanked him.', 
+        isCorrect: true,
+        note: 'me (object pronoun), I (subject pronoun), him (object pronoun)'
+      },
+      { 
+        sentence: 'John gave the book to I, and me thanked he.', 
+        isCorrect: false,
+        note: 'Should be "to me" (object) and "I thanked him" (subject + object)'
+      },
+      { 
+        sentence: 'The dog wagged its tail.', 
+        isCorrect: true,
+        note: 'its (possessive pronoun), not it\'s (contraction of it is)'
+      },
+      { 
+        sentence: 'Everyone should bring their own lunch.', 
+        isCorrect: false,
+        note: 'Everyone is singular, should be "his or her own lunch" or "their own lunch" (modern usage)'
+      }
+    ]
+  },
+  {
+    id: 'adjectives-adverbs',
+    title: 'Adjectives and Adverbs',
+    explanation: `Adjectives and adverbs are descriptive words that add detail and clarity to sentences. Adjectives modify nouns and pronouns, while adverbs modify verbs, adjectives, and other adverbs.
+
+Adjectives:
+- Describe or modify nouns and pronouns
+- Answer questions: What kind? Which one? How many?
+- Examples: big, red, beautiful, three, this
+
+Adverbs:
+- Modify verbs, adjectives, and other adverbs
+- Answer questions: How? When? Where? Why? To what extent?
+- Often end in -ly (but not always)
+- Examples: quickly, very, here, now, well
+
+Common Mistakes:
+- Using adjectives instead of adverbs
+- Confusing good/well, bad/badly
+- Misplacing modifiers`,
+    examples: [
+      { 
+        sentence: 'The beautiful flower grows quickly in the garden.', 
+        isCorrect: true,
+        note: 'beautiful (adjective) describes flower, quickly (adverb) describes grows'
+      },
+      { 
+        sentence: 'The flower beautiful grows quick in the garden.', 
+        isCorrect: false,
+        note: 'beautiful should come before flower, quick should be quickly'
+      },
+      { 
+        sentence: 'She is a good singer and sings well.', 
+        isCorrect: true,
+        note: 'good (adjective) describes singer, well (adverb) describes sings'
+      },
+      { 
+        sentence: 'She is a well singer and sings good.', 
+        isCorrect: false,
+        note: 'Should be "good singer" and "sings well"'
+      }
+    ]
+  },
+  {
+    id: 'prepositions',
+    title: 'Prepositions',
+    explanation: `Prepositions are words that show relationships between other words in a sentence. They indicate location, direction, time, manner, and other relationships.
+
+Common Prepositions:
+1. Location: in, on, at, under, over, beside, between, among
+2. Direction: to, from, toward, into, out of, through, across
+3. Time: at, in, on, before, after, during, since, until
+4. Manner: by, with, without, like, as
+5. Purpose: for, to, in order to
+
+Prepositional Phrases:
+- A preposition + its object (noun or pronoun)
+- Can function as adjectives or adverbs
+- Examples: in the house, with my friends, at 3 o'clock
+
+Common Mistakes:
+- Using wrong prepositions
+- Ending sentences with prepositions (sometimes acceptable)
+- Confusing similar prepositions (in/on/at)`,
+    examples: [
+      { 
+        sentence: 'The book is on the table in the library.', 
+        isCorrect: true,
+        note: 'on (location), in (location)'
+      },
+      { 
+        sentence: 'The book is at the table on the library.', 
+        isCorrect: false,
+        note: 'Should be "on the table" and "in the library"'
+      },
+      { 
+        sentence: 'I will meet you at 3 o\'clock on Monday.', 
+        isCorrect: true,
+        note: 'at (specific time), on (day)'
+      },
+      { 
+        sentence: 'I will meet you in 3 o\'clock in Monday.', 
+        isCorrect: false,
+        note: 'Should be "at 3 o\'clock" and "on Monday"'
+      }
+    ]
+  },
+  // Advanced Grammar Rules - For SSAT Level
   {
     id: 'subject-verb-agreement',
     title: 'Subject-Verb Agreement',
