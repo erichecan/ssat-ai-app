@@ -1,5 +1,5 @@
-// 语法学习主页面 - 2024-12-19 15:30:25
-// SSAT语法学习功能的完整页面（AI动态生成题目）
+// Grammar Learning Main Page - 2024-12-19 16:00:00
+// SSAT Grammar Learning Function Complete Page (AI Dynamic Question Generation)
 
 'use client';
 
@@ -11,7 +11,7 @@ import { grammarRules } from '../data/grammarRules';
 import { BookOpen, Target, Trophy, House, Brain, User, Loader2, RefreshCw } from 'lucide-react';
 
 const GrammarPracticePage: React.FC = () => {
-  // 状态管理
+  // State management
   const [selectedRuleId, setSelectedRuleId] = useState<string>('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -20,7 +20,7 @@ const GrammarPracticePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // 生成AI题目的函数
+  // Function to generate AI questions
   const generateAIQuestions = async (ruleId: string) => {
     setIsLoading(true);
     setError('');
@@ -28,7 +28,7 @@ const GrammarPracticePage: React.FC = () => {
     try {
       const selectedRule = grammarRules.find(rule => rule.id === ruleId);
       if (!selectedRule) {
-        throw new Error('语法规则未找到');
+        throw new Error('Grammar rule not found');
       }
 
       const response = await fetch('/api/ai/grammar-questions', {
@@ -41,13 +41,13 @@ const GrammarPracticePage: React.FC = () => {
           ruleTitle: selectedRule.title,
           ruleDescription: selectedRule.explanation,
           examples: selectedRule.examples,
-          count: 4 // 生成4道题目
+          count: 4 // Generate 4 questions
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || '生成题目失败');
+        throw new Error(errorData.error || 'Failed to generate questions');
       }
 
       const data = await response.json();
@@ -57,24 +57,24 @@ const GrammarPracticePage: React.FC = () => {
       setTotalAnswered(0);
     } catch (err) {
       console.error('Error generating questions:', err);
-      setError(err instanceof Error ? err.message : '生成题目时发生错误');
+      setError(err instanceof Error ? err.message : 'Error occurred while generating questions');
       setCurrentQuestions([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 当选择语法规则时，生成AI练习题
+  // Generate AI practice questions when grammar rule is selected
   useEffect(() => {
     if (selectedRuleId) {
       generateAIQuestions(selectedRuleId);
     }
   }, [selectedRuleId]);
 
-  // 获取当前选中的语法规则
+  // Get currently selected grammar rule
   const selectedRule = grammarRules.find(rule => rule.id === selectedRuleId);
 
-  // 处理答案提交
+  // Handle answer submission
   const handleAnswerSubmit = (isCorrect: boolean) => {
     if (isCorrect) {
       setScore(prev => prev + 1);
@@ -82,24 +82,24 @@ const GrammarPracticePage: React.FC = () => {
     setTotalAnswered(prev => prev + 1);
   };
 
-  // 处理下一题
+  // Handle next question
   const handleNext = () => {
     if (currentQuestionIndex < currentQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
     } else {
-      // 所有题目完成，重置状态
+      // All questions completed, reset state
       setCurrentQuestionIndex(0);
     }
   };
 
-  // 重置练习
+  // Reset practice
   const handleResetPractice = () => {
     setCurrentQuestionIndex(0);
     setScore(0);
     setTotalAnswered(0);
   };
 
-  // 重新生成题目
+  // Regenerate questions
   const handleRegenerateQuestions = () => {
     if (selectedRuleId) {
       generateAIQuestions(selectedRuleId);
@@ -108,28 +108,28 @@ const GrammarPracticePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 页面标题 */}
+      {/* Page Title */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-3">
             <BookOpen className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">语法学习</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Grammar Learning</h1>
           </div>
-          <p className="mt-2 text-gray-600">掌握SSAT考试中的核心语法规则（AI动态生成题目）</p>
+          <p className="mt-2 text-gray-600">Master core grammar rules for SSAT exam (AI Dynamic Question Generation)</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* 左侧栏 - 学习区 */}
+          {/* Left Column - Learning Area */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-blue-600" />
-                语法规则
+                Grammar Rules
               </h2>
               
-              {/* 语法规则列表 */}
+              {/* Grammar Rules List */}
               <div className="space-y-3">
                 {grammarRules.map((rule) => (
                   <button
@@ -143,28 +143,28 @@ const GrammarPracticePage: React.FC = () => {
                   >
                     <h3 className="font-semibold text-lg">{rule.title}</h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      {rule.examples.length} 个示例
+                      {rule.examples.length} examples
                     </p>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 选中的语法规则详情 */}
+            {/* Selected Grammar Rule Details */}
             {selectedRule && (
               <GrammarRuleDisplay rule={selectedRule} />
             )}
           </div>
 
-          {/* 右侧栏 - 练习区 */}
+          {/* Right Column - Practice Area */}
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <Target className="w-5 h-5 text-green-600" />
-                练习区
+                Practice Area
               </h2>
 
-              {/* 重新生成按钮 */}
+              {/* Regenerate Button */}
               {selectedRuleId && !isLoading && (
                 <div className="mb-4 flex justify-end">
                   <button
@@ -173,20 +173,20 @@ const GrammarPracticePage: React.FC = () => {
                     disabled={isLoading}
                   >
                     <RefreshCw className="w-4 h-4" />
-                    重新生成题目
+                    Regenerate Questions
                   </button>
                 </div>
               )}
 
-              {/* 加载状态 */}
+              {/* Loading State */}
               {isLoading && (
                 <div className="text-center py-12">
                   <Loader2 className="w-12 h-12 text-blue-600 mx-auto mb-4 animate-spin" />
-                  <p className="text-gray-600">AI正在生成题目，请稍候...</p>
+                  <p className="text-gray-600">AI is generating questions, please wait...</p>
                 </div>
               )}
 
-              {/* 错误状态 */}
+              {/* Error State */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                   <p className="text-red-700 text-sm">{error}</p>
@@ -194,25 +194,25 @@ const GrammarPracticePage: React.FC = () => {
                     onClick={handleRegenerateQuestions}
                     className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium"
                   >
-                    重试
+                    Retry
                   </button>
                 </div>
               )}
 
-              {/* 练习进度和得分 */}
+              {/* Practice Progress and Score */}
               {selectedRuleId && !isLoading && !error && currentQuestions.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600">进度：</span>
+                        <span className="text-sm font-medium text-gray-600">Progress:</span>
                         <span className="text-sm font-semibold text-blue-600">
                           {currentQuestionIndex + 1} / {currentQuestions.length}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Trophy className="w-4 h-4 text-yellow-500" />
-                        <span className="text-sm font-medium text-gray-600">得分：</span>
+                        <span className="text-sm font-medium text-gray-600">Score:</span>
                         <span className="text-sm font-semibold text-green-600">
                           {score} / {totalAnswered}
                         </span>
@@ -222,11 +222,11 @@ const GrammarPracticePage: React.FC = () => {
                       onClick={handleResetPractice}
                       className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                     >
-                      重新开始
+                      Restart
                     </button>
                   </div>
 
-                  {/* 进度条 */}
+                  {/* Progress Bar */}
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300"
@@ -238,7 +238,7 @@ const GrammarPracticePage: React.FC = () => {
                 </div>
               )}
 
-              {/* 练习题目 */}
+              {/* Practice Questions */}
               {selectedRuleId && !isLoading && !error && currentQuestions.length > 0 ? (
                 <PracticeQuestion
                   question={currentQuestions[currentQuestionIndex]}
@@ -248,43 +248,43 @@ const GrammarPracticePage: React.FC = () => {
               ) : selectedRuleId && !isLoading && !error ? (
                 <div className="text-center py-12">
                   <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">该语法规则暂无练习题</p>
+                  <p className="text-gray-500">No practice questions available for this grammar rule</p>
                 </div>
               ) : !selectedRuleId ? (
                 <div className="text-center py-12">
                   <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">请先选择一个语法规则开始学习</p>
+                  <p className="text-gray-500">Please select a grammar rule to start learning</p>
                 </div>
               ) : null}
             </div>
 
-            {/* 练习完成提示 */}
+            {/* Practice Completion Notice */}
             {selectedRuleId && currentQuestions.length > 0 && 
              totalAnswered === currentQuestions.length && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                 <div className="flex items-center gap-3 mb-3">
                   <Trophy className="w-6 h-6 text-green-600" />
-                  <h3 className="text-lg font-semibold text-green-800">练习完成！</h3>
+                  <h3 className="text-lg font-semibold text-green-800">Practice Complete!</h3>
                 </div>
                 <p className="text-green-700 mb-4">
-                  恭喜你完成了 {selectedRule?.title} 的练习！
+                  Congratulations on completing the practice for {selectedRule?.title}!
                 </p>
                 <div className="text-sm text-green-600">
-                  <p>正确率：{Math.round((score / totalAnswered) * 100)}%</p>
-                  <p>答对：{score} 题，答错：{totalAnswered - score} 题</p>
+                  <p>Accuracy: {Math.round((score / totalAnswered) * 100)}%</p>
+                  <p>Correct: {score} questions, Incorrect: {totalAnswered - score} questions</p>
                 </div>
                 <div className="flex gap-2 mt-4">
                   <button
                     onClick={handleResetPractice}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
-                    重新练习
+                    Practice Again
                   </button>
                   <button
                     onClick={handleRegenerateQuestions}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    生成新题目
+                    Generate New Questions
                   </button>
                 </div>
               </div>

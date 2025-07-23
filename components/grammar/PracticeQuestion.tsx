@@ -1,5 +1,5 @@
-// PracticeQuestion组件 - 2024-12-19 14:30:25
-// 用于展示和交互语法练习题
+// PracticeQuestion Component - 2024-12-19 16:00:00
+// Used to display and interact with grammar practice questions
 
 import React, { useState } from 'react';
 import { CheckCircle, XCircle, ArrowRight } from 'lucide-react';
@@ -47,28 +47,28 @@ const PracticeQuestion: React.FC<PracticeQuestionProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-      {/* 题目类型标识 */}
+      {/* Question Type Indicator */}
       <div className="mb-4">
         <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
           question.type === 'multiple-choice' 
             ? 'bg-blue-100 text-blue-800' 
             : 'bg-purple-100 text-purple-800'
         }`}>
-          {question.type === 'multiple-choice' ? '选择题' : '完形填空'}
+          {question.type === 'multiple-choice' ? 'Multiple Choice' : 'Fill in the Blank'}
         </span>
       </div>
 
-      {/* 题干 */}
+      {/* Question Stem */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">题目</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">Question</h3>
         <p className="text-gray-700 leading-relaxed">
           {question.question}
         </p>
       </div>
 
-      {/* 选项 */}
+      {/* Options */}
       <div className="mb-6">
-        <h4 className="text-md font-semibold text-gray-700 mb-3">选项</h4>
+        <h4 className="text-md font-semibold text-gray-700 mb-3">Options</h4>
         {question.type === 'multiple-choice' ? (
           <div className="space-y-3">
             {question.options.map((option, index) => (
@@ -129,18 +129,18 @@ const PracticeQuestion: React.FC<PracticeQuestionProps> = ({
         )}
       </div>
 
-      {/* 提交按钮 */}
+      {/* Submit Button */}
       {!isSubmitted && (
         <button
           onClick={handleSubmit}
           disabled={!selectedAnswer}
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          提交答案
+          Submit Answer
         </button>
       )}
 
-      {/* 结果反馈 */}
+      {/* Result Feedback */}
       {isSubmitted && (
         <div className="mb-6">
           <div className={`p-4 rounded-lg border-l-4 ${
@@ -155,35 +155,35 @@ const PracticeQuestion: React.FC<PracticeQuestionProps> = ({
               <span className={`font-semibold ${
                 isCorrect ? 'text-green-800' : 'text-red-800'
               }`}>
-                {isCorrect ? '回答正确！' : '回答错误'}
+                {isCorrect ? 'Correct!' : 'Incorrect'}
               </span>
             </div>
             {!isCorrect && (
               <p className="text-gray-700 mb-2">
-                正确答案：<span className="font-semibold text-green-700">{question.answer}</span>
+                Correct Answer: <span className="font-semibold text-green-700">{question.answer}</span>
               </p>
             )}
           </div>
         </div>
       )}
 
-      {/* 解释 */}
+      {/* Explanation */}
       {showExplanation && (
         <div className="mb-6">
-          <h4 className="text-md font-semibold text-gray-700 mb-3">解析</h4>
+          <h4 className="text-md font-semibold text-gray-700 mb-3">Explanation</h4>
           <div className="bg-gray-50 rounded-lg p-4 text-gray-700 leading-relaxed">
             {question.explanation}
           </div>
         </div>
       )}
 
-      {/* 下一题按钮 */}
+      {/* Next Question Button */}
       {isSubmitted && (
         <button
           onClick={handleNext}
           className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
         >
-          下一题
+          Next Question
           <ArrowRight className="w-5 h-5" />
         </button>
       )}

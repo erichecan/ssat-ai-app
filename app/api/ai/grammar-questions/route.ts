@@ -1,17 +1,17 @@
-// AI语法题目生成API - 2024-12-19 15:30:25
-// 动态生成SSAT语法练习题
+// AI Grammar Questions Generation API - 2024-12-19 16:00:00
+// Dynamically generate SSAT grammar practice questions
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// 初始化Gemini AI
+// Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
     const { ruleId, ruleTitle, ruleDescription, examples, questionType, count = 2 } = await request.json();
 
-    // 验证必要参数
+    // Validate required parameters
     if (!ruleId || !ruleTitle || !ruleDescription) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
@@ -19,60 +19,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 构建AI提示词
+    // Build AI prompt
     const prompt = `
-你是一个专业的SSAT语法教学专家。请根据以下语法规则生成${count}道高质量的练习题。
+You are a professional SSAT grammar teaching expert. Please generate ${count} high-quality practice questions based on the following grammar rule.
 
-语法规则信息：
-- 规则ID: ${ruleId}
-- 规则标题: ${ruleTitle}
-- 规则描述: ${ruleDescription}
-- 示例: ${examples?.map((ex: any) => ex.sentence).join('; ') || '无'}
+Grammar Rule Information:
+- Rule ID: ${ruleId}
+- Rule Title: ${ruleTitle}
+- Rule Description: ${ruleDescription}
+- Examples: ${examples?.map((ex: any) => ex.sentence).join('; ') || 'None'}
 
-要求：
-1. 生成${count}道题目，其中${Math.ceil(count/2)}道选择题，${Math.floor(count/2)}道填空题
-2. 题目难度适合SSAT考试水平
-3. 每道题都要有明确的正确答案和详细解释
-4. 选择题提供4个选项，其中只有1个正确答案
-5. 填空题提供2个选项供选择
+Requirements:
+1. Generate ${count} questions, with ${Math.ceil(count/2)} multiple-choice questions and ${Math.floor(count/2)} fill-in-the-blank questions
+2. Question difficulty should be appropriate for SSAT exam level
+3. Each question must have a clear correct answer and detailed explanation
+4. Multiple-choice questions should provide 4 options with only 1 correct answer
+5. Fill-in-the-blank questions should provide 2 options to choose from
 
-请以JSON格式返回，格式如下：
+Please return in JSON format as follows:
 {
   "questions": [
     {
       "id": "unique-id-1",
       "ruleId": "${ruleId}",
       "type": "multiple-choice",
-      "question": "题目内容",
-      "options": ["选项A", "选项B", "选项C", "选项D"],
-      "answer": "正确答案",
-      "explanation": "详细解释"
+      "question": "Question content",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": "Correct answer",
+      "explanation": "Detailed explanation"
     },
     {
       "id": "unique-id-2", 
       "ruleId": "${ruleId}",
       "type": "fill-in-the-blank",
-      "question": "题目内容 ___ (选项1/选项2)",
-      "options": ["选项1", "选项2"],
-      "answer": "正确答案",
-      "explanation": "详细解释"
+      "question": "Question content ___ (option1/option2)",
+      "options": ["option1", "option2"],
+      "answer": "Correct answer",
+      "explanation": "Detailed explanation"
     }
   ]
 }
 
-只返回JSON格式，不要其他内容。
+Return only JSON format, no other content.
 `;
 
-    // 调用Gemini AI生成题目
+    // Call Gemini AI to generate questions
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // 解析AI返回的JSON
+    // Parse AI response JSON
     let aiResponse;
     try {
-      // 提取JSON部分
+      // Extract JSON part
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('No valid JSON found in AI response');
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证AI返回的数据结构
+    // Validate AI response data structure
     if (!aiResponse.questions || !Array.isArray(aiResponse.questions)) {
       return NextResponse.json(
         { error: 'Invalid AI response format' },
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 为每个题目生成唯一ID
+    // Generate unique ID for each question
     const questions = aiResponse.questions.map((q: any, index: number) => ({
       ...q,
       id: `${ruleId}-ai-${Date.now()}-${index}`,

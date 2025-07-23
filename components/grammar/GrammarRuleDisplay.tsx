@@ -1,5 +1,5 @@
-// GrammarRuleDisplay组件 - 2024-12-19 14:30:25
-// 用于展示语法规则的详细内容
+// GrammarRuleDisplay Component - 2024-12-19 16:00:00
+// Used to display detailed content of grammar rules
 
 import React from 'react';
 import { CheckCircle, XCircle } from 'lucide-react';
@@ -24,22 +24,22 @@ interface GrammarRuleDisplayProps {
 const GrammarRuleDisplay: React.FC<GrammarRuleDisplayProps> = ({ rule }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-      {/* 标题 */}
+      {/* Title */}
       <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b border-gray-200 pb-2">
         {rule.title}
       </h2>
       
-      {/* 解释 */}
+      {/* Explanation */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">规则解释</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">Rule Explanation</h3>
         <div className="bg-gray-50 rounded-lg p-4 text-gray-700 leading-relaxed whitespace-pre-line">
           {rule.explanation}
         </div>
       </div>
       
-      {/* 示例 */}
+      {/* Examples */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">示例</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-3">Examples</h3>
         <div className="space-y-4">
           {rule.examples.map((example, index) => (
             <div 
