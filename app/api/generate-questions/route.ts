@@ -58,12 +58,49 @@ export async function POST(request: NextRequest) {
       console.log('Found', userAnswers?.length || 0, 'user answers for analysis')
     }
 
+    // 获取需要复习的flashcard词汇（艾宾浩斯曲线）
+    console.log('Fetching due flashcard vocabulary...')
+    const { data: dueVocabulary, error: vocabError } = await supabase
+      .from('flashcards_due_for_review')
+      .select('*')
+      .eq('user_id', userId)
+      .limit(15)
+
+    if (vocabError) {
+      console.error('Vocabulary fetch error:', vocabError)
+    } else {
+      console.log('Found', dueVocabulary?.length || 0, 'vocabulary words due for review')
+    }
+
+    // 获取flashcard详细信息
+    let vocabularyWords: any[] = []
+    if (dueVocabulary && dueVocabulary.length > 0) {
+      const flashcardIds = dueVocabulary.map(v => v.flashcard_id)
+      const { data: flashcardDetails, error: flashcardError } = await supabase
+        .from('flashcards')
+        .select('*')
+        .in('word', flashcardIds)
+        .limit(10)
+
+      if (!flashcardError && flashcardDetails) {
+        vocabularyWords = flashcardDetails
+        console.log('Retrieved', vocabularyWords.length, 'vocabulary word details')
+      }
+    }
+
     // 构建基于用户材料的提示词
     const contextContent = knowledgeData && knowledgeData.length > 0 
       ? knowledgeData.map(kb => `${kb.title}: ${kb.content}`).join('\n\n')
       : ''
 
     const userWeaknesses = analyzeUserWeaknesses(userAnswers || [])
+    
+    // 构建词汇复习内容
+    const vocabularyContext = vocabularyWords.length > 0 
+      ? vocabularyWords.map(word => 
+          `Word: ${word.word || word.front_text}\nDefinition: ${word.definition || word.back_text}\nExample: ${word.example_sentence || ''}`
+        ).join('\n\n')
+      : ''
     
     let prompt = `You are an expert SSAT (Secondary School Admission Test) question generation engine. Your SOLE aim is to create ${count} high-quality, authentic SSAT-style questions in a strict JSON format, based PRIMARILY on the context provided.
 
@@ -144,14 +181,18 @@ You MUST adhere to the following style guide, which is derived from official SSA
 ### [CONTEXT FROM RAG]:
 ${contextContent || 'No specific context provided - generate standard SSAT questions targeting user weaknesses.'}
 
+### [VOCABULARY WORDS DUE FOR SPACED REPETITION REVIEW]:
+${vocabularyContext || 'No vocabulary words currently due for review.'}
+
 ### [USER PERFORMANCE ANALYSIS]:
 ${userWeaknesses}
 
 ### [FINAL INSTRUCTIONS]:
 1.  Generate **${count}** questions.
-2.  **PRIORITY #1**: Base your questions **DIRECTLY** on the provided **[CONTEXT FROM RAG]**. Use its text for reading passages, its words for vocabulary, and its scenarios for math problems.
-3.  **PRIORITY #2**: If the context is insufficient for a certain question type, generate a standard question but ensure it targets the user's weak areas: **${userWeaknesses}**.
-4.  **STRICTLY** follow the JSON format and style of the **Golden Examples**. Every question MUST have a detailed \`explanation\`.
+2.  **PRIORITY #1**: If vocabulary words are provided in **[VOCABULARY WORDS DUE FOR SPACED REPETITION REVIEW]**, create vocabulary questions using these specific words. Use them for synonyms, analogies, or vocabulary-in-context questions.
+3.  **PRIORITY #2**: Base your questions **DIRECTLY** on the provided **[CONTEXT FROM RAG]**. Use its text for reading passages, its words for vocabulary, and its scenarios for math problems.
+4.  **PRIORITY #3**: If neither vocabulary nor context is sufficient, generate standard questions but ensure they target the user's weak areas: **${userWeaknesses}**.
+5.  **STRICTLY** follow the JSON format and style of the **Golden Examples**. Every question MUST have a detailed \`explanation\`.
 
 ## OUTPUT FORMAT (JSON only - no markdown):
 {
@@ -209,6 +250,8 @@ Begin generation.`
             userMaterialsCount: knowledgeData?.length || 0,
             userHistoryAnalyzed: (userAnswers?.length || 0) > 0,
             userWeaknesses: userWeaknesses,
+            vocabularyWordsCount: vocabularyWords.length,
+            hasVocabularyWords: vocabularyWords.length > 0,
             isFallback: false
           }
         })
