@@ -207,7 +207,27 @@ export default function FlashCardPage() {
     e.stopPropagation() // 阻止事件冒泡，防止触发卡片翻转
     if (currentCard && 'speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(currentCard.word)
-      utterance.rate = 0.8
+      
+      // 设置美式发音 - 更新于 2024-01-21 05:30:00
+      utterance.lang = 'en-US' // 设置为美式英语
+      utterance.rate = 0.8 // 语速稍慢，便于听清
+      utterance.pitch = 1.0 // 正常音调
+      utterance.volume = 1.0 // 最大音量
+      
+      // 尝试选择美式发音的语音
+      const voices = speechSynthesis.getVoices()
+      const usVoice = voices.find(voice => 
+        voice.lang === 'en-US' && 
+        (voice.name.includes('US') || voice.name.includes('American') || voice.name.includes('Samantha'))
+      )
+      
+      if (usVoice) {
+        utterance.voice = usVoice
+        console.log('Using US voice:', usVoice.name)
+      } else {
+        console.log('No US voice found, using default')
+      }
+      
       speechSynthesis.speak(utterance)
     }
   }

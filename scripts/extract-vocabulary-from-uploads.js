@@ -69,7 +69,7 @@ Create a detailed flashcard with the following information (respond in valid JSO
 
 {
   "definition": "Clear, concise definition suitable for high school students",
-  "pronunciation": "IPA pronunciation in /.../ format",
+  "pronunciation": "American English IPA pronunciation in /.../ format (use US pronunciation, not British)",
   "part_of_speech": "noun/verb/adjective/adverb/etc",
   "example_sentence": "Natural example sentence using the word in context",
   "synonyms": ["synonym1", "synonym2", "synonym3"],
@@ -78,6 +78,11 @@ Create a detailed flashcard with the following information (respond in valid JSO
   "memory_tip": "Helpful mnemonic or memory technique",
   "difficulty": "easy/medium/hard (based on SSAT/SAT level)"
 }
+
+IMPORTANT: Use American English pronunciation for IPA. For example:
+- "schedule" should be /ˈskɛdʒuːl/ (US) not /ˈʃɛdjuːl/ (UK)
+- "tomato" should be /təˈmeɪtoʊ/ (US) not /təˈmɑːtəʊ/ (UK)
+- "vitamin" should be /ˈvaɪtəmɪn/ (US) not /ˈvɪtəmɪn/ (UK)
 
 Ensure the content is appropriate for SSAT/SAT test preparation and focuses on academic vocabulary usage.`
 
