@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText } from '@/lib/gemini'
+import { generateTextOptimized } from '@/lib/gemini-optimized'
 
 // 真正的AI助手实现，使用Gemini AI
 export async function POST(request: NextRequest) {
@@ -37,7 +37,10 @@ If they ask about specific subjects:
 Respond in a friendly, tutor-like tone.`
 
       console.log('Calling generateText with prompt length:', prompt.length)
-      const response = await generateText(prompt, 15000) // 增加到15秒超时
+      const response = await generateTextOptimized(prompt, 15000, {
+      maxRetries: 2,
+      baseDelay: 1000
+    })
       console.log('AI response received, length:', response.length)
       
       return NextResponse.json({

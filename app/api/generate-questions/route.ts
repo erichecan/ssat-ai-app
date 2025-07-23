@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { generateText } from '@/lib/gemini'
+import { generateTextOptimized } from '@/lib/gemini-optimized'
+import { generateTextWithCache } from '@/lib/ai-cache'
 import { supabase } from '@/lib/supabase'
 
 interface Question {
@@ -326,8 +327,23 @@ Begin generation.`
     // 首先尝试AI生成，如果失败使用备用题目
     let aiResponse: string
     try {
-      console.log('Calling Gemini API with 12s timeout...')
-      aiResponse = await generateText(prompt, 12000) // 12秒超时
+      console.log('Calling optimized Gemini API with cache and retry mechanism...')
+      aiResponse = await generateTextWithCache(
+        prompt,
+        generateTextOptimized,
+        15000,
+        {
+          maxRetries: 3,
+          baseDelay: 1000,
+          maxDelay: 5000
+        },
+        {
+          initialTimeout: 15000,
+          retryTimeout: 20000,
+          maxTimeout: 30000
+        },
+        1800000 // 30分钟缓存
+      )
       console.log('AI response received, length:', aiResponse.length)
     } catch (aiError) {
       console.log('AI generation failed, using fallback questions:', aiError)
