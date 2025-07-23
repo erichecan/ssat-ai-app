@@ -203,7 +203,8 @@ export default function FlashCardPage() {
     }
   }
 
-  const handlePronounce = () => {
+  const handlePronounce = (e: React.MouseEvent) => {
+    e.stopPropagation() // 阻止事件冒泡，防止触发卡片翻转
     if (currentCard && 'speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(currentCard.word)
       utterance.rate = 0.8
@@ -461,7 +462,6 @@ export default function FlashCardPage() {
             <div className="mt-6 space-y-4">
               {/* 复习质量评分 */}
               <div className="bg-white rounded-2xl p-4 border border-zinc-200 shadow-sm">
-                <h4 className="text-zinc-700 text-sm font-semibold mb-3 text-center">复习效果如何？</h4>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => handleReview(1)}
@@ -485,18 +485,21 @@ export default function FlashCardPage() {
               </div>
 
               {/* 掌握控制 */}
-              {!currentCard?.userProgress?.is_mastered && (
-                <div className="text-center">
+              <div className="flex justify-center">
+                {!currentCard?.userProgress?.is_mastered ? (
                   <button
                     onClick={handleMaster}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-semibold rounded-xl shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                    className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                    title="标记为已掌握"
                   >
-                    <Star size={16} />
-                    标记为已掌握
+                    <Star size={20} />
                   </button>
-                  <p className="text-zinc-400 text-xs mt-2">已掌握的词汇不会再出现在复习中</p>
-                </div>
-              )}
+                ) : (
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full shadow-md">
+                    <Trophy size={20} />
+                  </div>
+                )}
+              </div>
 
               {/* 学习统计 */}
               {stats && (
