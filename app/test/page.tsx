@@ -8,7 +8,8 @@ import {
   BookOpen,
   Brain,
   User,
-  Loader2
+  Loader2,
+  FileText
 } from 'lucide-react'
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 
@@ -391,36 +392,42 @@ export default function TestPage() {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="flex gap-2 border-t border-[#e7edf3] bg-slate-50 px-4 pb-3 pt-2">
-        <Link href="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <House size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
-        </Link>
-        <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <BookOpen size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
-        </Link>
-        <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <Brain size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
-        </Link>
-        <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
-          <div className="text-[#4e7397] flex h-8 items-center justify-center">
-            <User size={24} />
-          </div>
-          <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
-        </Link>
+            {/* Bottom Navigation */}
+      <div>
+        <div className="flex gap-2 border-t border-[#e7edf3] bg-slate-50 px-4 pb-3 pt-2">
+          <Link href="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <House size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </Link>
+          <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <BookOpen size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <FileText size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
+          </Link>
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <Brain size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
+          </Link>
+          <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <User size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+          </Link>
+        </div>
+        <div className="h-5 bg-slate-50"></div>
       </div>
-      
-      {/* Safe area for mobile */}
-      <div className="h-5 bg-slate-50"></div>
     </div>
   )
 }

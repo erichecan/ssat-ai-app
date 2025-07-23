@@ -4,11 +4,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import GrammarRuleDisplay from '../../components/grammar/GrammarRuleDisplay';
 import PracticeQuestion from '../../components/grammar/PracticeQuestion';
 import { grammarRules } from '../data/grammarRules';
 import { grammarQuestions } from '../data/grammarQuestions';
-import { BookOpen, Target, Trophy } from 'lucide-react';
+import { BookOpen, Target, Trophy, House, Brain, User } from 'lucide-react';
 
 const GrammarPracticePage: React.FC = () => {
   // 状态管理
@@ -201,6 +202,43 @@ const GrammarPracticePage: React.FC = () => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Bottom Navigation */}
+      <div>
+        <div className="flex gap-2 border-t border-[#e7edf3] bg-slate-50 px-4 pb-3 pt-2">
+          <Link href="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <House size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </Link>
+          <Link href="/practice" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <BookOpen size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]">
+            <div className="text-[#0e141b] flex h-8 items-center justify-center">
+              <BookOpen size={24} fill="currentColor" />
+            </div>
+            <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
+          </Link>
+          <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <Brain size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Vocabulary</p>
+          </Link>
+          <Link href="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <User size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+          </Link>
+        </div>
+        <div className="h-5 bg-slate-50"></div>
       </div>
     </div>
   );

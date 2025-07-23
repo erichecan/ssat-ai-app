@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, BookOpen, House, Brain, User } from 'lucide-react';
+import { ArrowLeft, BookOpen, House, Brain, User, FileText } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 export default function PracticePage() {
@@ -226,6 +226,12 @@ export default function PracticePage() {
               <BookOpen size={24} fill="currentColor" />
             </div>
             <p className="text-[#0e141b] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <FileText size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
           </Link>
           <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">

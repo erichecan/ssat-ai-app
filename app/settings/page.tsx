@@ -443,6 +443,12 @@ export default function SettingsPage() {
             </div>
             <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
+          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
+            <div className="text-[#5c738a] flex h-8 items-center justify-center">
+              <FileText size={24} />
+            </div>
+            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
+          </Link>
           <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
             <div className="text-[#5c738a] flex h-8 items-center justify-center">
               <Brain size={24} />

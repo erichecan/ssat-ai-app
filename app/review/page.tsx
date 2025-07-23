@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, House, BookOpen, Brain, User, ChevronLeft, ChevronRight, RefreshCw, Bot } from 'lucide-react';
+import { ArrowLeft, House, BookOpen, Brain, User, ChevronLeft, ChevronRight, RefreshCw, Bot , FileText} from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 
 interface ReviewQuestion {
@@ -307,7 +307,8 @@ export default function ReviewPage() {
           </div>
         </div>
 
-        {/* Bottom Navigation */}
+              {/* Bottom Navigation */}
+      <div>
         <div className="flex gap-2 border-t border-[#e7edf3] bg-slate-50 px-4 pb-3 pt-2">
           <Link href="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
@@ -320,6 +321,12 @@ export default function ReviewPage() {
               <BookOpen size={24} />
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <FileText size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
           </Link>
           <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
@@ -335,6 +342,7 @@ export default function ReviewPage() {
           </Link>
         </div>
         <div className="h-5 bg-slate-50"></div>
+      </div>
       </div>
     </div>
   );

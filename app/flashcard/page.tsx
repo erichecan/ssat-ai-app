@@ -15,7 +15,8 @@ import {
   Star,
   Trophy,
   Clock,
-  Target
+  Target,
+  FileText
 } from 'lucide-react'
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 import { Flashcard } from '@/lib/flashcard-bank'
@@ -532,6 +533,12 @@ export default function FlashCardPage() {
               <BookOpen size={24} />
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
+          </Link>
+          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+            <div className="text-[#4e7397] flex h-8 items-center justify-center">
+              <FileText size={24} />
+            </div>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
           </Link>
           <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#0e141b]">
             <div className="text-[#0e141b] flex h-8 items-center justify-center">
