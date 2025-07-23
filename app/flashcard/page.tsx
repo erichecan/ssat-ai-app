@@ -489,31 +489,35 @@ export default function FlashCardPage() {
             {/* Mastery and Review Control Buttons - Top Right */}
             <div className="absolute top-4 right-4 z-20 flex gap-2">
               {!currentCard?.userProgress?.is_mastered ? (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleMaster()
-                  }}
-                  className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-full shadow-md hover:from-green-500 hover:to-green-600 transition-all duration-200"
-                  title="Mark as Mastered"
-                >
-                  <CheckSquare size={16} />
-                </button>
-              ) : (
                 <>
-                  <div className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-md">
-                    <CheckSquare size={16} />
-                  </div>
+                  {/* 未掌握状态：显示掌握按钮和收藏按钮 (2024-12-19 15:35:00) */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleReview(3) // Medium quality review
+                      handleMaster()
+                    }}
+                    className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-full shadow-md hover:from-green-500 hover:to-green-600 transition-all duration-200"
+                    title="Mark as Mastered (✅)"
+                  >
+                    <CheckSquare size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleReview(5) // High quality review for starred items
                     }}
                     className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
-                    title="Review Again"
+                    title="Star for Enhanced Review (⭐)"
                   >
                     <Star size={16} />
                   </button>
+                </>
+              ) : (
+                <>
+                  {/* 已掌握状态：只显示已掌握图标 */}
+                  <div className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-md">
+                    <CheckSquare size={16} />
+                  </div>
                 </>
               )}
             </div>
