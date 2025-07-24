@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       } catch (aiError) {
         console.warn('AI generation failed, falling back to static questions:', aiError)
         
-        // 如果AI生成失败，使用静态题目库作为备用
+        // 如果AI生成失败，使用静态题目库作为备用 - Enhanced fallback logic (2024-12-19 17:05:00)
         const subjectTypeMap: Record<string, string> = {
           'Reading Comprehension': 'reading',
           'Math': 'math', 
@@ -149,6 +149,22 @@ export async function POST(request: NextRequest) {
           uniqueQuestions.push(...additionalQuestions)
         }
         
+        // 如果仍然不够，重复使用现有题目（确保至少达到目标数量）
+        if (uniqueQuestions.length < targetCount) {
+          const needed = targetCount - uniqueQuestions.length
+          const existingQuestions = [...uniqueQuestions]
+          for (let i = 0; i < needed; i++) {
+            const originalQuestion = existingQuestions[i % existingQuestions.length]
+            const duplicatedQuestion = {
+              ...originalQuestion,
+              id: `${originalQuestion.id}_duplicate_${i}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+            uniqueQuestions.push(duplicatedQuestion)
+          }
+        }
+        
         // 随机排序
         const shuffleArray = (array: any[]) => {
           const result = [...array]
@@ -160,6 +176,7 @@ export async function POST(request: NextRequest) {
         }
         
         questions = shuffleArray(uniqueQuestions).slice(0, targetCount)
+        console.log(`Fallback: Generated ${questions.length} static questions (target was ${targetCount})`)
       }
       
       console.log('Generated', questions.length, 'questions for custom practice (AI + fallback)')

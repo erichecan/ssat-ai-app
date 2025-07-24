@@ -89,7 +89,7 @@ Please return in JSON format as follows:
 Return only JSON format, no other content.
 `;
 
-    // Call Gemini AI to generate questions
+    // Call Gemini AI to generate questions - Fixed model name (2024-12-19 17:00:00)
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
     const result = await model.generateContent(prompt);
     const response = await result.response;

@@ -471,21 +471,23 @@ async function getFallbackQuestions(count: number, userId: string, questionType:
   console.log(`Requested ${count} questions, ensuring adequate fallback coverage...`)
   
   try {
-    // 调用动态题目生成API
-    const dynamicResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/questions/dynamic`, {
+    // 调用AI生成题目 API
+    const aiResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/ai/grammar-questions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId,
-        questionType,
-        count: Math.max(count, 20), // 确保至少生成20道题
-        difficulty: 'mixed',
-        avoidRecent: true
+        userId: userId,
+        questionType: 'mixed',
+        count: count, // Use the requested count for fallback
+        ruleId: 'custom-practice',
+        ruleTitle: 'Custom Practice Questions',
+        ruleDescription: 'Mixed SSAT practice questions for custom session',
+        examples: []
       })
     })
 
-    if (dynamicResponse.ok) {
-      const dynamicData = await dynamicResponse.json()
+    if (aiResponse.ok) {
+      const dynamicData = await aiResponse.json()
       if (dynamicData.success && dynamicData.questions && dynamicData.questions.length >= count) {
         console.log(`Generated ${dynamicData.questions.length} dynamic fallback questions`)
         

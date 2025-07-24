@@ -517,6 +517,302 @@ export const questionBank: Question[] = [
     time_limit: 90,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
+  },
+
+  // Additional Vocabulary Questions - Enhanced for better coverage (2024-12-19 17:00:00)
+  {
+    id: 'vocab_016',
+    type: 'vocabulary',
+    question: "What does 'meticulous' mean?",
+    options: [
+      "Showing great attention to detail; very careful and precise.",
+      "Being very fast and efficient in completing tasks.",
+      "Having a strong desire to succeed or achieve something.",
+      "Being friendly and easy to talk to."
+    ],
+    correct_answer: "Showing great attention to detail; very careful and precise.",
+    explanation: "Meticulous means showing great attention to detail; very careful and precise. It comes from the Latin 'metus' meaning 'fear' - originally meaning 'fearful' but evolved to mean 'careful'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['latin_roots', 'attention', 'precision'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_017',
+    type: 'vocabulary',
+    question: "Which word means 'to make something less severe or intense'?",
+    options: [
+      "Exacerbate",
+      "Alleviate",
+      "Aggravate",
+      "Intensify"
+    ],
+    correct_answer: "Alleviate",
+    explanation: "Alleviate means to make something less severe or intense. It comes from the Latin 'alleviare' meaning 'to lighten'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['latin_roots', 'reduction', 'relief'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_018',
+    type: 'vocabulary',
+    question: "What is the meaning of 'resilient'?",
+    options: [
+      "Able to withstand or recover quickly from difficult conditions.",
+      "Being very strong and muscular.",
+      "Having a lot of energy and enthusiasm.",
+      "Being very intelligent and knowledgeable."
+    ],
+    correct_answer: "Able to withstand or recover quickly from difficult conditions.",
+    explanation: "Resilient means able to withstand or recover quickly from difficult conditions. It comes from the Latin 'resilire' meaning 'to leap back'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['latin_roots', 'recovery', 'strength'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_019',
+    type: 'vocabulary',
+    question: "Which word means 'to express strong disapproval of'?",
+    options: [
+      "Applaud",
+      "Condemn",
+      "Praise",
+      "Support"
+    ],
+    correct_answer: "Condemn",
+    explanation: "Condemn means to express strong disapproval of. It comes from the Latin 'condemnare' meaning 'to sentence'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['latin_roots', 'disapproval', 'judgment'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'vocab_020',
+    type: 'vocabulary',
+    question: "What does 'eloquent' mean?",
+    options: [
+      "Fluent or persuasive in speaking or writing.",
+      "Being very loud and attention-grabbing.",
+      "Having a lot of knowledge about many subjects.",
+      "Being very fast in completing tasks."
+    ],
+    correct_answer: "Fluent or persuasive in speaking or writing.",
+    explanation: "Eloquent means fluent or persuasive in speaking or writing. It comes from the Latin 'eloquens' meaning 'speaking out'.",
+    difficulty: 'medium',
+    topic: 'vocabulary',
+    tags: ['latin_roots', 'speech', 'persuasion'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+
+  // Additional Math Questions
+  {
+    id: 'math_016',
+    type: 'math',
+    question: "If a triangle has angles measuring 45°, 45°, and 90°, what type of triangle is it?",
+    options: [
+      "Equilateral triangle",
+      "Isosceles right triangle",
+      "Scalene triangle",
+      "Obtuse triangle"
+    ],
+    correct_answer: "Isosceles right triangle",
+    explanation: "A triangle with angles 45°, 45°, and 90° is an isosceles right triangle. It has two equal angles (45°) and one right angle (90°), and the sides opposite the equal angles are equal in length.",
+    difficulty: 'medium',
+    topic: 'geometry',
+    tags: ['triangles', 'angles', 'isosceles'],
+    time_limit: 90,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_017',
+    type: 'math',
+    question: "What is the value of x if 2x + 5 = 17?",
+    options: [
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    correct_answer: "6",
+    explanation: "2x + 5 = 17 → 2x = 12 → x = 6",
+    difficulty: 'easy',
+    topic: 'algebra',
+    tags: ['linear_equations', 'solving'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_018',
+    type: 'math',
+    question: "What is the perimeter of a square with side length 8?",
+    options: [
+      "16",
+      "24",
+      "32",
+      "64"
+    ],
+    correct_answer: "32",
+    explanation: "Perimeter of a square = 4 × side length = 4 × 8 = 32",
+    difficulty: 'easy',
+    topic: 'geometry',
+    tags: ['perimeter', 'squares'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_019',
+    type: 'math',
+    question: "What is 15% of 200?",
+    options: [
+      "20",
+      "30",
+      "25",
+      "35"
+    ],
+    correct_answer: "30",
+    explanation: "15% of 200 = 0.15 × 200 = 30",
+    difficulty: 'easy',
+    topic: 'percentages',
+    tags: ['percentages', 'calculation'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'math_020',
+    type: 'math',
+    question: "If a rectangle has length 10 and width 6, what is its area?",
+    options: [
+      "16",
+      "32",
+      "60",
+      "120"
+    ],
+    correct_answer: "60",
+    explanation: "Area of rectangle = length × width = 10 × 6 = 60",
+    difficulty: 'easy',
+    topic: 'geometry',
+    tags: ['area', 'rectangles'],
+    time_limit: 60,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+
+  // Additional Reading Questions
+  {
+    id: 'reading_016',
+    type: 'reading',
+    question: "What is the main purpose of this passage?",
+    options: [
+      "To entertain readers with a story",
+      "To inform readers about a scientific discovery",
+      "To persuade readers to take action",
+      "To describe a historical event"
+    ],
+    correct_answer: "To inform readers about a scientific discovery",
+    explanation: "The passage presents factual information about a scientific discovery in an objective manner, making its main purpose to inform.",
+    difficulty: 'medium',
+    topic: 'comprehension',
+    tags: ['main_idea', 'purpose'],
+    time_limit: 90,
+    passage: "Scientists have discovered a new species of deep-sea fish that can survive in extreme pressure conditions. The fish, found at depths of over 3,000 meters, has unique adaptations including bioluminescent organs and specialized gills that allow it to extract oxygen from the low-oxygen environment. This discovery could lead to new insights into how life adapts to extreme environments.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'reading_017',
+    type: 'reading',
+    question: "Based on the passage, what can be inferred about the author's attitude?",
+    options: [
+      "Skeptical and doubtful",
+      "Enthusiastic and optimistic",
+      "Neutral and objective",
+      "Concerned and worried"
+    ],
+    correct_answer: "Neutral and objective",
+    explanation: "The author presents the information in a factual, objective manner without expressing personal opinions or emotions.",
+    difficulty: 'medium',
+    topic: 'comprehension',
+    tags: ['inference', 'author_attitude'],
+    time_limit: 90,
+    passage: "The new technology shows potential for improving efficiency in manufacturing processes. Research indicates that it could reduce production time by up to 25% while maintaining quality standards. However, implementation costs and training requirements must be carefully considered before adoption.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'reading_018',
+    type: 'reading',
+    question: "What is the meaning of the word 'innovative' as used in the passage?",
+    options: [
+      "Traditional and well-established",
+      "New and creative",
+      "Expensive and costly",
+      "Simple and basic"
+    ],
+    correct_answer: "New and creative",
+    explanation: "In the context of the passage, 'innovative' refers to something that is new and creative, introducing novel approaches or methods.",
+    difficulty: 'medium',
+    topic: 'vocabulary_in_context',
+    tags: ['vocabulary', 'context'],
+    time_limit: 90,
+    passage: "The company's innovative approach to problem-solving has led to several breakthrough products. Their creative thinking and willingness to try new methods have set them apart from competitors in the industry.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'reading_019',
+    type: 'reading',
+    question: "Which of the following best summarizes the passage?",
+    options: [
+      "A detailed history of the subject",
+      "A comparison of different approaches",
+      "An explanation of a process or concept",
+      "A personal opinion about the topic"
+    ],
+    correct_answer: "An explanation of a process or concept",
+    explanation: "The passage explains how a process works or describes a concept in detail, making this the best summary.",
+    difficulty: 'medium',
+    topic: 'comprehension',
+    tags: ['summary', 'main_idea'],
+    time_limit: 90,
+    passage: "Photosynthesis is the process by which plants convert sunlight into energy. During this process, plants take in carbon dioxide and water, and using energy from sunlight, they produce glucose and oxygen. This process is essential for life on Earth as it provides the oxygen we breathe and forms the base of most food chains.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'reading_020',
+    type: 'reading',
+    question: "What is the tone of this passage?",
+    options: [
+      "Humorous and lighthearted",
+      "Serious and informative",
+      "Critical and negative",
+      "Emotional and passionate"
+    ],
+    correct_answer: "Serious and informative",
+    explanation: "The passage presents information in a serious, factual manner with the purpose of educating the reader.",
+    difficulty: 'medium',
+    topic: 'comprehension',
+    tags: ['tone', 'mood'],
+    time_limit: 90,
+    passage: "Climate change represents one of the most significant challenges facing humanity today. Scientific evidence shows that global temperatures are rising due to increased greenhouse gas emissions. This warming trend affects weather patterns, sea levels, and ecosystems worldwide, requiring immediate attention and action.",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ]
 
