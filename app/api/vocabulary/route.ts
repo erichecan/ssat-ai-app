@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { generateText } from '@/lib/gemini'
+import { createClient } from '@supabase/supabase-js'
 import { DEMO_USER_UUID } from '@/lib/demo-user'
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseKey)
 
+// Add word to vocabulary with AI enhancement
 export async function POST(request: NextRequest) {
   try {
-    const { word, userId, context, source } = await request.json()
-    const finalUserId = userId || DEMO_USER_UUID
+    const body = await request.json()
+    let { word, userId, source = 'manual_add', context } = body
+    
+    // Fix UUID format - 2024-12-19 17:30:00
+    if (!userId || userId === 'demo-user-123') {
+      userId = DEMO_USER_UUID
+    }
+
+    console.log('Adding word to vocabulary:', { word, userId, source })
 
     if (!word) {
       return NextResponse.json(
@@ -17,49 +27,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Adding word to vocabulary:', { word, userId: finalUserId, source })
-
     // Check if word already exists for this user
     const { data: existingWord, error: checkError } = await supabase
       .from('flashcards')
       .select('*')
-      .eq('user_id', finalUserId)
+      .eq('user_id', userId)
       .eq('word', word.toLowerCase())
-      .maybeSingle()
+      .eq('type', 'vocabulary')
+      .single()
 
     if (checkError && checkError.code !== 'PGRST116') {
       console.error('Error checking existing word:', checkError)
       return NextResponse.json(
-        { error: 'Failed to check existing vocabulary' },
+        { error: 'Database error checking existing word' },
         { status: 500 }
       )
     }
 
     if (existingWord) {
-      return NextResponse.json({
-        success: true,
-        message: 'Word already exists in vocabulary',
-        wordId: existingWord.id,
-        alreadyExists: true
-      })
+      return NextResponse.json(
+        { 
+          success: true, 
+          message: 'Word already exists in vocabulary',
+          word: existingWord 
+        }
+      )
     }
 
-    // Generate comprehensive flashcard content using AI
-    let cardContent: any = {
-      definition: `Definition for "${word}" - to be updated`,
-      pronunciation: '',
-      part_of_speech: 'unknown',
-      example_sentence: '',
-      synonyms: '[]',
-      antonyms: '[]',
-      etymology: '',
-      memory_tip: '',
-      difficulty: 'medium'
-    }
-
+    // Generate AI content for the word
+    let cardContent
     try {
       console.log('Generating AI content for word:', word)
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
       
       const prompt = `You are a vocabulary expert creating a comprehensive flashcard for SSAT/SAT test preparation.
 
@@ -80,38 +78,11 @@ Create a detailed flashcard with the following information (respond in valid JSO
   "difficulty": "easy/medium/hard (based on SSAT/SAT level)"
 }
 
-IMPORTANT: Use American English pronunciation for IPA. For example:
-- "schedule" should be /ˈskɛdʒuːl/ (US) not /ˈʃɛdjuːl/ (UK)
-- "tomato" should be /təˈmeɪtoʊ/ (US) not /təˈmɑːtəʊ/ (UK)
-- "vitamin" should be /ˈvaɪtəmɪn/ (US) not /ˈvɪtəmɪn/ (UK)
+Return only the JSON object, no additional text.`
 
-Ensure the content is appropriate for SSAT/SAT test preparation and focuses on academic vocabulary usage.`
-
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const text = response.text()
-      
-      // Parse AI response, remove markdown code blocks if present
-      let cleanText = text.trim()
-      if (cleanText.startsWith('```json')) {
-        cleanText = cleanText.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-      } else if (cleanText.startsWith('```')) {
-        cleanText = cleanText.replace(/^```\s*/, '').replace(/\s*```$/, '')
-      }
-      
-      const aiContent = JSON.parse(cleanText)
-      
-      cardContent = {
-        definition: aiContent.definition || cardContent.definition,
-        pronunciation: aiContent.pronunciation || '',
-        part_of_speech: aiContent.part_of_speech || 'unknown',
-        example_sentence: aiContent.example_sentence || '',
-        synonyms: Array.isArray(aiContent.synonyms) ? `{${aiContent.synonyms.join(',')}}` : '{}',
-        antonyms: Array.isArray(aiContent.antonyms) ? `{${aiContent.antonyms.join(',')}}` : '{}',
-        etymology: aiContent.etymology || '',
-        memory_tip: aiContent.memory_tip || '',
-        difficulty: aiContent.difficulty || 'medium'
-      }
+      const aiResponse = await generateText(prompt, 10000) // 10 second timeout
+      const cleanResponse = aiResponse.replace(/```json\n?|\n?```/g, '').trim()
+      cardContent = JSON.parse(cleanResponse)
       
       console.log('Successfully generated AI content for:', word)
       
@@ -123,23 +94,23 @@ Ensure the content is appropriate for SSAT/SAT test preparation and focuses on a
     const { data: newCard, error: insertError } = await supabase
       .from('flashcards')
       .insert({
-        user_id: finalUserId,
+        user_id: userId,
         word: word.toLowerCase(),
-        definition: cardContent.definition,
+        definition: cardContent.definition || 'Definition for "' + word + '" - to be updated',
         type: 'vocabulary',
         subject: 'Advanced Vocabulary',
         difficulty_level: cardContent.difficulty === 'easy' ? 1 : cardContent.difficulty === 'medium' ? 2 : 3,
         question: `What does "${word}" mean?`,
-        answer: cardContent.definition,
-        explanation: `${cardContent.definition}. ${cardContent.etymology ? `Etymology: ${cardContent.etymology}` : ''}`,
+        answer: cardContent.definition || 'Definition for "' + word + '" - to be updated',
+        explanation: `${cardContent.definition || 'Definition for "' + word + '" - to be updated'}. ${cardContent.etymology ? `Etymology: ${cardContent.etymology}` : ''}`,
         tags: `{${source || 'global_selection'},vocabulary}`,
-        pronunciation: cardContent.pronunciation,
-        part_of_speech: cardContent.part_of_speech,
-        example_sentence: cardContent.example_sentence,
-        synonyms: cardContent.synonyms,
-        antonyms: cardContent.antonyms,
-        etymology: cardContent.etymology,
-        memory_tip: cardContent.memory_tip,
+        pronunciation: cardContent.pronunciation || '',
+        part_of_speech: cardContent.part_of_speech || 'unknown',
+        example_sentence: cardContent.example_sentence || '',
+        synonyms: cardContent.synonyms || '[]',
+        antonyms: cardContent.antonyms || '[]',
+        etymology: cardContent.etymology || '',
+        memory_tip: cardContent.memory_tip || '',
         category: 'vocabulary',
         frequency_score: 50,
         source_type: 'global_selection',

@@ -42,7 +42,7 @@ export default function UploadPage() {
   const loadUploadedFiles = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/uploaded-files?userId=demo-user-123');
+      const response = await fetch('/api/uploaded-files?userId=00000000-0000-0000-0000-000000000001'); // Fixed UUID format
       const result = await response.json();
 
       if (response.ok && result.files) {
@@ -107,7 +107,7 @@ export default function UploadPage() {
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('userId', 'demo-user-123');
+      formData.append('userId', '00000000-0000-0000-0000-000000000001'); // Fixed UUID format
 
       const newFile: UploadedFile = {
         id: Date.now().toString(),
@@ -156,7 +156,7 @@ export default function UploadPage() {
 
   const handleDeleteFile = async (fileId: string) => {
     try {
-      const response = await fetch(`/api/uploaded-files?userId=demo-user-123&fileName=${encodeURIComponent(fileId)}`, {
+      const response = await fetch(`/api/uploaded-files?userId=00000000-0000-0000-0000-000000000001&fileName=${encodeURIComponent(fileId)}`, {
         method: 'DELETE',
       });
 

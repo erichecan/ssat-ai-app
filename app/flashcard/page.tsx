@@ -114,7 +114,7 @@ export default function FlashCardPage() {
     
     try {
       const currentUser = SessionManager.getCurrentUser()
-      const userId = currentUser?.id || 'demo-user-123'
+      const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
       // 按艾宾浩斯记忆曲线加载所有flashcards（无论是否到期）
       // 优先级：1.到期复习 2.新单词 3.困难单词 4.其他
@@ -192,7 +192,7 @@ export default function FlashCardPage() {
     
     try {
       const currentUser = SessionManager.getCurrentUser()
-      const userId = currentUser?.id || 'demo-user-123'
+      const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
       const response = await fetch('/api/flashcards/enhanced', {
         method: 'POST',
@@ -229,7 +229,7 @@ export default function FlashCardPage() {
     
     try {
       const currentUser = SessionManager.getCurrentUser()
-      const userId = currentUser?.id || 'demo-user-123'
+      const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
       const response = await fetch('/api/flashcards/enhanced', {
         method: 'POST',
@@ -267,7 +267,7 @@ export default function FlashCardPage() {
     
     try {
       const currentUser = SessionManager.getCurrentUser()
-      const userId = currentUser?.id || 'demo-user-123'
+      const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
       const response = await fetch('/api/flashcards/enhanced', {
         method: 'POST',
@@ -306,7 +306,7 @@ export default function FlashCardPage() {
     
     try {
       const currentUser = SessionManager.getCurrentUser()
-      const userId = currentUser?.id || 'demo-user-123'
+      const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
       const response = await fetch('/api/flashcards/enhanced', {
         method: 'POST',
