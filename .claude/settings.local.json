@@ -31,7 +31,8 @@
       "Bash(touch:*)",
       "Bash(psql:*)",
       "Bash(supabase db push:*)",
-      "Bash(supabase link:*)"
+      "Bash(supabase link:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   }

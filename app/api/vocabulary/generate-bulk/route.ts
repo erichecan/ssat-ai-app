@@ -4,9 +4,15 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId = 'demo-user-123', batchSize = 50, totalTarget = 3000 } = await request.json()
+    const { userId, batchSize = 50, totalTarget = 3000 } = await request.json()
     
-    console.log(`Starting bulk vocabulary generation: ${totalTarget} words in batches of ${batchSize}`)
+    // Fix UUID format for demo user - 2024-12-19 17:15:00
+    let finalUserId = userId
+    if (!userId || userId === 'demo-user-123') {
+      finalUserId = '00000000-0000-0000-0000-000000000001' // Valid UUID format for demo user
+    }
+    
+    console.log(`Starting bulk vocabulary generation: ${totalTarget} words in batches of ${batchSize} for user: ${finalUserId}`)
     
     // 检查环境变量
     if (!process.env.GOOGLE_GEMINI_API_KEY) {
@@ -29,7 +35,7 @@ export async function POST(request: NextRequest) {
     const { data: existingWords, error: countError } = await supabase
       .from('flashcards')
       .select('word')
-      .eq('user_id', userId)
+      .eq('user_id', finalUserId)
       .eq('type', 'vocabulary')
 
     if (countError) {
@@ -127,7 +133,7 @@ Generate ${batchSize} words now:`
 
           // 插入到数据库 - 使用数据库的实际字段结构
           const wordsToInsert = batchWords.map((word: any) => ({
-            user_id: userId,
+            user_id: finalUserId, // Use the corrected UUID
             word: word.word.toLowerCase(),
             definition: word.definition,
             type: 'vocabulary',
@@ -168,7 +174,7 @@ Generate ${batchSize} words now:`
               hint: insertError.hint,
               code: insertError.code
             })
-            console.error('Failed to insert words:', wordsToInsert.map(w => w.word))
+            console.error('Failed to insert words:', wordsToInsert.map((w: any) => w.word))
           } else {
             successfulBatches++
             totalGenerated += insertedWords?.length || 0
@@ -221,9 +227,15 @@ Generate ${batchSize} words now:`
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId') || 'demo-user-123'
+    const userId = searchParams.get('userId')
     
-    console.log('Fetching vocabulary stats for user:', userId)
+    // Fix UUID format for demo user - 2024-12-19 17:15:00
+    let finalUserId = userId
+    if (!userId || userId === 'demo-user-123') {
+      finalUserId = '00000000-0000-0000-0000-000000000001' // Valid UUID format for demo user
+    }
+    
+    console.log('Fetching vocabulary stats for user:', finalUserId)
     
     // 检查数据库配置
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -237,7 +249,7 @@ export async function GET(request: NextRequest) {
     const { data: words, error } = await supabase
       .from('flashcards')
       .select('word, difficulty_level, category, source_type, created_at')
-      .eq('user_id', userId)
+      .eq('user_id', finalUserId)
       .eq('type', 'vocabulary')
       .order('created_at', { ascending: false })
 
@@ -255,7 +267,7 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
     
-    console.log(`Found ${words?.length || 0} vocabulary words for user ${userId}`)
+    console.log(`Found ${words?.length || 0} vocabulary words for user ${finalUserId}`)
 
     const stats = {
       total: words?.length || 0,

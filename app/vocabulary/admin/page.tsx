@@ -39,6 +39,8 @@ export default function VocabularyAdminPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generationProgress, setGenerationProgress] = useState('')
   const [loading, setLoading] = useState(true)
+  const [autoGenEnabled, setAutoGenEnabled] = useState(true)
+  const [nextAutoGen, setNextAutoGen] = useState<Date | null>(null)
 
   useEffect(() => {
     // 延迟加载统计数据，避免服务端渲染问题
@@ -49,6 +51,63 @@ export default function VocabularyAdminPage() {
     return () => clearTimeout(timer)
   }, [])
 
+  // 自动生成单词 - 每5分钟执行一次
+  useEffect(() => {
+    if (typeof window === 'undefined' || !autoGenEnabled) {
+      return
+    }
+
+    const autoGenerate = async () => {
+      // 检查是否已经达到目标数量
+      if (stats && stats.total >= 3000) {
+        console.log('Target reached, stopping auto-generation')
+        setAutoGenEnabled(false)
+        return
+      }
+
+      try {
+        console.log('Starting auto-generation...')
+        setGenerationProgress('Auto-generating 5 new words...')
+        
+        const response = await fetch('/api/vocabulary/auto-generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+
+        const result = await response.json()
+        
+        if (result.success) {
+          setGenerationProgress(`Auto-generated ${result.stats?.totalGenerated || 0} words successfully`)
+          await loadStats() // 刷新统计数据
+        } else {
+          setGenerationProgress(`Auto-generation failed: ${result.error}`)
+        }
+      } catch (error) {
+        console.error('Auto-generation error:', error)
+        setGenerationProgress('Auto-generation failed: Network error')
+      }
+      
+      // 清除进度消息
+      setTimeout(() => {
+        setGenerationProgress('')
+      }, 10000)
+    }
+
+    // 立即执行一次
+    autoGenerate()
+    
+    // 设置5分钟间隔
+    const interval = setInterval(() => {
+      autoGenerate()
+      setNextAutoGen(new Date(Date.now() + 5 * 60 * 1000))
+    }, 5 * 60 * 1000) // 5分钟 = 300,000毫秒
+    
+    // 设置下次执行时间
+    setNextAutoGen(new Date(Date.now() + 5 * 60 * 1000))
+
+    return () => clearInterval(interval)
+  }, [stats, autoGenEnabled])
+
   const loadStats = async () => {
     // 确保在客户端环境中执行
     if (typeof window === 'undefined') {
@@ -56,7 +115,7 @@ export default function VocabularyAdminPage() {
     }
     
     try {
-      const response = await fetch('/api/vocabulary/generate-bulk')
+      const response = await fetch('/api/vocabulary/generate-bulk?userId=00000000-0000-0000-0000-000000000001') // Fixed UUID format
       const result = await response.json()
       
       if (result.success) {
@@ -98,7 +157,7 @@ export default function VocabularyAdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 'demo-user-123',
+          userId: '00000000-0000-0000-0000-000000000001', // Fixed UUID format for demo user
           batchSize: 5, // 减少批次大小避免超时
           totalTarget: 3000
         })
@@ -193,7 +252,22 @@ export default function VocabularyAdminPage() {
 
         {/* Action Buttons */}
         <div className="px-4 py-2">
-          <h3 className="text-[#0e141b] text-lg font-bold mb-4">AI Generation</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-[#0e141b] text-lg font-bold">AI Generation</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Auto-generate:</span>
+              <button
+                onClick={() => setAutoGenEnabled(!autoGenEnabled)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  autoGenEnabled 
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {autoGenEnabled ? 'ON' : 'OFF'}
+              </button>
+            </div>
+          </div>
           
           <div className="space-y-4">
             {/* Bulk Generation */}
