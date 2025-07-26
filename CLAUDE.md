@@ -92,12 +92,45 @@ The application follows a consistent design system based on 21st.dev principles:
 - `.radio-option` for radio button styling
 - `.progress-bar` and `.progress-fill` for progress indicators
 
+### Database Schema Reference
+Complete database table structure for development reference:
+
+**Core Tables:**
+- `flashcards` - Main vocabulary/question storage with complete fields:
+  - Core: id, type, subject, difficulty_level, question, answer, explanation
+  - Vocabulary: word, definition, pronunciation, part_of_speech, example_sentence
+  - Learning: synonyms, antonyms, etymology, memory_tip, tags
+  - Metadata: user_id, source_type, source_context, frequency_score, usage_count
+- `users` - User profiles extending auth.users
+- `questions` - SSAT/SAT questions with types: vocabulary, reading, math, writing
+- `user_sessions` - Practice/test/flashcard sessions
+- `user_answers` - Individual question responses with detailed tracking
+- `achievements` - Gamification badges and rewards
+- `user_achievements` - User's earned achievements
+- `mistake_questions` - Spaced repetition for incorrect answers
+- `ai_conversations` - AI tutor interaction history
+- `knowledge_base` - RAG content storage with PDF processing
+
+**Advanced Tables:**
+- `user_flashcard_progress` - Spaced repetition progress tracking
+- `test_sessions` & `test_question_attempts` - Comprehensive test tracking
+- `study_plans` & `study_plan_items` - Personalized learning paths
+- `rag_sessions` - RAG query and response logging
+- `document_chunks` & `vector_embeddings` - Content chunking and vector storage
+
+**Key Constraints:**
+- RLS enabled on all tables
+- Unique constraint on flashcards(word, user_id)
+- Foreign key relationships maintain data integrity
+- Demo user UUID: '00000000-0000-0000-0000-000000000001'
+
 ### Development Notes
 - The app uses TypeScript with strict types defined in `types/database.ts`
 - Supabase client is configured in `lib/supabase.ts` with auth persistence
+- Use `getSupabaseAdmin()` for server-side operations that bypass RLS
 - Component library uses Radix UI with custom styling
 - The project includes reference HTML designs in `quizlet-design-html/`
 - No state management stores are currently implemented (stores/ is empty)
-- No testing framework is configured
+- Playwright testing configured in `.playwright/playwright.config.ts`
 - All pages follow consistent mobile-first layout with bottom navigation
 - Uses Heroicons for consistent iconography across all pages

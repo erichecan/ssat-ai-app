@@ -65,11 +65,32 @@ export async function POST(request: NextRequest) {
 }
 
 // GET方法返回自动生成的状态
+// GET方法用于健康检查
 export async function GET() {
-  return NextResponse.json({
-    message: 'Auto-generation service is active',
-    interval: '5 minutes',
-    target: 3000,
-    batchSize: 5
-  })
+  try {
+    // 检查当前词汇数量
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/api/vocabulary/generate-bulk?userId=00000000-0000-0000-0000-000000000001`)
+    const stats = await response.json()
+    
+    return NextResponse.json({
+      message: 'Auto-generation service is active',
+      interval: '5 minutes',
+      target: 3000,
+      batchSize: 5,
+      currentStatus: {
+        totalWords: stats.stats?.total || 0,
+        targetRemaining: Math.max(0, 3000 - (stats.stats?.total || 0))
+      },
+      lastCheck: new Date().toISOString()
+    })
+  } catch (error) {
+    return NextResponse.json({
+      message: 'Auto-generation service status check failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      interval: '5 minutes',
+      target: 3000,
+      batchSize: 5
+    })
+  }
 }

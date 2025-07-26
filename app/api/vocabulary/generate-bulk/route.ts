@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateText } from '@/lib/gemini'
-import { supabase } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,8 +31,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 使用admin客户端绕过RLS策略
+    const supabaseAdmin = getSupabaseAdmin()
+
     // 检查现有词汇数量
-    const { data: existingWords, error: countError } = await supabase
+    const { data: existingWords, error: countError } = await supabaseAdmin
       .from('flashcards')
       .select('word')
       .eq('user_id', finalUserId)
@@ -56,43 +59,41 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 基于SSAT历年真题的AI提示词
-    const prompt = `Generate exactly ${batchSize} SSAT vocabulary words in this JSON format:
+    // 分批生成避免超时 - 每批3个词最可靠
+    const actualBatchSize = Math.min(batchSize, 3) // 每批最多3个词
+    const maxWordsPerRequest = Math.min(remainingWords, 20) // 单次请求最多20个词
+    const numBatches = Math.ceil(maxWordsPerRequest / actualBatchSize)
+
+    // 简化的AI提示词，更可靠
+    const prompt = `Generate ${actualBatchSize} SSAT vocabulary words as JSON:
+
 {
   "words": [
     {
-      "word": "example",
-      "definition": "clear definition for high school students",
-      "pronunciation": "/ɪɡˈzæmpəl/",
-      "part_of_speech": "noun",
-      "difficulty": "medium",
-      "example_sentence": "This is an example sentence.",
-      "synonyms": ["sample", "instance"],
-      "antonyms": ["opposite"],
-      "etymology": "from Latin",
-      "memory_tip": "helpful memory aid",
-      "ssat_frequency": "medium",
-      "category": "academic"
+      "word": "perspicacious",
+      "definition": "Having keen insight and understanding",
+      "pronunciation": "/ˌpɜːrspɪˈkeɪʃəs/",
+      "part_of_speech": "adjective",
+      "difficulty": "hard",
+      "example_sentence": "The perspicacious student quickly understood the complex problem.",
+      "synonyms": ["perceptive", "insightful"],
+      "antonyms": ["obtuse", "dull"],
+      "memory_tip": "Think of 'perspective' - someone with good perspective is perspicacious"
     }
   ]
 }
 
 Requirements:
-- Use SSAT-level vocabulary words
-- Provide clear, concise definitions
-- Use American English pronunciation
-- Include helpful memory tips
-- Focus on academic and literary terms
+- SSAT/SAT level words
+- Clear definitions
+- Valid pronunciation guides
+- Real example sentences
 
-Generate only the JSON, no other text.`
+Return only valid JSON.`
 
     let generatedWords = []
     let successfulBatches = 0
     let totalGenerated = 0
-
-    // 分批生成避免超时 - 限制更严格以适应Netlify环境
-    const maxWordsPerRequest = Math.min(remainingWords, 10) // 单次请求最多10个词
-    const numBatches = Math.ceil(maxWordsPerRequest / Math.min(batchSize, 5)) // 每批最多5个词
     
     for (let batch = 0; batch < numBatches; batch++) {
       try {
@@ -107,9 +108,9 @@ Generate only the JSON, no other text.`
             word.word && word.definition && word.pronunciation
           )
 
-          // 插入到数据库 - 使用数据库的实际字段结构
+          // 插入到数据库 - 使用简化的字段结构
           const wordsToInsert = batchWords.map((word: any) => ({
-            user_id: finalUserId, // Use the corrected UUID
+            user_id: finalUserId,
             word: word.word.toLowerCase(),
             definition: word.definition,
             type: 'vocabulary',
@@ -117,20 +118,20 @@ Generate only the JSON, no other text.`
             difficulty_level: word.difficulty === 'easy' ? 1 : word.difficulty === 'hard' ? 3 : 2,
             question: `What does "${word.word}" mean?`,
             answer: word.definition,
-            explanation: `${word.definition}. ${word.etymology ? `Etymology: ${word.etymology}` : ''}`,
+            explanation: word.definition,
             pronunciation: word.pronunciation || '',
-            part_of_speech: word.part_of_speech || 'unknown',
+            part_of_speech: word.part_of_speech || '',
             example_sentence: word.example_sentence || '',
             memory_tip: word.memory_tip || '',
             synonyms: word.synonyms || [],
             antonyms: word.antonyms || [],
-            etymology: word.etymology || '',
-            category: word.category || 'academic',
-            frequency_score: word.ssat_frequency === 'high' ? 80 : word.ssat_frequency === 'low' ? 40 : 60,
-            source_type: 'ai_generated_ssat',
-            source_context: `SSAT historical test vocabulary - batch ${batch + 1}`,
-            tags: [word.category || 'academic', 'vocabulary', 'ssat', word.ssat_frequency || 'medium'],
-            is_public: false,
+            etymology: '',
+            category: 'vocabulary',
+            frequency_score: 50,
+            source_type: 'ai_generated',
+            source_context: `AI generated vocabulary - batch ${batch + 1}`,
+            tags: ['vocabulary', 'ssat'],
+            is_public: true,
             usage_count: 0,
             avg_rating: 0
           }))
@@ -138,7 +139,7 @@ Generate only the JSON, no other text.`
           console.log(`Attempting to insert ${wordsToInsert.length} words into database...`)
           console.log('Sample word to insert:', JSON.stringify(wordsToInsert[0], null, 2))
 
-          const { data: insertedWords, error: insertError } = await supabase
+          const { data: insertedWords, error: insertError } = await supabaseAdmin
             .from('flashcards')
             .insert(wordsToInsert)
             .select('word')
@@ -222,7 +223,10 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    const { data: words, error } = await supabase
+    // 使用admin客户端绕过RLS策略
+    const supabaseAdmin = getSupabaseAdmin()
+
+    const { data: words, error } = await supabaseAdmin
       .from('flashcards')
       .select('word, difficulty_level, category, source_type, created_at')
       .eq('user_id', finalUserId)

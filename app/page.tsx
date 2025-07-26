@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Settings, 
@@ -11,11 +11,20 @@ import {
   Brain,
   FileText
 } from 'lucide-react';
+import { vocabularyScheduler } from '@/lib/vocabulary-scheduler';
 
 export default function HomePage() {
   const [overallProgress] = useState(65);
 
-
+  // 启动词汇自动生成调度器
+  useEffect(() => {
+    console.log('🚀 Starting vocabulary auto-generation scheduler...');
+    vocabularyScheduler.start();
+    
+    return () => {
+      vocabularyScheduler.stop();
+    };
+  }, []);
 
   return (
     <div
