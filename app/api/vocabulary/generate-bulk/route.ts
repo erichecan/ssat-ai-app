@@ -103,7 +103,7 @@ Generate ${batchSize} words now:`
         const parsedResponse = JSON.parse(cleanResponse)
 
         if (parsedResponse.words && Array.isArray(parsedResponse.words)) {
-          const batchWords = parsedResponse.words.filter(word => 
+          const batchWords = parsedResponse.words.filter((word: any) => 
             word.word && word.definition && word.pronunciation
           )
 
