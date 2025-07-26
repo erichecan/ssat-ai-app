@@ -108,7 +108,7 @@ Generate ${batchSize} words now:`
           )
 
           // 插入到数据库
-          const wordsToInsert = batchWords.map(word => ({
+          const wordsToInsert = batchWords.map((word: any) => ({
             user_id: userId,
             word: word.word.toLowerCase(),
             definition: word.definition,
@@ -167,7 +167,7 @@ Generate ${batchSize} words now:`
         newTotal: existingCount + totalGenerated,
         targetRemaining: Math.max(0, totalTarget - existingCount - totalGenerated)
       },
-      sampleWords: generatedWords.slice(0, 5).map(w => ({
+      sampleWords: generatedWords.slice(0, 5).map((w: any) => ({
         word: w.word,
         definition: w.definition,
         difficulty: w.difficulty
