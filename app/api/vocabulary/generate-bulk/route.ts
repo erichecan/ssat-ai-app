@@ -108,7 +108,7 @@ Generate ${batchSize} words now:`
             word.word && word.definition && word.pronunciation
           )
 
-          // 插入到数据库
+          // 插入到数据库 - 使用数据库的实际字段结构
           const wordsToInsert = batchWords.map((word: any) => ({
             user_id: userId,
             word: word.word.toLowerCase(),
@@ -119,19 +119,25 @@ Generate ${batchSize} words now:`
             question: `What does "${word.word}" mean?`,
             answer: word.definition,
             explanation: `${word.definition}. ${word.etymology ? `Etymology: ${word.etymology}` : ''}`,
-            tags: `{${word.category || 'academic'},vocabulary,ssat,${word.ssat_frequency || 'medium'}}`,
             pronunciation: word.pronunciation || '',
             part_of_speech: word.part_of_speech || 'unknown',
             example_sentence: word.example_sentence || '',
-            synonyms: word.synonyms ? `{${word.synonyms.join(',')}}` : '{}',
-            antonyms: word.antonyms ? `{${word.antonyms.join(',')}}` : '{}',
-            etymology: word.etymology || '',
             memory_tip: word.memory_tip || '',
+            synonyms: word.synonyms || [],
+            antonyms: word.antonyms || [],
+            etymology: word.etymology || '',
             category: word.category || 'academic',
             frequency_score: word.ssat_frequency === 'high' ? 80 : word.ssat_frequency === 'low' ? 40 : 60,
             source_type: 'ai_generated_ssat',
-            source_context: `SSAT historical test vocabulary - batch ${batch + 1}`
+            source_context: `SSAT historical test vocabulary - batch ${batch + 1}`,
+            tags: [word.category || 'academic', 'vocabulary', 'ssat', word.ssat_frequency || 'medium'],
+            is_public: false,
+            usage_count: 0,
+            avg_rating: 0
           }))
+
+          console.log(`Attempting to insert ${wordsToInsert.length} words into database...`)
+          console.log('Sample word to insert:', JSON.stringify(wordsToInsert[0], null, 2))
 
           const { data: insertedWords, error: insertError } = await supabase
             .from('flashcards')
@@ -139,11 +145,18 @@ Generate ${batchSize} words now:`
             .select('word')
 
           if (insertError) {
-            console.error(`Batch ${batch + 1} insert error:`, insertError)
+            console.error(`Batch ${batch + 1} insert error:`, {
+              message: insertError.message,
+              details: insertError.details,
+              hint: insertError.hint,
+              code: insertError.code
+            })
+            console.error('Failed to insert words:', wordsToInsert.map(w => w.word))
           } else {
             successfulBatches++
             totalGenerated += insertedWords?.length || 0
             console.log(`Batch ${batch + 1} completed: ${insertedWords?.length} words inserted`)
+            console.log('Inserted words:', insertedWords?.map(w => w.word))
             generatedWords.push(...batchWords)
           }
         }
