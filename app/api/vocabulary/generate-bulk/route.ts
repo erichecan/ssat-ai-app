@@ -122,7 +122,7 @@ Generate ${batchSize} words now:`
       try {
         console.log(`Generating batch ${batch + 1}/${numBatches}...`)
         
-        const aiResponse = await generateText(prompt, 8000) // 8秒超时，适应Netlify限制
+        const aiResponse = await generateText(prompt, 45000) // 45秒超时，给AI足够时间生成词汇
         const cleanResponse = aiResponse.replace(/```json\n?|\n?```/g, '').trim()
         const parsedResponse = JSON.parse(cleanResponse)
 

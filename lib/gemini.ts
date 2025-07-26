@@ -17,22 +17,25 @@ const genAI = new GoogleGenerativeAI(apiKey)
 
 export const geminiModel = genAI.getGenerativeModel({ model })
 
-export async function generateText(prompt: string, timeout: number = 15000): Promise<string> {
+export async function generateText(prompt: string, timeout: number = 30000): Promise<string> {
   try {
     console.log('Generating text with timeout:', timeout, 'prompt length:', prompt.length)
     
-    // 创建超时Promise
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('AI request timeout after ' + timeout + 'ms')), timeout)
-    )
+    // 创建超时Promise和clearTimeout函数 - 2024-12-19 18:15:00
+    let timeoutId: NodeJS.Timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('AI request timeout after ' + timeout + 'ms')), timeout)
+    })
     
     // 创建生成Promise
     const generatePromise = geminiModel.generateContent(prompt).then(result => {
       console.log('Gemini API call completed successfully')
+      clearTimeout(timeoutId) // 清除超时定时器
       const text = result.response.text()
       console.log('Response text extracted, length:', text.length)
       return text
     }).catch(geminiError => {
+      clearTimeout(timeoutId) // 清除超时定时器
       console.error('Gemini API call failed:', {
         name: geminiError.name,
         message: geminiError.message,
