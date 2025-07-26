@@ -51,9 +51,24 @@ export default function VocabularyAdminPage() {
       
       if (result.success) {
         setStats(result.stats)
+      } else {
+        console.warn('API returned no success flag, using empty stats')
+        setStats({
+          total: 0,
+          byDifficulty: { easy: 0, medium: 0, hard: 0 },
+          bySource: { static: 0, aiGenerated: 0, userAdded: 0 },
+          recent: []
+        })
       }
     } catch (error) {
       console.error('Error loading stats:', error)
+      // 设置默认stats避免页面崩溃
+      setStats({
+        total: 0,
+        byDifficulty: { easy: 0, medium: 0, hard: 0 },
+        bySource: { static: 0, aiGenerated: 0, userAdded: 0 },
+        recent: []
+      })
     } finally {
       setLoading(false)
     }
@@ -74,16 +89,21 @@ export default function VocabularyAdminPage() {
         })
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const result = await response.json()
       
       if (result.success) {
         setGenerationProgress(`Generation completed! Added ${result.stats.totalGenerated} new words.`)
         await loadStats() // Refresh stats
       } else {
-        setGenerationProgress(`Generation failed: ${result.error}`)
+        setGenerationProgress(`Generation failed: ${result.error || 'Unknown error'}`)
       }
     } catch (error) {
-      setGenerationProgress(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Generation error:', error)
+      setGenerationProgress(`Error: ${error instanceof Error ? error.message : 'Network or server error'}`)
     } finally {
       setIsGenerating(false)
     }

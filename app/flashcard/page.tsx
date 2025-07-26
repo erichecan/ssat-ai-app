@@ -76,10 +76,10 @@ export default function FlashCardPage() {
     loadFlashcards()
   }, [])
 
-  // 添加键盘事件监听 - 支持空格键翻转flashcard (2024-12-19 15:30:00)
+  // 添加键盘事件监听 - 支持空格键翻转flashcard和左右箭头键切换单词
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // 检查是否在输入框中，如果是则不处理空格键
+      // 检查是否在输入框中，如果是则不处理键盘事件
       const target = event.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
         return
@@ -88,6 +88,12 @@ export default function FlashCardPage() {
       if (event.code === 'Space') {
         event.preventDefault() // 阻止默认的空格键行为（页面滚动）
         handleFlip()
+      } else if (event.code === 'ArrowLeft') {
+        event.preventDefault()
+        handlePrevious()
+      } else if (event.code === 'ArrowRight') {
+        event.preventDefault()
+        handleNext()
       }
     }
 
@@ -210,6 +216,43 @@ export default function FlashCardPage() {
       }
     } catch (error) {
       console.error('Error mastering flashcard:', error)
+    }
+  }
+
+  const handleUnmaster = async () => {
+    if (!currentCard) return
+    
+    try {
+      const currentUser = SessionManager.getCurrentUser()
+      const userId = currentUser?.id || 'demo-user-123'
+
+      const response = await fetch('/api/flashcards/enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          flashcardId: currentCard.id,
+          action: 'unmaster'
+        })
+      })
+
+      if (response.ok) {
+        // 更新当前卡片状态
+        const updatedFlashcards = [...flashcards]
+        if (updatedFlashcards[currentIndex]) {
+          if (updatedFlashcards[currentIndex].userProgress) {
+            updatedFlashcards[currentIndex].userProgress!.is_mastered = false
+          }
+        }
+        setFlashcards(updatedFlashcards)
+        
+        // 自动跳到下一张卡片
+        setTimeout(() => {
+          handleNext()
+        }, 800)
+      }
+    } catch (error) {
+      console.error('Error unmastering flashcard:', error)
     }
   }
 
@@ -547,52 +590,63 @@ export default function FlashCardPage() {
               </div>
             )}
 
-            {/* Mastery and Review Control Buttons - Top Right */}
-            <div className="absolute top-4 right-4 z-20 flex gap-2">
-              {!currentCard?.userProgress?.is_mastered ? (
-                <>
-                  {/* 未掌握状态：显示掌握按钮和收藏按钮 (2024-12-19 15:35:00) */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleMaster()
-                    }}
-                    className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-full shadow-md hover:from-green-500 hover:to-green-600 transition-all duration-200"
-                    title="Mark as Mastered (✅)"
-                  >
-                    <CheckSquare size={16} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleStar() // 使用新的收藏功能
-                    }}
-                    className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
-                    title="Star for Enhanced Review (⭐)"
-                  >
-                    <Star size={16} />
-                  </button>
-                </>
-              ) : (
-                <>
-                  {/* 已掌握状态：只显示已掌握图标 */}
-                  <div className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-md">
-                    <CheckSquare size={16} />
-                  </div>
-                </>
-              )}
-            </div>
-
             {/* Flip Animation - positioned to not interfere with content flow */}
             <div 
               className="absolute inset-0 cursor-pointer rounded-3xl z-10"
               onClick={handleFlip}
             />
+
+            {/* Mastery and Review Control Buttons - Top Right */}
+            <div className="absolute top-4 right-4 z-30 flex gap-2">
+              {/* 掌握按钮 - 所有单词都显示 */}
+              {currentCard?.userProgress?.is_mastered ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    handleUnmaster()
+                  }}
+                  className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-all duration-200 hover:scale-105"
+                  title="Click to unmaster"
+                >
+                  <CheckSquare size={16} />
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    handleMaster()
+                  }}
+                  className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-full shadow-lg hover:from-green-500 hover:to-green-600 transition-all duration-200 hover:scale-105"
+                  title="Mark as Mastered (✅)"
+                >
+                  <CheckSquare size={16} />
+                </button>
+              )}
+
+              {/* 收藏按钮 - 所有单词都显示 */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  handleStar()
+                }}
+                className={`inline-flex items-center justify-center w-10 h-10 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
+                  currentCard?.userProgress?.difficulty_rating === 5
+                    ? 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600'
+                    : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600'
+                }`}
+                title={currentCard?.userProgress?.difficulty_rating === 5 ? 'Starred for Enhanced Review ⭐' : 'Star for Enhanced Review (⭐)'}
+              >
+                <Star size={16} fill={currentCard?.userProgress?.difficulty_rating === 5 ? 'currentColor' : 'none'} />
+              </button>
+            </div>
           </div>
 
           {/* 滑动提示 */}
           <div className="text-center mt-4">
-            <p className="text-zinc-400 text-sm">👈 Swipe to navigate • Tap to flip • Spacebar to flip 👆</p>
+            <p className="text-zinc-400 text-sm">👈 Swipe to navigate • Tap to flip • Spacebar to flip • ← → Arrow keys 👆</p>
           </div>
 
           {/* 学习统计 - 简化版本 */}
