@@ -20,9 +20,10 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId') || 'demo-user-123'
     const dueOnly = searchParams.get('dueOnly') === 'true' // 只返回需要复习的
     const masteredOnly = searchParams.get('masteredOnly') === 'true' // 只返回已掌握的
+    const ebbinghausOrder = searchParams.get('ebbinghausOrder') === 'true' // 按艾宾浩斯曲线排序
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    console.log('Enhanced flashcards API called:', { userId, dueOnly, masteredOnly, limit })
+    console.log('Enhanced flashcards API called:', { userId, dueOnly, masteredOnly, ebbinghausOrder, limit })
 
     // 1. 获取用户的flashcard进度数据
     let progressQuery = supabase
@@ -40,9 +41,10 @@ export async function GET(request: NextRequest) {
       progressQuery = progressQuery.eq('is_mastered', true)
     }
 
-    const { data: progressData, error: progressError } = await progressQuery
+    // 根据排序方式调整查询
+    let { data: progressData, error: progressError } = await progressQuery
       .order('next_review', { ascending: true })
-      .limit(limit)
+      .limit(ebbinghausOrder ? 200 : limit) // 艾宾浩斯排序时获取更多数据进行客户端排序
 
     if (progressError) {
       console.error('Error fetching flashcard progress:', progressError)
@@ -108,7 +110,57 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 4. 计算统计信息
+    // 4. 艾宾浩斯记忆曲线排序
+    let sortedFlashcards = allFlashcards
+    if (ebbinghausOrder) {
+      const now = new Date()
+      
+      sortedFlashcards = allFlashcards
+        .map(card => {
+          const progress = card.userProgress
+          let priority = 0
+          
+          if (!progress || progress.times_seen === 0) {
+            // 新单词 - 最高优先级
+            priority = 1
+          } else if (new Date(progress.next_review) <= now && !progress.is_mastered) {
+            // 到期需要复习的单词 - 第二优先级，按掌握度排序
+            priority = 2 + (5 - (progress.mastery_level || 0))
+          } else if (progress.difficulty_rating === 5) {
+            // 收藏的单词 - 第三优先级，比普通单词更频繁出现
+            priority = 8
+          } else if (progress.times_seen > 0 && progress.times_correct / progress.times_seen < 0.6) {
+            // 错误率高的困难单词 - 第四优先级
+            priority = 10
+          } else if (progress.is_mastered) {
+            // 已掌握的单词 - 低优先级（但会出现用于测试）
+            priority = 20
+          } else {
+            // 其他单词 - 最低优先级
+            priority = 15
+          }
+          
+          return {
+            ...card,
+            priority,
+            daysOverdue: new Date(progress?.next_review || now).getTime() < now.getTime() 
+              ? Math.floor((now.getTime() - new Date(progress?.next_review || now).getTime()) / (1000 * 60 * 60 * 24))
+              : 0
+          }
+        })
+        .sort((a, b) => {
+          // 优先级越小越优先，相同优先级按逾期天数排序
+          if (a.priority !== b.priority) {
+            return a.priority - b.priority
+          }
+          return b.daysOverdue - a.daysOverdue
+        })
+        .slice(0, limit)
+
+      console.log(`Ebbinghaus sorting applied: ${sortedFlashcards.length} cards ordered by memory priority`)
+    }
+
+    // 5. 计算统计信息
     const stats = {
       total: progressData?.length || 0,
       dueForReview: progressData?.filter(p => 
@@ -123,9 +175,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      flashcards: allFlashcards,
+      flashcards: sortedFlashcards,
       stats,
-      filters: { dueOnly, masteredOnly, limit }
+      filters: { dueOnly, masteredOnly, ebbinghausOrder, limit }
     })
 
   } catch (error) {
@@ -229,6 +281,56 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Word unmarked, ready for review'
+      })
+    }
+
+    if (action === 'star') {
+      // 收藏单词 - 增加在艾宾浩斯曲线中的出现频率
+      const currentProgress = existingProgress || {
+        times_seen: 0,
+        times_correct: 0,
+        interval_days: 1,
+        ease_factor: 2.5,
+        mastery_level: 0,
+        difficulty_rating: 3
+      }
+
+      // 降低质量评分和缩短复习间隔，增加出现频率
+      const nextInterval = Math.max(1, Math.floor(currentProgress.interval_days * 0.5)) // 将间隔减半
+      const nextReview = new Date(Date.now() + nextInterval * 24 * 60 * 60 * 1000).toISOString()
+
+      const updateData = {
+        difficulty_rating: 5, // 标记为最困难，优先出现
+        interval_days: nextInterval,
+        next_review: nextReview,
+        times_seen: currentProgress.times_seen + 1,
+        updated_at: now
+      }
+
+      if (existingProgress) {
+        await supabase
+          .from('user_flashcard_progress')
+          .update(updateData)
+          .eq('user_id', userId)
+          .eq('flashcard_id', flashcardId)
+      } else {
+        await supabase
+          .from('user_flashcard_progress')
+          .insert({
+            user_id: userId,
+            flashcard_id: flashcardId,
+            ...updateData,
+            times_correct: 0, // 新词汇，需要多练习
+            ease_factor: 2.0, // 降低易度系数
+            mastery_level: 0,
+            is_mastered: false,
+            created_at: now
+          })
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `Word starred for enhanced review. Next review in ${nextInterval} day(s).`
       })
     }
 

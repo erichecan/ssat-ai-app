@@ -37,16 +37,40 @@ interface FlashcardWithProgress extends Flashcard {
 export default function FlashCardPage() {
   const [flashcards, setFlashcards] = useState<FlashcardWithProgress[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isFlipped, setIsFlipped] = useState(true)  // 默认显示答案面
+  const [isFlipped, setIsFlipped] = useState(false)  // 动态决定显示面
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showingAnswer, setShowingAnswer] = useState(true)  // 默认显示答案
+  const [showingAnswer, setShowingAnswer] = useState(false)  // 动态决定显示答案
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [showMastery, setShowMastery] = useState(false) // 显示掌握按钮
   const [stats, setStats] = useState<any>(null)
   
   const currentCard = flashcards[currentIndex]
+
+  // 根据单词掌握状态决定初始显示面
+  const getInitialDisplayState = (card: FlashcardWithProgress) => {
+    if (!card) return { showAnswer: false, isFlipped: false }
+    
+    const isMastered = card.userProgress?.is_mastered === true
+    
+    if (isMastered) {
+      // 已掌握的单词：先显示题目面（问题）
+      return { showAnswer: false, isFlipped: false }
+    } else {
+      // 未掌握的单词：先显示答案面（定义）
+      return { showAnswer: true, isFlipped: true }
+    }
+  }
+
+  // 当卡片变化时更新显示状态
+  useEffect(() => {
+    if (currentCard) {
+      const { showAnswer, isFlipped: flipped } = getInitialDisplayState(currentCard)
+      setShowingAnswer(showAnswer)
+      setIsFlipped(flipped)
+    }
+  }, [currentIndex, flashcards])
 
   useEffect(() => {
     loadFlashcards()
@@ -81,19 +105,15 @@ export default function FlashCardPage() {
       const currentUser = SessionManager.getCurrentUser()
       const userId = currentUser?.id || 'demo-user-123'
 
-      // 优先加载需要复习的flashcards，如果没有则加载随机的
-      let response = await fetch(`/api/flashcards/enhanced?userId=${userId}&dueOnly=true&limit=20`)
-      let result = await response.json()
-
-      if (response.ok && result.flashcards.length === 0) {
-        // 如果没有需要复习的，加载随机的进行学习
-        response = await fetch(`/api/flashcards?userId=${userId}&limit=20&random=true`)
-        result = await response.json()
-      }
+      // 按艾宾浩斯记忆曲线加载所有flashcards（无论是否到期）
+      // 优先级：1.到期复习 2.新单词 3.困难单词 4.其他
+      const response = await fetch(`/api/flashcards/enhanced?userId=${userId}&ebbinghausOrder=true&limit=50`)
+      const result = await response.json()
 
       if (response.ok) {
         setFlashcards(result.flashcards || [])
         setStats(result.stats)
+        console.log('Loaded flashcards with Ebbinghaus ordering:', result.flashcards?.length)
       } else {
         setError('Failed to load flashcards')
       }
@@ -136,16 +156,14 @@ export default function FlashCardPage() {
     // 循环到第一张卡片如果已经是最后一张
     const nextIndex = currentIndex >= flashcards.length - 1 ? 0 : currentIndex + 1
     setCurrentIndex(nextIndex)
-    setIsFlipped(true)
-    setShowingAnswer(true)
+    // 显示状态将由useEffect自动更新
   }
 
   const handlePrevious = () => {
     // 循环到最后一张卡片如果已经是第一张
     const prevIndex = currentIndex <= 0 ? flashcards.length - 1 : currentIndex - 1
     setCurrentIndex(prevIndex)
-    setIsFlipped(true)
-    setShowingAnswer(true)
+    // 显示状态将由useEffect自动更新
   }
 
   const handleDifficultyRating = async (rating: number) => {
@@ -192,6 +210,46 @@ export default function FlashCardPage() {
       }
     } catch (error) {
       console.error('Error mastering flashcard:', error)
+    }
+  }
+
+  // 收藏单词 - 增加在艾宾浩斯曲线中的出现频率
+  const handleStar = async () => {
+    if (!currentCard) return
+    
+    try {
+      const currentUser = SessionManager.getCurrentUser()
+      const userId = currentUser?.id || 'demo-user-123'
+
+      const response = await fetch('/api/flashcards/enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          flashcardId: currentCard.id,
+          action: 'star', // 新的收藏操作
+          quality: 2 // 降低质量评分，增加出现频率
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Word starred for enhanced review:', result.message)
+        
+        // 更新当前卡片状态，标记为需要增强复习
+        const updatedFlashcards = [...flashcards]
+        if (updatedFlashcards[currentIndex]?.userProgress) {
+          updatedFlashcards[currentIndex].userProgress!.difficulty_rating = 5 // 标记为困难
+        }
+        setFlashcards(updatedFlashcards)
+        
+        // 自动跳到下一张卡片
+        setTimeout(() => {
+          handleNext()
+        }, 800)
+      }
+    } catch (error) {
+      console.error('Error starring flashcard:', error)
     }
   }
 
@@ -339,9 +397,12 @@ export default function FlashCardPage() {
         <Link href="/" className="text-[#0e141b] flex size-12 shrink-0 items-center">
           <ArrowLeft size={24} />
         </Link>
-        <h2 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">
+        <h2 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
           Flashcard
         </h2>
+        <Link href="/vocabulary/admin" className="text-[#4e7397] flex size-12 shrink-0 items-center justify-center">
+          <Brain size={20} />
+        </Link>
       </div>
 
       {/* Main Content */}
@@ -504,7 +565,7 @@ export default function FlashCardPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      handleReview(5) // High quality review for starred items
+                      handleStar() // 使用新的收藏功能
                     }}
                     className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white rounded-full shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
                     title="Star for Enhanced Review (⭐)"

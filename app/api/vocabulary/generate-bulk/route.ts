@@ -1,0 +1,236 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { generateText } from '@/lib/gemini'
+import { supabase } from '@/lib/supabase'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { userId = 'demo-user-123', batchSize = 50, totalTarget = 3000 } = await request.json()
+    
+    console.log(`Starting bulk vocabulary generation: ${totalTarget} words in batches of ${batchSize}`)
+
+    // 检查现有词汇数量
+    const { data: existingWords, error: countError } = await supabase
+      .from('flashcards')
+      .select('word')
+      .eq('user_id', userId)
+      .eq('type', 'vocabulary')
+
+    if (countError) {
+      console.error('Error counting existing words:', countError)
+    }
+
+    const existingCount = existingWords?.length || 0
+    const remainingWords = Math.max(0, totalTarget - existingCount)
+    
+    console.log(`Existing words: ${existingCount}, Target: ${totalTarget}, Remaining: ${remainingWords}`)
+
+    if (remainingWords <= 0) {
+      return NextResponse.json({
+        success: true,
+        message: `Already have ${existingCount} words, target reached!`,
+        existingCount,
+        totalTarget
+      })
+    }
+
+    // 基于SSAT历年真题的AI提示词
+    const prompt = `You are an expert SSAT vocabulary curator with access to decades of historical SSAT tests. Your task is to generate ${batchSize} high-quality vocabulary words that frequently appear in SSAT exams.
+
+REQUIREMENTS:
+1. Generate exactly ${batchSize} words from actual SSAT historical tests
+2. Focus on words that appear repeatedly across multiple test years
+3. Include a mix of difficulty levels: 40% medium, 35% hard, 25% easy
+4. Prioritize academic vocabulary that 8th-12th graders need to master
+5. Each word must include authentic SSAT-style definitions and examples
+
+WORD CATEGORIES TO INCLUDE:
+- Literary analysis terms (metaphor, allusion, protagonist, etc.)
+- Academic adjectives (comprehensive, meticulous, profound, etc.)
+- Advanced verbs (synthesize, scrutinize, corroborate, etc.)
+- Scientific/social studies vocabulary (hypothesis, equilibrium, democracy, etc.)
+- SAT-level vocabulary that appears in reading passages
+
+HISTORICAL SSAT THEMES:
+- Words from literature passages (19th-20th century authors)
+- Science and nature vocabulary
+- Social studies and history terms
+- Psychology and human behavior
+- Art and culture terminology
+
+OUTPUT FORMAT (JSON only, no markdown):
+{
+  "words": [
+    {
+      "word": "word_here",
+      "definition": "Clear, concise definition for high school level",
+      "pronunciation": "/IPA_pronunciation/",
+      "part_of_speech": "noun/verb/adjective/adverb",
+      "difficulty": "easy/medium/hard",
+      "example_sentence": "Natural example sentence from SSAT context",
+      "synonyms": ["syn1", "syn2", "syn3"],
+      "antonyms": ["ant1", "ant2"],
+      "etymology": "Brief word origin if notable",
+      "memory_tip": "Mnemonic or memory aid",
+      "ssat_frequency": "high/medium/low",
+      "test_years": ["2020", "2019", "2018"],
+      "category": "academic/literary/scientific/social"
+    }
+  ]
+}
+
+IMPORTANT NOTES:
+- Use American English spelling and pronunciation
+- Ensure words are actually from SSAT tests, not just college-level vocabulary
+- Focus on words that help students understand reading passages
+- Include context-dependent words that require inference skills
+- Avoid obscure or archaic words that don't appear in modern tests
+
+Generate ${batchSize} words now:`
+
+    let generatedWords = []
+    let successfulBatches = 0
+    let totalGenerated = 0
+
+    // 分批生成避免超时
+    const numBatches = Math.ceil(Math.min(remainingWords, 200) / batchSize) // 限制单次最多200个词
+    
+    for (let batch = 0; batch < numBatches; batch++) {
+      try {
+        console.log(`Generating batch ${batch + 1}/${numBatches}...`)
+        
+        const aiResponse = await generateText(prompt, 30000) // 30秒超时
+        const cleanResponse = aiResponse.replace(/```json\n?|\n?```/g, '').trim()
+        const parsedResponse = JSON.parse(cleanResponse)
+
+        if (parsedResponse.words && Array.isArray(parsedResponse.words)) {
+          const batchWords = parsedResponse.words.filter(word => 
+            word.word && word.definition && word.pronunciation
+          )
+
+          // 插入到数据库
+          const wordsToInsert = batchWords.map(word => ({
+            user_id: userId,
+            word: word.word.toLowerCase(),
+            definition: word.definition,
+            type: 'vocabulary',
+            subject: 'SSAT Vocabulary',
+            difficulty_level: word.difficulty === 'easy' ? 1 : word.difficulty === 'hard' ? 3 : 2,
+            question: `What does "${word.word}" mean?`,
+            answer: word.definition,
+            explanation: `${word.definition}. ${word.etymology ? `Etymology: ${word.etymology}` : ''}`,
+            tags: `{${word.category || 'academic'},vocabulary,ssat,${word.ssat_frequency || 'medium'}}`,
+            pronunciation: word.pronunciation || '',
+            part_of_speech: word.part_of_speech || 'unknown',
+            example_sentence: word.example_sentence || '',
+            synonyms: word.synonyms ? `{${word.synonyms.join(',')}}` : '{}',
+            antonyms: word.antonyms ? `{${word.antonyms.join(',')}}` : '{}',
+            etymology: word.etymology || '',
+            memory_tip: word.memory_tip || '',
+            category: word.category || 'academic',
+            frequency_score: word.ssat_frequency === 'high' ? 80 : word.ssat_frequency === 'low' ? 40 : 60,
+            source_type: 'ai_generated_ssat',
+            source_context: `SSAT historical test vocabulary - batch ${batch + 1}`
+          }))
+
+          const { data: insertedWords, error: insertError } = await supabase
+            .from('flashcards')
+            .insert(wordsToInsert)
+            .select('word')
+
+          if (insertError) {
+            console.error(`Batch ${batch + 1} insert error:`, insertError)
+          } else {
+            successfulBatches++
+            totalGenerated += insertedWords?.length || 0
+            console.log(`Batch ${batch + 1} completed: ${insertedWords?.length} words inserted`)
+            generatedWords.push(...batchWords)
+          }
+        }
+
+        // 短暂延迟避免API限制
+        await new Promise(resolve => setTimeout(resolve, 2000))
+
+      } catch (batchError) {
+        console.error(`Batch ${batch + 1} failed:`, batchError)
+        continue
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Bulk vocabulary generation completed`,
+      stats: {
+        batchesProcessed: numBatches,
+        successfulBatches,
+        totalGenerated,
+        existingWords: existingCount,
+        newTotal: existingCount + totalGenerated,
+        targetRemaining: Math.max(0, totalTarget - existingCount - totalGenerated)
+      },
+      sampleWords: generatedWords.slice(0, 5).map(w => ({
+        word: w.word,
+        definition: w.definition,
+        difficulty: w.difficulty
+      }))
+    })
+
+  } catch (error) {
+    console.error('Bulk vocabulary generation error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Failed to generate bulk vocabulary',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    )
+  }
+}
+
+// GET endpoint to check progress
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get('userId') || 'demo-user-123'
+
+    const { data: words, error } = await supabase
+      .from('flashcards')
+      .select('word, difficulty_level, category, source_type, created_at')
+      .eq('user_id', userId)
+      .eq('type', 'vocabulary')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching vocabulary stats:', error)
+      return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
+    }
+
+    const stats = {
+      total: words?.length || 0,
+      byDifficulty: {
+        easy: words?.filter(w => w.difficulty_level === 1).length || 0,
+        medium: words?.filter(w => w.difficulty_level === 2).length || 0,
+        hard: words?.filter(w => w.difficulty_level === 3).length || 0
+      },
+      bySource: {
+        static: words?.filter(w => w.source_type === 'static_import').length || 0,
+        aiGenerated: words?.filter(w => w.source_type === 'ai_generated_ssat').length || 0,
+        userAdded: words?.filter(w => w.source_type === 'user_added').length || 0
+      },
+      recent: words?.slice(0, 10) || []
+    }
+
+    return NextResponse.json({
+      success: true,
+      stats,
+      progressToTarget: {
+        current: stats.total,
+        target: 3000,
+        percentage: Math.round((stats.total / 3000) * 100)
+      }
+    })
+
+  } catch (error) {
+    console.error('Vocabulary stats error:', error)
+    return NextResponse.json({ error: 'Failed to get stats' }, { status: 500 })
+  }
+}
