@@ -107,6 +107,11 @@ export default function FlashCardPage() {
   }, [isFlipped]) // 依赖isFlipped状态
 
   const loadFlashcards = async () => {
+    // 确保在客户端环境中执行
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     try {
       const currentUser = SessionManager.getCurrentUser()
       const userId = currentUser?.id || 'demo-user-123'

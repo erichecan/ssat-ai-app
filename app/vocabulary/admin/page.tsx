@@ -41,10 +41,20 @@ export default function VocabularyAdminPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadStats()
+    // 延迟加载统计数据，避免服务端渲染问题
+    const timer = setTimeout(() => {
+      loadStats()
+    }, 100)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   const loadStats = async () => {
+    // 确保在客户端环境中执行
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     try {
       const response = await fetch('/api/vocabulary/generate-bulk')
       const result = await response.json()
@@ -75,6 +85,11 @@ export default function VocabularyAdminPage() {
   }
 
   const startBulkGeneration = async () => {
+    // 确保在客户端环境中执行
+    if (typeof window === 'undefined') {
+      return
+    }
+    
     setIsGenerating(true)
     setGenerationProgress('Initializing AI vocabulary generation...')
 
