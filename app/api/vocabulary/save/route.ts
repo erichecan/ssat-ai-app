@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { DEMO_USER_UUID } from '@/lib/demo-user'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { 
-      userId = 'demo-user-123',
+      userId = DEMO_USER_UUID, // Fixed UUID format - 2024-12-19 18:00:00
       word,
       definition,
       context, // 题目上下文
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId') || 'demo-user-123'
+    const userId = searchParams.get('userId') || DEMO_USER_UUID // Fixed UUID format
     const limit = parseInt(searchParams.get('limit') || '50')
 
     console.log('Fetching saved vocabulary for user:', userId)

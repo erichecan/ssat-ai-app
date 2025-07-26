@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { flashcards as staticFlashcards } from '@/lib/flashcard-bank'
 import { questionBank, filterQuestions } from '@/lib/question-bank'
+import { DEMO_USER_UUID } from '@/lib/demo-user'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -11,7 +12,9 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 // 生成重点关注flashcard词汇的练习题
 export async function POST(request: NextRequest) {
   try {
-    const { userId = 'demo-user-123', count = 10 } = await request.json()
+    console.log('API called: vocabulary-focused questions generation')
+    
+    const { userId = DEMO_USER_UUID, count = 10 } = await request.json() // Fixed UUID format
 
     console.log('Generating vocabulary-focused questions for user:', userId)
 

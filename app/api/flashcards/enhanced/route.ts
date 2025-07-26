@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { flashcards as staticFlashcards } from '@/lib/flashcard-bank'
+import { DEMO_USER_UUID } from '@/lib/demo-user'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -17,7 +18,7 @@ interface EbbinghausCalculation {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('userId') || 'demo-user-123'
+    const userId = searchParams.get('userId') || DEMO_USER_UUID // Fixed UUID format
     const dueOnly = searchParams.get('dueOnly') === 'true' // 只返回需要复习的
     const masteredOnly = searchParams.get('masteredOnly') === 'true' // 只返回已掌握的
     const ebbinghausOrder = searchParams.get('ebbinghausOrder') === 'true' // 按艾宾浩斯曲线排序
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { 
-      userId = 'demo-user-123', 
+      userId = DEMO_USER_UUID, // Fixed UUID format 
       flashcardId, 
       action, 
       quality, // 0-5 质量评分，用于艾宾浩斯算法
