@@ -7,6 +7,23 @@ export async function POST(request: NextRequest) {
     const { userId = 'demo-user-123', batchSize = 50, totalTarget = 3000 } = await request.json()
     
     console.log(`Starting bulk vocabulary generation: ${totalTarget} words in batches of ${batchSize}`)
+    
+    // 检查环境变量
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      console.error('Missing GOOGLE_GEMINI_API_KEY')
+      return NextResponse.json(
+        { error: 'AI service not configured' },
+        { status: 500 }
+      )
+    }
+    
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase configuration')
+      return NextResponse.json(
+        { error: 'Database service not configured' },
+        { status: 500 }
+      )
+    }
 
     // 检查现有词汇数量
     const { data: existingWords, error: countError } = await supabase
@@ -205,6 +222,17 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get('userId') || 'demo-user-123'
+    
+    console.log('Fetching vocabulary stats for user:', userId)
+    
+    // 检查数据库配置
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase configuration in GET endpoint')
+      return NextResponse.json({ 
+        error: 'Database service not configured',
+        success: false 
+      }, { status: 500 })
+    }
 
     const { data: words, error } = await supabase
       .from('flashcards')
@@ -214,9 +242,20 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching vocabulary stats:', error)
-      return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 })
+      console.error('Error fetching vocabulary stats:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      })
+      return NextResponse.json({ 
+        error: 'Failed to fetch stats',
+        details: error.message,
+        success: false 
+      }, { status: 500 })
     }
+    
+    console.log(`Found ${words?.length || 0} vocabulary words for user ${userId}`)
 
     const stats = {
       total: words?.length || 0,
