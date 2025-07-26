@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: 'demo-user-123',
+        userId: '00000000-0000-0000-0000-000000000001', // Fixed UUID format for demo user
         batchSize: 5,
         totalTarget: 3000
       })
