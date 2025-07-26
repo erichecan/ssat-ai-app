@@ -603,34 +603,28 @@ export default function FlashCardPage() {
 
             {/* Mastery and Review Control Buttons - Top Right */}
             <div className="absolute top-4 right-4 z-30 flex gap-2">
-              {/* 掌握按钮 - 所有单词都显示 */}
-              {currentCard?.userProgress?.is_mastered ? (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
+              {/* 掌握按钮 - 未掌握时灰色，已掌握时绿色 (2024-12-19 17:45:00) */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  if (currentCard?.userProgress?.is_mastered) {
                     handleUnmaster()
-                  }}
-                  className="inline-flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-all duration-200 hover:scale-105"
-                  title="Click to unmaster"
-                >
-                  <CheckSquare size={16} />
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
+                  } else {
                     handleMaster()
-                  }}
-                  className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-green-400 to-green-500 text-white rounded-full shadow-lg hover:from-green-500 hover:to-green-600 transition-all duration-200 hover:scale-105"
-                  title="Mark as Mastered (✅)"
-                >
-                  <CheckSquare size={16} />
-                </button>
-              )}
+                  }
+                }}
+                className={`inline-flex items-center justify-center w-10 h-10 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
+                  currentCard?.userProgress?.is_mastered
+                    ? 'bg-green-500 hover:bg-green-600'
+                    : 'bg-gray-400 hover:bg-gray-500'
+                }`}
+                title={currentCard?.userProgress?.is_mastered ? "Click to unmaster" : "Mark as Mastered (✅)"}
+              >
+                <CheckSquare size={16} />
+              </button>
 
-              {/* 收藏按钮 - 所有单词都显示 */}
+              {/* 收藏按钮 - 未收藏时灰色，已收藏时土黄色 (2024-12-19 17:45:00) */}
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -639,8 +633,8 @@ export default function FlashCardPage() {
                 }}
                 className={`inline-flex items-center justify-center w-10 h-10 text-white rounded-full shadow-lg transition-all duration-200 hover:scale-105 ${
                   currentCard?.userProgress?.difficulty_rating === 5
-                    ? 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600'
-                    : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600'
+                    ? 'bg-yellow-600 hover:bg-yellow-700'  // 土黄色
+                    : 'bg-gray-400 hover:bg-gray-500'      // 灰色
                 }`}
                 title={currentCard?.userProgress?.difficulty_rating === 5 ? 'Starred for Enhanced Review ⭐' : 'Star for Enhanced Review (⭐)'}
               >
