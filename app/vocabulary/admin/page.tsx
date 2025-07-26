@@ -99,7 +99,7 @@ export default function VocabularyAdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: 'demo-user-123',
-          batchSize: 30,
+          batchSize: 5, // 减少批次大小避免超时
           totalTarget: 3000
         })
       })
@@ -225,7 +225,7 @@ export default function VocabularyAdminPage() {
                 ) : (
                   <div className="flex items-center justify-center gap-2">
                     <Zap size={16} />
-                    Generate 30 New Words
+                    Generate 5 New Words
                   </div>
                 )}
               </button>

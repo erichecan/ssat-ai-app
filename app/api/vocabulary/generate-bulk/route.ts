@@ -91,14 +91,15 @@ Generate ${batchSize} words now:`
     let successfulBatches = 0
     let totalGenerated = 0
 
-    // 分批生成避免超时
-    const numBatches = Math.ceil(Math.min(remainingWords, 200) / batchSize) // 限制单次最多200个词
+    // 分批生成避免超时 - 限制更严格以适应Netlify环境
+    const maxWordsPerRequest = Math.min(remainingWords, 10) // 单次请求最多10个词
+    const numBatches = Math.ceil(maxWordsPerRequest / Math.min(batchSize, 5)) // 每批最多5个词
     
     for (let batch = 0; batch < numBatches; batch++) {
       try {
         console.log(`Generating batch ${batch + 1}/${numBatches}...`)
         
-        const aiResponse = await generateText(prompt, 30000) // 30秒超时
+        const aiResponse = await generateText(prompt, 8000) // 8秒超时，适应Netlify限制
         const cleanResponse = aiResponse.replace(/```json\n?|\n?```/g, '').trim()
         const parsedResponse = JSON.parse(cleanResponse)
 
@@ -148,7 +149,7 @@ Generate ${batchSize} words now:`
         }
 
         // 短暂延迟避免API限制
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise(resolve => setTimeout(resolve, 500))
 
       } catch (batchError) {
         console.error(`Batch ${batch + 1} failed:`, batchError)
