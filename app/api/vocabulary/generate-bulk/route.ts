@@ -57,58 +57,34 @@ export async function POST(request: NextRequest) {
     }
 
     // 基于SSAT历年真题的AI提示词
-    const prompt = `You are an expert SSAT vocabulary curator with access to decades of historical SSAT tests. Your task is to generate ${batchSize} high-quality vocabulary words that frequently appear in SSAT exams.
-
-REQUIREMENTS:
-1. Generate exactly ${batchSize} words from actual SSAT historical tests
-2. Focus on words that appear repeatedly across multiple test years
-3. Include a mix of difficulty levels: 40% medium, 35% hard, 25% easy
-4. Prioritize academic vocabulary that 8th-12th graders need to master
-5. Each word must include authentic SSAT-style definitions and examples
-
-WORD CATEGORIES TO INCLUDE:
-- Literary analysis terms (metaphor, allusion, protagonist, etc.)
-- Academic adjectives (comprehensive, meticulous, profound, etc.)
-- Advanced verbs (synthesize, scrutinize, corroborate, etc.)
-- Scientific/social studies vocabulary (hypothesis, equilibrium, democracy, etc.)
-- SAT-level vocabulary that appears in reading passages
-
-HISTORICAL SSAT THEMES:
-- Words from literature passages (19th-20th century authors)
-- Science and nature vocabulary
-- Social studies and history terms
-- Psychology and human behavior
-- Art and culture terminology
-
-OUTPUT FORMAT (JSON only, no markdown):
+    const prompt = `Generate exactly ${batchSize} SSAT vocabulary words in this JSON format:
 {
   "words": [
     {
-      "word": "word_here",
-      "definition": "Clear, concise definition for high school level",
-      "pronunciation": "/IPA_pronunciation/",
-      "part_of_speech": "noun/verb/adjective/adverb",
-      "difficulty": "easy/medium/hard",
-      "example_sentence": "Natural example sentence from SSAT context",
-      "synonyms": ["syn1", "syn2", "syn3"],
-      "antonyms": ["ant1", "ant2"],
-      "etymology": "Brief word origin if notable",
-      "memory_tip": "Mnemonic or memory aid",
-      "ssat_frequency": "high/medium/low",
-      "test_years": ["2020", "2019", "2018"],
-      "category": "academic/literary/scientific/social"
+      "word": "example",
+      "definition": "clear definition for high school students",
+      "pronunciation": "/ɪɡˈzæmpəl/",
+      "part_of_speech": "noun",
+      "difficulty": "medium",
+      "example_sentence": "This is an example sentence.",
+      "synonyms": ["sample", "instance"],
+      "antonyms": ["opposite"],
+      "etymology": "from Latin",
+      "memory_tip": "helpful memory aid",
+      "ssat_frequency": "medium",
+      "category": "academic"
     }
   ]
 }
 
-IMPORTANT NOTES:
-- Use American English spelling and pronunciation
-- Ensure words are actually from SSAT tests, not just college-level vocabulary
-- Focus on words that help students understand reading passages
-- Include context-dependent words that require inference skills
-- Avoid obscure or archaic words that don't appear in modern tests
+Requirements:
+- Use SSAT-level vocabulary words
+- Provide clear, concise definitions
+- Use American English pronunciation
+- Include helpful memory tips
+- Focus on academic and literary terms
 
-Generate ${batchSize} words now:`
+Generate only the JSON, no other text.`
 
     let generatedWords = []
     let successfulBatches = 0
