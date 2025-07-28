@@ -59,9 +59,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 分批生成避免超时 - 每批3个词最可靠
-    const actualBatchSize = Math.min(batchSize, 3) // 每批最多3个词
-    const maxWordsPerRequest = Math.min(remainingWords, 20) // 单次请求最多20个词
+    // 分批生成避免超时 - 增加每批词汇数量
+    const actualBatchSize = Math.min(batchSize, 5) // 每批最多5个词
+    const maxWordsPerRequest = Math.min(remainingWords, 30) // 单次请求最多30个词
     const numBatches = Math.ceil(maxWordsPerRequest / actualBatchSize)
 
     // 简化的AI提示词，更可靠

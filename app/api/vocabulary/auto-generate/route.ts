@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId: '00000000-0000-0000-0000-000000000001', // Fixed UUID format for demo user
-        batchSize: 5,
+        batchSize: 30,
         totalTarget: 3000
       })
     })
@@ -77,7 +77,7 @@ export async function GET() {
       message: 'Auto-generation service is active',
       interval: '5 minutes',
       target: 3000,
-      batchSize: 5,
+      batchSize: 30,
       currentStatus: {
         totalWords: stats.stats?.total || 0,
         targetRemaining: Math.max(0, 3000 - (stats.stats?.total || 0))
