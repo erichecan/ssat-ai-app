@@ -17,10 +17,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the article and its standard summary
+    // Get the article and its standard summary from knowledge_base
     const { data: article, error: articleError } = await supabase
-      .from('articles')
-      .select('standard_summary, title')
+      .from('knowledge_base')
+      .select('description, title')
       .eq('id', article_id)
       .single();
 
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
           parts: [{
             text: `As an expert SSAT writing coach, compare the following two summaries of an article titled "${article.title}".
 
-Standard Summary: "${article.standard_summary}"
+Standard Summary: "${article.description}"
 User's Summary: "${user_summary}"
 
 Provide a JSON response with two keys:

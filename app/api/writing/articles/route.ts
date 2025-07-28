@@ -13,8 +13,9 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     let query = supabase
-      .from('articles')
+      .from('knowledge_base')
       .select('*')
+      .eq('type', 'concept')
       .order('created_at', { ascending: false });
 
     if (difficulty) {
@@ -43,8 +44,11 @@ export async function POST(request: NextRequest) {
     const articleData = await request.json();
     
     const { data: article, error } = await supabase
-      .from('articles')
-      .insert(articleData)
+      .from('knowledge_base')
+      .insert({
+        ...articleData,
+        type: 'concept'
+      })
       .select()
       .single();
 

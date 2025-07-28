@@ -91,16 +91,18 @@ Make the article factual and educational, suitable for standardized test practic
       };
     }
 
-    // Save the generated article to database
+    // Save the generated article to knowledge_base table (reusing existing structure)
     const { data: savedArticle, error: saveError } = await supabase
-      .from('articles')
+      .from('knowledge_base')
       .insert({
         title: articleData.title,
         content: articleData.content,
-        topic_category: articleData.topic_category,
-        standard_summary: articleData.standard_summary,
-        keywords: articleData.keywords,
-        difficulty: articleData.difficulty
+        topic: articleData.topic_category,
+        difficulty: articleData.difficulty,
+        type: 'concept',
+        tags: articleData.keywords,
+        // Additional fields for writing articles
+        description: articleData.standard_summary
       })
       .select()
       .single();
