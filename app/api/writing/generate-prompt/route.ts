@@ -95,13 +95,19 @@ Make the prompt engaging and suitable for a 25-minute timed writing exercise.`
       }
     }
 
-    // Save the generated prompt to database
+    // Save the generated prompt to test_questions table (reusing existing structure)
     const { data: savedPrompt, error: saveError } = await supabase
-      .from('mock_test_prompts')
+      .from('test_questions')
       .insert({
-        prompt_text: promptData.prompt_text,
-        prompt_type: promptData.prompt_type,
-        difficulty: promptData.difficulty
+        type: 'vocabulary', // Using existing type category
+        subject: 'Writing Prompts',
+        difficulty_level: promptData.difficulty === 'easy' ? 1 : promptData.difficulty === 'medium' ? 2 : 3,
+        question_text: promptData.prompt_text,
+        question_type: 'essay',
+        correct_answer: `This is a ${promptData.prompt_type.toLowerCase()} essay prompt.`,
+        explanation: `This prompt tests ${promptData.prompt_type.toLowerCase()} writing skills.`,
+        time_limit_seconds: 1500, // 25 minutes
+        points: 25
       })
       .select()
       .single();

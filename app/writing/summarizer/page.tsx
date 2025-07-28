@@ -18,9 +18,9 @@ interface Article {
   id: string;
   title: string;
   content: string;
-  topic_category: string;
-  standard_summary: string;
-  keywords: string[];
+  topic: string;
+  description: string;
+  tags: string[];
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
@@ -87,9 +87,9 @@ export default function SummarizerPage() {
         id: 'fallback-1',
         title: 'The Importance of Education',
         content: 'Education plays a crucial role in personal development and societal progress. Through learning, individuals acquire knowledge, develop critical thinking skills, and prepare for future challenges. Quality education provides opportunities for growth, creativity, and innovation. It helps people understand the world around them and make informed decisions. Education also promotes equality by giving everyone the chance to improve their circumstances through knowledge and skills.',
-        topic_category: 'Education',
-        standard_summary: 'Education is essential for personal growth and societal advancement through knowledge and skill development.',
-        keywords: ['education', 'learning', 'development', 'knowledge', 'skills'],
+        topic: 'Education',
+        description: 'Education is essential for personal growth and societal advancement through knowledge and skill development.',
+        tags: ['education', 'learning', 'development', 'knowledge', 'skills'],
         difficulty: 'medium' as 'easy' | 'medium' | 'hard'
       });
       setUserSummary('');
@@ -187,7 +187,7 @@ export default function SummarizerPage() {
               </div>
               
               <div className="text-[#4e7397] text-sm mb-2">
-                Topic: {currentArticle.topic_category}
+                Topic: {currentArticle.topic}
               </div>
               
               <div className="text-[#0e141b] text-sm leading-relaxed">
@@ -274,7 +274,7 @@ export default function SummarizerPage() {
                 {/* Standard Summary */}
                 <div className="bg-green-50 rounded-lg p-4 mb-4">
                   <h5 className="text-[#0e141b] text-sm font-medium mb-2">✅ Expert Summary:</h5>
-                  <p className="text-[#0e141b] text-sm italic">{currentArticle.standard_summary}</p>
+                  <p className="text-[#0e141b] text-sm italic">{currentArticle.description}</p>
                 </div>
                 
                 {/* Action Buttons */}

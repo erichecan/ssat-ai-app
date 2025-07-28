@@ -17,9 +17,12 @@ import {
 
 interface MockPrompt {
   id: string;
-  prompt_text: string;
-  prompt_type: 'Persuasive' | 'Narrative';
-  difficulty: 'easy' | 'medium' | 'hard';
+  question_text: string;
+  prompt_type?: 'Persuasive' | 'Narrative';
+  difficulty_level: number;
+  explanation?: string;
+  correct_answer?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 interface GradingScores {
@@ -112,9 +115,9 @@ export default function MockTestPage() {
       // Fallback to a simple prompt if generation fails
       setCurrentPrompt({
         id: 'fallback-1',
-        prompt_text: 'Write about a person who has had a significant influence on your life. Describe who this person is, how they influenced you, and why their impact was meaningful. Use specific examples and details to help your reader understand the importance of this relationship.',
+        question_text: 'Write about a person who has had a significant influence on your life. Describe who this person is, how they influenced you, and why their impact was meaningful. Use specific examples and details to help your reader understand the importance of this relationship.',
         prompt_type: 'Narrative',
-        difficulty: 'medium' as 'easy' | 'medium' | 'hard'
+        difficulty_level: 2
       });
       setEssay('');
       setTimeLeft(25 * 60);
@@ -160,7 +163,7 @@ export default function MockTestPage() {
         },
         body: JSON.stringify({
           user_essay: essay,
-          prompt_text: currentPrompt.prompt_text,
+          prompt_text: currentPrompt.question_text,
           prompt_id: currentPrompt.id,
           user_id: '00000000-0000-0000-0000-000000000001' // Demo user ID
         }),
@@ -234,6 +237,12 @@ export default function MockTestPage() {
     }
   };
 
+  const getDifficultyFromLevel = (level: number): 'easy' | 'medium' | 'hard' => {
+    if (level === 1) return 'easy';
+    if (level === 3) return 'hard';
+    return 'medium';
+  };
+
   const getAverageScore = (scores: GradingScores) => {
     const total = scores.thesisAndFocus.score + scores.structureAndLogic.score + 
                   scores.argumentAndEvidence.score + scores.languageAndStyle.score + 
@@ -273,18 +282,18 @@ export default function MockTestPage() {
                       Essay Prompt
                     </h3>
                     <div className="flex gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(currentPrompt.prompt_type)}`}>
-                        {currentPrompt.prompt_type}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeColor(currentPrompt.prompt_type || 'Narrative')}`}>
+                        {currentPrompt.prompt_type || 'Narrative'}
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentPrompt.difficulty)}`}>
-                        {currentPrompt.difficulty.toUpperCase()}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentPrompt.difficulty || getDifficultyFromLevel(currentPrompt.difficulty_level))}`}>
+                        {(currentPrompt.difficulty || getDifficultyFromLevel(currentPrompt.difficulty_level)).toUpperCase()}
                       </span>
                     </div>
                   </div>
                   
                   <div className="bg-purple-50 rounded-lg p-4 mb-6">
                     <p className="text-[#0e141b] text-sm leading-relaxed">
-                      {currentPrompt.prompt_text}
+                      {currentPrompt.question_text}
                     </p>
                   </div>
 
@@ -363,7 +372,7 @@ export default function MockTestPage() {
                 <div className="bg-white rounded-xl p-6 border border-[#d0dbe7]">
                   <div className="mb-4">
                     <h4 className="text-[#0e141b] text-sm font-semibold mb-2">Essay Prompt:</h4>
-                    <p className="text-[#4e7397] text-sm">{currentPrompt.prompt_text}</p>
+                    <p className="text-[#4e7397] text-sm">{currentPrompt.question_text}</p>
                   </div>
                   
                   <textarea

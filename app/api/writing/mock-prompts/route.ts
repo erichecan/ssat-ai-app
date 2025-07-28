@@ -14,16 +14,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     let query = supabase
-      .from('mock_test_prompts')
+      .from('test_questions')
       .select('*')
+      .eq('question_type', 'essay')
+      .eq('subject', 'Writing Prompts')
       .order('created_at', { ascending: false });
 
-    if (type) {
-      query = query.eq('prompt_type', type);
-    }
-
     if (difficulty) {
-      query = query.eq('difficulty', difficulty);
+      const difficultyLevel = difficulty === 'easy' ? 1 : difficulty === 'medium' ? 2 : 3;
+      query = query.eq('difficulty_level', difficultyLevel);
     }
 
     const { data: prompts, error } = await query.limit(limit);
@@ -48,8 +47,18 @@ export async function POST(request: NextRequest) {
     const promptData = await request.json();
     
     const { data: prompt, error } = await supabase
-      .from('mock_test_prompts')
-      .insert(promptData)
+      .from('test_questions')
+      .insert({
+        type: 'vocabulary',
+        subject: 'Writing Prompts', 
+        difficulty_level: promptData.difficulty === 'easy' ? 1 : promptData.difficulty === 'medium' ? 2 : 3,
+        question_text: promptData.prompt_text,
+        question_type: 'essay',
+        correct_answer: `This is a ${promptData.prompt_type?.toLowerCase() || 'writing'} essay prompt.`,
+        explanation: `This prompt tests writing skills.`,
+        time_limit_seconds: 1500,
+        points: 25
+      })
       .select()
       .single();
 
