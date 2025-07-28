@@ -42,37 +42,59 @@ export default function SummarizerPage() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [completedCount, setCompletedCount] = useState(0);
 
-  // Mock article data - In production, this would come from your Supabase database
-  const mockArticles: Article[] = [
-    {
-      id: '1',
-      title: 'The Benefits of Reading',
-      content: `Reading is one of the most fundamental skills for academic success. When students read regularly, they develop stronger vocabulary, better comprehension abilities, and improved writing skills. Research shows that students who read for just 20 minutes daily score significantly higher on standardized tests. Reading also enhances critical thinking skills by exposing students to different perspectives and complex ideas. Furthermore, reading fiction helps develop empathy and emotional intelligence, while non-fiction builds knowledge across various subjects. The habit of reading should be cultivated early and maintained throughout life, as it serves as a foundation for lifelong learning and intellectual growth.`,
-      topic_category: 'Education',
-      standard_summary: 'Regular reading develops vocabulary, comprehension, and critical thinking skills, leading to better academic performance and lifelong learning.',
-      keywords: ['reading', 'vocabulary', 'comprehension', 'academic success'],
-      difficulty: 'easy'
-    },
-    {
-      id: '2',
-      title: 'Climate Change and Ocean Levels',
-      content: `Global climate change has led to significant rises in ocean levels worldwide. As greenhouse gases trap more heat in Earth's atmosphere, polar ice caps and glaciers melt at accelerating rates. Scientists estimate that sea levels have risen approximately 8-9 inches since 1880, with the rate of increase doubling in recent decades. This rise threatens coastal communities, damages marine ecosystems, and affects weather patterns globally. Small island nations face complete submersion, while major coastal cities must invest billions in protective infrastructure. The economic impact includes property damage, agricultural losses, and forced migration of populations. Immediate action to reduce carbon emissions is crucial to slow this trend and protect vulnerable communities from devastating consequences.`,
-      topic_category: 'Environment',
-      standard_summary: 'Climate change causes ocean levels to rise through melting ice, threatening coastal areas and requiring urgent carbon emission reductions.',
-      keywords: ['climate change', 'sea level rise', 'greenhouse gases', 'coastal threats'],
-      difficulty: 'medium'
-    }
-  ];
-
   useEffect(() => {
     loadNewArticle();
   }, []);
 
-  const loadNewArticle = () => {
-    const randomIndex = Math.floor(Math.random() * mockArticles.length);
-    setCurrentArticle(mockArticles[randomIndex]);
-    setUserSummary('');
-    setFeedback(null);
+  const loadNewArticle = async () => {
+    try {
+      // First try to get an existing article from database
+      const existingResponse = await fetch('/api/writing/articles?limit=10');
+      if (existingResponse.ok) {
+        const { articles } = await existingResponse.json();
+        if (articles && articles.length > 0) {
+          const randomIndex = Math.floor(Math.random() * articles.length);
+          setCurrentArticle(articles[randomIndex]);
+          setUserSummary('');
+          setFeedback(null);
+          return;
+        }
+      }
+
+      // If no existing articles, generate a new one
+      const response = await fetch('/api/writing/generate-article', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          difficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate article');
+      }
+
+      const { article } = await response.json();
+      setCurrentArticle(article);
+      setUserSummary('');
+      setFeedback(null);
+    } catch (error) {
+      console.error('Error loading article:', error);
+      // Fallback to a simple article if generation fails
+      setCurrentArticle({
+        id: 'fallback-1',
+        title: 'The Importance of Education',
+        content: 'Education plays a crucial role in personal development and societal progress. Through learning, individuals acquire knowledge, develop critical thinking skills, and prepare for future challenges. Quality education provides opportunities for growth, creativity, and innovation. It helps people understand the world around them and make informed decisions. Education also promotes equality by giving everyone the chance to improve their circumstances through knowledge and skills.',
+        topic_category: 'Education',
+        standard_summary: 'Education is essential for personal growth and societal advancement through knowledge and skill development.',
+        keywords: ['education', 'learning', 'development', 'knowledge', 'skills'],
+        difficulty: 'medium' as 'easy' | 'medium' | 'hard'
+      });
+      setUserSummary('');
+      setFeedback(null);
+    }
   };
 
   const submitSummary = async () => {

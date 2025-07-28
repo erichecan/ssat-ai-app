@@ -11,10 +11,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
     const difficulty = searchParams.get('difficulty');
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     let query = supabase
       .from('mock_test_prompts')
-      .select('*');
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (type) {
       query = query.eq('prompt_type', type);
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('difficulty', difficulty);
     }
 
-    const { data: prompts, error } = await query.limit(10);
+    const { data: prompts, error } = await query.limit(limit);
 
     if (error) {
       throw error;

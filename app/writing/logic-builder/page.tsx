@@ -37,54 +37,79 @@ export default function LogicBuilderPage() {
   const [completedCount, setCompletedCount] = useState(0);
   const [draggedItem, setDraggedItem] = useState<LogicElement | null>(null);
 
-  // Mock puzzle data - In production, this would come from your Supabase database
-  const mockPuzzles: LogicPuzzle[] = [
-    {
-      id: '1',
-      main_thesis: 'Schools should require students to wear uniforms',
-      elements: {
-        shuffled: [
-          { id: '1', text: 'School uniforms reduce distractions in the learning environment', order: 2 },
-          { id: '2', text: 'Students spend less time choosing outfits and more time focusing on studies', order: 3 },
-          { id: '3', text: 'Education should prioritize academic achievement over fashion choices', order: 1 },
-          { id: '4', text: 'Therefore, mandatory school uniforms benefit student learning', order: 4 }
-        ],
-        correct_order: [3, 1, 2, 4]
-      },
-      difficulty: 'easy'
-    },
-    {
-      id: '2',
-      main_thesis: 'Social media has negative effects on teenagers',
-      elements: {
-        shuffled: [
-          { id: '1', text: 'Studies show increased anxiety and depression among heavy social media users', order: 2 },
-          { id: '2', text: 'This creates unrealistic expectations and feelings of inadequacy', order: 3 },
-          { id: '3', text: 'Social media platforms promote constant comparison with others', order: 1 },
-          { id: '4', text: 'Limited social media use should be encouraged for teen mental health', order: 5 },
-          { id: '5', text: 'Sleep disruption from late-night scrolling affects academic performance', order: 4 }
-        ],
-        correct_order: [3, 1, 2, 5, 4]
-      },
-      difficulty: 'medium'
-    }
-  ];
-
   useEffect(() => {
     loadNewPuzzle();
   }, []);
 
-  const loadNewPuzzle = () => {
-    const randomIndex = Math.floor(Math.random() * mockPuzzles.length);
-    const puzzle = mockPuzzles[randomIndex];
-    
-    // Shuffle the elements for display
-    const shuffled = [...puzzle.elements.shuffled].sort(() => Math.random() - 0.5);
-    
-    setCurrentPuzzle({ ...puzzle, elements: { ...puzzle.elements, shuffled } });
-    setUserOrder([]);
-    setIsComplete(false);
-    setIsCorrect(null);
+  const loadNewPuzzle = async () => {
+    try {
+      // First try to get an existing puzzle from database
+      const existingResponse = await fetch('/api/writing/logic-puzzles?limit=10');
+      if (existingResponse.ok) {
+        const { puzzles } = await existingResponse.json();
+        if (puzzles && puzzles.length > 0) {
+          const randomIndex = Math.floor(Math.random() * puzzles.length);
+          const puzzle = puzzles[randomIndex];
+          
+          // Shuffle the elements for display
+          const shuffled = [...puzzle.elements.shuffled].sort(() => Math.random() - 0.5);
+          
+          setCurrentPuzzle({ ...puzzle, elements: { ...puzzle.elements, shuffled } });
+          setUserOrder([]);
+          setIsComplete(false);
+          setIsCorrect(null);
+          return;
+        }
+      }
+
+      // If no existing puzzles, generate a new one
+      const response = await fetch('/api/writing/generate-logic-puzzle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          difficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate logic puzzle');
+      }
+
+      const { puzzle } = await response.json();
+      
+      // Shuffle the elements for display
+      const shuffled = [...puzzle.elements.shuffled].sort(() => Math.random() - 0.5);
+      
+      setCurrentPuzzle({ ...puzzle, elements: { ...puzzle.elements, shuffled } });
+      setUserOrder([]);
+      setIsComplete(false);
+      setIsCorrect(null);
+    } catch (error) {
+      console.error('Error loading puzzle:', error);
+      // Fallback to a simple puzzle if generation fails
+      const fallbackPuzzle = {
+        id: 'fallback-1',
+        main_thesis: 'Students should participate in extracurricular activities',
+        elements: {
+          shuffled: [
+            { id: '1', text: 'Extracurricular activities help students develop leadership skills', order: 2 },
+            { id: '2', text: 'These skills are valuable for college applications and future careers', order: 3 },
+            { id: '3', text: 'Student participation in activities beyond academics is beneficial', order: 1 },
+            { id: '4', text: 'Therefore, schools should encourage all students to join clubs or sports', order: 4 }
+          ],
+          correct_order: [3, 1, 2, 4]
+        },
+        difficulty: 'medium' as 'easy' | 'medium' | 'hard'
+      };
+      
+      const shuffled = [...fallbackPuzzle.elements.shuffled].sort(() => Math.random() - 0.5);
+      setCurrentPuzzle({ ...fallbackPuzzle, elements: { ...fallbackPuzzle.elements, shuffled } });
+      setUserOrder([]);
+      setIsComplete(false);
+      setIsCorrect(null);
+    }
   };
 
   const handleDragStart = (element: LogicElement) => {

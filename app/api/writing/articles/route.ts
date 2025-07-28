@@ -10,16 +10,18 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const difficulty = searchParams.get('difficulty');
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     let query = supabase
       .from('articles')
-      .select('*');
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (difficulty) {
       query = query.eq('difficulty', difficulty);
     }
 
-    const { data: articles, error } = await query.limit(10);
+    const { data: articles, error } = await query.limit(limit);
 
     if (error) {
       throw error;

@@ -48,28 +48,6 @@ export default function MockTestPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Mock prompts - In production, this would come from your Supabase database
-  const mockPrompts: MockPrompt[] = [
-    {
-      id: '1',
-      prompt_text: 'Some people believe that students should be required to take a foreign language class, while others think it should be optional. In your opinion, should foreign language classes be mandatory or optional in schools? Use specific reasons and examples to support your position.',
-      prompt_type: 'Persuasive',
-      difficulty: 'medium'
-    },
-    {
-      id: '2',
-      prompt_text: 'Write about a time when you had to overcome a challenge or obstacle. Describe the situation, what you did to overcome it, and what you learned from the experience.',
-      prompt_type: 'Narrative',
-      difficulty: 'easy'
-    },
-    {
-      id: '3',
-      prompt_text: 'Many schools are considering implementing later start times to help students get more sleep. Do you think schools should start later in the day? Support your opinion with specific reasons and examples.',
-      prompt_type: 'Persuasive',
-      difficulty: 'medium'
-    }
-  ];
-
   useEffect(() => {
     loadNewPrompt();
   }, []);
@@ -90,13 +68,59 @@ export default function MockTestPage() {
     };
   }, [testStatus, timeLeft]);
 
-  const loadNewPrompt = () => {
-    const randomIndex = Math.floor(Math.random() * mockPrompts.length);
-    setCurrentPrompt(mockPrompts[randomIndex]);
-    setEssay('');
-    setTimeLeft(25 * 60);
-    setTestStatus('setup');
-    setGradingReport(null);
+  const loadNewPrompt = async () => {
+    try {
+      // First try to get an existing prompt from database
+      const existingResponse = await fetch('/api/writing/mock-prompts?limit=10');
+      if (existingResponse.ok) {
+        const { prompts } = await existingResponse.json();
+        if (prompts && prompts.length > 0) {
+          const randomIndex = Math.floor(Math.random() * prompts.length);
+          setCurrentPrompt(prompts[randomIndex]);
+          setEssay('');
+          setTimeLeft(25 * 60);
+          setTestStatus('setup');
+          setGradingReport(null);
+          return;
+        }
+      }
+
+      // If no existing prompts, generate a new one
+      const response = await fetch('/api/writing/generate-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt_type: Math.random() > 0.5 ? 'Persuasive' : 'Narrative',
+          difficulty: ['easy', 'medium', 'hard'][Math.floor(Math.random() * 3)]
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate prompt');
+      }
+
+      const { prompt } = await response.json();
+      setCurrentPrompt(prompt);
+      setEssay('');
+      setTimeLeft(25 * 60);
+      setTestStatus('setup');
+      setGradingReport(null);
+    } catch (error) {
+      console.error('Error loading prompt:', error);
+      // Fallback to a simple prompt if generation fails
+      setCurrentPrompt({
+        id: 'fallback-1',
+        prompt_text: 'Write about a person who has had a significant influence on your life. Describe who this person is, how they influenced you, and why their impact was meaningful. Use specific examples and details to help your reader understand the importance of this relationship.',
+        prompt_type: 'Narrative',
+        difficulty: 'medium' as 'easy' | 'medium' | 'hard'
+      });
+      setEssay('');
+      setTimeLeft(25 * 60);
+      setTestStatus('setup');
+      setGradingReport(null);
+    }
   };
 
   const startTest = () => {
