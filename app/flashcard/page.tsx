@@ -16,7 +16,8 @@ import {
   Trophy,
   Clock,
   Target,
-  FileText
+  FileText,
+  CalendarCheck
 } from 'lucide-react'
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth'
 import { Flashcard } from '@/lib/flashcard-bank'
@@ -45,6 +46,7 @@ export default function FlashCardPage() {
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const [showMastery, setShowMastery] = useState(false) // 显示掌握按钮
   const [stats, setStats] = useState<any>(null)
+  const [reviewMode, setReviewMode] = useState(false) // 今日复习模式
   
   const currentCard = flashcards[currentIndex]
 
@@ -106,7 +108,7 @@ export default function FlashCardPage() {
     }
   }, [isFlipped]) // 依赖isFlipped状态
 
-  const loadFlashcards = async () => {
+  const loadFlashcards = async (todayReviewOnly = false) => {
     // 确保在客户端环境中执行
     if (typeof window === 'undefined') {
       return
@@ -116,15 +118,26 @@ export default function FlashCardPage() {
       const currentUser = SessionManager.getCurrentUser()
       const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
-      // 按艾宾浩斯记忆曲线加载所有flashcards（无论是否到期）
-      // 优先级：1.到期复习 2.新单词 3.困难单词 4.其他
-      const response = await fetch(`/api/flashcards/enhanced?userId=${userId}&ebbinghausOrder=true&limit=50`)
+      let endpoint = `/api/flashcards/enhanced?userId=${userId}&limit=50`
+      
+      if (todayReviewOnly) {
+        // 今日复习模式：只加载已掌握且根据艾宾浩斯曲线需要复习的单词
+        endpoint += '&todayReviewOnly=true&masteredOnly=true&ebbinghausOrder=true'
+        setReviewMode(true)
+      } else {
+        // 普通模式：按艾宾浩斯记忆曲线加载所有flashcards（无论是否到期）
+        // 优先级：1.到期复习 2.新单词 3.困难单词 4.其他
+        endpoint += '&ebbinghausOrder=true'
+        setReviewMode(false)
+      }
+      
+      const response = await fetch(endpoint)
       const result = await response.json()
 
       if (response.ok) {
         setFlashcards(result.flashcards || [])
         setStats(result.stats)
-        console.log('Loaded flashcards with Ebbinghaus ordering:', result.flashcards?.length)
+        console.log(`Loaded flashcards ${todayReviewOnly ? '(Today Review mode)' : '(Normal mode)'}:`, result.flashcards?.length)
       } else {
         setError('Failed to load flashcards')
       }
@@ -411,12 +424,33 @@ export default function FlashCardPage() {
   if (flashcards.length === 0) {
     return (
       <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
-        <BookOpen className="w-16 h-16 text-[#197fe5] mb-4" />
-        <h3 className="text-[#0e141b] text-lg font-bold mb-2">No Flashcards Available</h3>
-        <p className="text-[#4e7397] text-sm mb-4">No flashcards found. Please try again later.</p>
-        <button onClick={loadFlashcards} className="text-[#197fe5] font-semibold">
-          Refresh
-        </button>
+        {reviewMode ? (
+          <>
+            <CalendarCheck className="w-16 h-16 text-green-500 mb-4" />
+            <h3 className="text-[#0e141b] text-lg font-bold mb-2">All Caught Up! 🎉</h3>
+            <p className="text-[#4e7397] text-sm mb-4">No mastered words are due for review today according to the Ebbinghaus curve.</p>
+            <p className="text-[#4e7397] text-xs mb-4">Come back tomorrow or switch to normal mode to continue learning.</p>
+            <button 
+              onClick={() => {
+                setLoading(true)
+                setCurrentIndex(0)
+                loadFlashcards(false)
+              }} 
+              className="text-[#197fe5] font-semibold bg-blue-50 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              Switch to Normal Mode
+            </button>
+          </>
+        ) : (
+          <>
+            <BookOpen className="w-16 h-16 text-[#197fe5] mb-4" />
+            <h3 className="text-[#0e141b] text-lg font-bold mb-2">No Flashcards Available</h3>
+            <p className="text-[#4e7397] text-sm mb-4">No flashcards found. Please try again later.</p>
+            <button onClick={() => loadFlashcards(false)} className="text-[#197fe5] font-semibold">
+              Refresh
+            </button>
+          </>
+        )}
       </div>
     )
   }
@@ -442,11 +476,31 @@ export default function FlashCardPage() {
     >
       {/* Header */}
       <div className="flex items-center bg-slate-50 p-4 pb-2 justify-between">
-        <Link href="/" className="text-[#0e141b] flex size-12 shrink-0 items-center">
-          <ArrowLeft size={24} />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="text-[#0e141b] flex size-10 shrink-0 items-center justify-center">
+            <ArrowLeft size={20} />
+          </Link>
+          {/* Today Review Button */}
+          <button
+            onClick={() => {
+              setLoading(true)
+              setCurrentIndex(0)
+              loadFlashcards(!reviewMode)
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 ${
+              reviewMode 
+                ? 'bg-blue-100 text-blue-700 border border-blue-200 shadow-sm hover:bg-blue-50' 
+                : 'bg-amber-100 text-amber-700 border border-amber-200 shadow-sm hover:bg-amber-50'
+            }`}
+            title={reviewMode ? 'Switch to Normal Mode' : 'Today Review (Ebbinghaus Curve)'}
+          >
+            <CalendarCheck size={12} />
+            <span className="hidden sm:inline">{reviewMode ? 'Normal' : 'Today Review'}</span>
+            <span className="sm:hidden">{reviewMode ? '📚' : '📅'}</span>
+          </button>
+        </div>
         <h2 className="text-[#0e141b] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
-          Flashcard
+          {reviewMode ? 'Today Review' : 'Flashcard'}
         </h2>
         <Link href="/vocabulary/admin" className="text-[#4e7397] flex size-12 shrink-0 items-center justify-center">
           <Brain size={20} />

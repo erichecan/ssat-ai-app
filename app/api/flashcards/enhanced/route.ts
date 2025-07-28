@@ -21,10 +21,11 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId') || DEMO_USER_UUID // Fixed UUID format
     const dueOnly = searchParams.get('dueOnly') === 'true' // 只返回需要复习的
     const masteredOnly = searchParams.get('masteredOnly') === 'true' // 只返回已掌握的
+    const todayReviewOnly = searchParams.get('todayReviewOnly') === 'true' // 今日复习模式
     const ebbinghausOrder = searchParams.get('ebbinghausOrder') === 'true' // 按艾宾浩斯曲线排序
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    console.log('Enhanced flashcards API called:', { userId, dueOnly, masteredOnly, ebbinghausOrder, limit })
+    console.log('Enhanced flashcards API called:', { userId, dueOnly, masteredOnly, todayReviewOnly, ebbinghausOrder, limit })
 
     // 1. 获取用户的flashcard进度数据
     let progressQuery = supabase
@@ -40,6 +41,13 @@ export async function GET(request: NextRequest) {
 
     if (masteredOnly) {
       progressQuery = progressQuery.eq('is_mastered', true)
+    }
+
+    // 今日复习模式：已掌握的单词中需要根据艾宾浩斯曲线复习的
+    if (todayReviewOnly) {
+      progressQuery = progressQuery
+        .eq('is_mastered', true) // 只看已掌握的单词
+        .lte('next_review', new Date().toISOString()) // 复习时间已到或逾期
     }
 
     // 根据排序方式调整查询
@@ -178,7 +186,7 @@ export async function GET(request: NextRequest) {
       success: true,
       flashcards: sortedFlashcards,
       stats,
-      filters: { dueOnly, masteredOnly, ebbinghausOrder, limit }
+      filters: { dueOnly, masteredOnly, todayReviewOnly, ebbinghausOrder, limit }
     })
 
   } catch (error) {
@@ -230,10 +238,26 @@ export async function POST(request: NextRequest) {
 
     // 处理不同的动作
     if (action === 'master') {
-      // 标记为已掌握
+      // 标记为已掌握并开始艾宾浩斯复习循环
+      const currentProgress = existingProgress || {
+        times_seen: 0,
+        times_correct: 0,
+        interval_days: 1,
+        ease_factor: 2.5
+      }
+
+      // 为已掌握单词设置初始复习间隔（30天）
+      const initialMasterInterval = 30
+      const nextReview = new Date(Date.now() + initialMasterInterval * 24 * 60 * 60 * 1000).toISOString()
+      
       const updateData = {
         is_mastered: true,
         mastery_level: 4, // 设置为最高掌握级别
+        interval_days: initialMasterInterval, // 30天后第一次复习
+        ease_factor: 2.8, // 较高的易度系数，因为已掌握
+        next_review: nextReview,
+        times_seen: currentProgress.times_seen + 1,
+        times_correct: currentProgress.times_correct + 1,
         updated_at: now
       }
 
@@ -250,18 +274,14 @@ export async function POST(request: NextRequest) {
             user_id: userId,
             flashcard_id: flashcardId,
             ...updateData,
-            times_seen: 1,
-            times_correct: 1,
-            interval_days: 999, // 很长的间隔，实际上不会复习
-            ease_factor: 2.5,
-            next_review: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            difficulty_rating: 2, // 已掌握的单词难度较低
             created_at: now
           })
       }
 
       return NextResponse.json({
         success: true,
-        message: 'Word marked as mastered'
+        message: `Word marked as mastered. Next review scheduled in ${initialMasterInterval} days.`
       })
     }
 

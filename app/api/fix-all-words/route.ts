@@ -10,97 +10,63 @@ const DEMO_USER_UUID = "00000000-0000-0000-0000-000000000001"
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔧 Fixing all words in database...')
+    console.log('🧹 Starting vocabulary database cleanup and deduplication...')
     
-    // 1. 获取所有user_id为null的单词
-    const { data: nullUserWords, error: nullUserError } = await supabase
-      .from('flashcards')
-      .select('*')
-      .is('user_id', null)
-
-    if (nullUserError) {
-      console.error('Error fetching null user words:', nullUserError)
-      return NextResponse.json({ 
-        success: false, 
-        error: nullUserError.message 
-      })
-    }
-
-    console.log(`Found ${nullUserWords?.length || 0} words with null user_id`)
-
-    // 2. 修复每个单词
-    const fixedWords = []
-    for (const word of nullUserWords || []) {
-      // 从question中提取单词
-      const questionText = word.question || ''
-      const wordMatch = questionText.match(/['"]([^'"]+)['"]/)
-      const extractedWord = wordMatch ? wordMatch[1] : null
-      
-      if (extractedWord) {
-        // 更新单词，添加user_id和word字段
-        const { data: updatedWord, error: updateError } = await supabase
-          .from('flashcards')
-          .update({
-            user_id: DEMO_USER_UUID,
-            word: extractedWord,
-            definition: word.answer,
-            source_type: 'legacy_migration',
-            source_context: 'Migrated from legacy format'
-          })
-          .eq('id', word.id)
-          .select()
-
-        if (updateError) {
-          console.error(`Error updating word ${word.id}:`, updateError)
-        } else {
-          fixedWords.push(updatedWord?.[0])
-          console.log(`✅ Fixed word: ${extractedWord}`)
-        }
-      }
-    }
-
-    // 3. 为所有单词创建progress记录
-    const { data: allWords, error: allWordsError } = await supabase
+    // 1. 获取所有单词并去重
+    const { data: allWords, error: fetchError } = await supabase
       .from('flashcards')
       .select('*')
       .eq('user_id', DEMO_USER_UUID)
+      .order('created_at', { ascending: true })
 
-    if (allWordsError) {
-      console.error('Error fetching all words:', allWordsError)
-    } else {
-      console.log(`Creating progress records for ${allWords?.length || 0} words`)
+    if (fetchError) {
+      console.error('Error fetching words:', fetchError)
+      return NextResponse.json({ 
+        success: false, 
+        error: fetchError.message 
+      })
+    }
+
+    console.log(`📊 Found ${allWords?.length || 0} total flashcards`)
+    
+    // 2. 去重处理
+    const wordGroups = new Map()
+    const duplicateIds = []
+    
+    for (const flashcard of allWords || []) {
+      const word = flashcard.word?.toLowerCase()
+      if (!word) continue
       
-      for (const word of allWords || []) {
-        // 检查是否已有progress记录
-        const { data: existingProgress } = await supabase
-          .from('user_flashcard_progress')
-          .select('*')
-          .eq('user_id', DEMO_USER_UUID)
-          .eq('flashcard_id', word.id)
-          .single()
-
-        if (!existingProgress) {
-          // 创建progress记录
-          const { error: progressError } = await supabase
-            .from('user_flashcard_progress')
-            .insert({
-              user_id: DEMO_USER_UUID,
-              flashcard_id: word.id,
-              mastery_level: 0,
-              times_seen: 0,
-              times_correct: 0,
-              difficulty_rating: 3,
-              next_review: new Date().toISOString(),
-              interval_days: 1,
-              ease_factor: 2.50,
-              is_mastered: false
-            })
-
-          if (progressError) {
-            console.error(`Error creating progress for word ${word.id}:`, progressError)
-          } else {
-            console.log(`✅ Created progress for word: ${word.word || word.question}`)
-          }
+      if (!wordGroups.has(word)) {
+        // 第一次出现 - 保留
+        wordGroups.set(word, flashcard)
+      } else {
+        // 重复 - 标记删除
+        duplicateIds.push(flashcard.id)
+      }
+    }
+    
+    console.log(`🔍 Found ${duplicateIds.length} duplicate records to remove`)
+    console.log(`✅ Will keep ${wordGroups.size} unique words`)
+    
+    // 3. 批量删除重复项
+    let deletedCount = 0
+    if (duplicateIds.length > 0) {
+      const batchSize = 100
+      
+      for (let i = 0; i < duplicateIds.length; i += batchSize) {
+        const batch = duplicateIds.slice(i, i + batchSize)
+        
+        const { error: deleteError } = await supabase
+          .from('flashcards')
+          .delete()
+          .in('id', batch)
+        
+        if (deleteError) {
+          console.error('Error deleting batch:', deleteError)
+        } else {
+          deletedCount += batch.length
+          console.log(`🗑️  Deleted batch ${Math.floor(i/batchSize) + 1}: ${batch.length} records`)
         }
       }
     }
@@ -111,11 +77,23 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('user_id', DEMO_USER_UUID)
 
+    // 5. 按来源分类统计
+    const sourceStats = {}
+    for (const word of finalStats || []) {
+      const source = word.source_type || 'unknown'
+      sourceStats[source] = (sourceStats[source] || 0) + 1
+    }
+
     return NextResponse.json({
       success: true,
-      fixedWords: fixedWords.length,
-      totalWords: finalStats?.length || 0,
-      message: `Successfully fixed ${fixedWords.length} words and created progress records`
+      message: 'Database cleanup completed successfully',
+      stats: {
+        originalCount: allWords?.length || 0,
+        duplicatesRemoved: deletedCount,
+        finalCount: finalStats?.length || 0,
+        uniqueWords: wordGroups.size,
+        sourceBreakdown: sourceStats
+      }
     })
 
   } catch (error) {
