@@ -97,12 +97,12 @@ Make the article factual and educational, suitable for standardized test practic
       .insert({
         title: articleData.title,
         content: articleData.content,
-        topic: articleData.topic_category,
+        topic: 'SSAT Writing Practice', // 统一标记为写作练习文章
         difficulty: articleData.difficulty,
         type: 'concept',
         tags: articleData.keywords,
-        // Additional fields for writing articles
-        description: articleData.standard_summary
+        source: `AI Generated - ${articleData.topic_category}`,
+        // 将标准概括存储在content的元数据中，或者单独存储
       })
       .select()
       .single();
@@ -112,15 +112,30 @@ Make the article factual and educational, suitable for standardized test practic
       // Still return the generated article even if save fails
     }
 
-    // Return the generated article (use saved version if available)
-    return NextResponse.json({
-      article: savedArticle || { 
-        id: 'temp-' + Date.now(),
-        ...articleData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    });
+    // Return the generated article with proper field mapping
+    const formattedArticle = savedArticle ? {
+      id: savedArticle.id,
+      title: savedArticle.title,
+      content: savedArticle.content,
+      topic: articleData.topic_category, // 返回原始主题分类
+      description: articleData.standard_summary, // 标准概括
+      tags: savedArticle.tags,
+      difficulty: savedArticle.difficulty,
+      created_at: savedArticle.created_at,
+      updated_at: savedArticle.updated_at
+    } : { 
+      id: 'temp-' + Date.now(),
+      title: articleData.title,
+      content: articleData.content,
+      topic: articleData.topic_category,
+      description: articleData.standard_summary,
+      tags: articleData.keywords,
+      difficulty: articleData.difficulty,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    return NextResponse.json({ article: formattedArticle });
 
   } catch (error) {
     console.error('Error generating article:', error);

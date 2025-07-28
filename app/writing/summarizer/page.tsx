@@ -48,20 +48,7 @@ export default function SummarizerPage() {
 
   const loadNewArticle = async () => {
     try {
-      // First try to get an existing article from database
-      const existingResponse = await fetch('/api/writing/articles?limit=10');
-      if (existingResponse.ok) {
-        const { articles } = await existingResponse.json();
-        if (articles && articles.length > 0) {
-          const randomIndex = Math.floor(Math.random() * articles.length);
-          setCurrentArticle(articles[randomIndex]);
-          setUserSummary('');
-          setFeedback(null);
-          return;
-        }
-      }
-
-      // If no existing articles, generate a new one
+      // 优先生成新文章，确保内容新鲜且多样化
       const response = await fetch('/api/writing/generate-article', {
         method: 'POST',
         headers: {
@@ -81,7 +68,24 @@ export default function SummarizerPage() {
       setUserSummary('');
       setFeedback(null);
     } catch (error) {
-      console.error('Error loading article:', error);
+      console.error('Error generating article:', error);
+      
+      // 如果AI生成失败，尝试从现有的写作练习文章中获取
+      try {
+        const existingResponse = await fetch('/api/writing/articles?limit=10');
+        if (existingResponse.ok) {
+          const { articles } = await existingResponse.json();
+          if (articles && articles.length > 0) {
+            const randomIndex = Math.floor(Math.random() * articles.length);
+            setCurrentArticle(articles[randomIndex]);
+            setUserSummary('');
+            setFeedback(null);
+            return;
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Error loading existing articles:', fallbackError);
+      }
       // Fallback to a simple article if generation fails
       setCurrentArticle({
         id: 'fallback-1',
