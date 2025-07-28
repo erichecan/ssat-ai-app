@@ -204,7 +204,7 @@ Return only valid JSON.`
         batchesProcessed: numBatches,
         successfulBatches,
         totalGenerated,
-        sourceFiles: [...new Set(uploads.map(u => u.source).filter(Boolean))]
+        sourceFiles: Array.from(new Set(uploads.map(u => u.source).filter(Boolean)))
       },
       sampleWords: generatedWords.slice(0, 5).map((w: any) => ({
         word: w.word,
@@ -244,7 +244,7 @@ function extractVocabularyWords(text: string): string[] {
     )
   
   // Remove duplicates and sort
-  return [...new Set(words)].sort()
+  return Array.from(new Set(words)).sort()
 }
 
 function selectDiverseWords(words: string[], maxWords: number): string[] {
@@ -321,7 +321,7 @@ export async function GET() {
       message: 'Upload-based vocabulary generation ready',
       uploadedFiles: fileCount,
       totalChunks: uploads?.length || 0,
-      sourceFiles: uploads ? [...new Set(uploads.map(u => u.source).filter(Boolean))] : [],
+      sourceFiles: uploads ? Array.from(new Set(uploads.map(u => u.source).filter(Boolean))) : [],
       lastUpload: uploads?.[0]?.created_at || null
     })
     

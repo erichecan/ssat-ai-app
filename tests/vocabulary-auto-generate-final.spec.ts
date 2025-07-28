@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
  * Optimized for the actual API behavior and performance characteristics
  */
 test.describe('Vocabulary Auto-Generation API - Production Tests', () => {
-  const API_ENDPOINT = '/api/vocabulary/auto-generate';
+  const API_ENDPOINT = 'http://localhost:3000/api/vocabulary/auto-generate';
 
   test.describe('GET /api/vocabulary/auto-generate', () => {
     test('should return auto-generation service status', async ({ request }) => {

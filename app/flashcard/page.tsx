@@ -413,7 +413,7 @@ export default function FlashCardPage() {
     return (
       <div className="relative flex size-full min-h-screen flex-col bg-slate-50 justify-center items-center">
         <p className="text-[#4e7397] text-base mb-4">{error}</p>
-        <button onClick={loadFlashcards} className="text-[#197fe5] flex items-center gap-2">
+        <button onClick={() => loadFlashcards()} className="text-[#197fe5] flex items-center gap-2">
           <RefreshCw size={16} />
           Retry
         </button>

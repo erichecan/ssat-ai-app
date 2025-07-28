@@ -32,7 +32,10 @@
       "Bash(psql:*)",
       "Bash(supabase db push:*)",
       "Bash(supabase link:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(npm test:*)",
+      "Bash(./scripts/quick-status.sh:*)",
+      "Bash(-H \"Content-Type: application/json\")"
     ],
     "deny": []
   }

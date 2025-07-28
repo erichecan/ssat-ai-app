@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', DEMO_USER_UUID)
 
     // 5. 按来源分类统计
-    const sourceStats = {}
+    const sourceStats: { [key: string]: number } = {}
     for (const word of finalStats || []) {
       const source = word.source_type || 'unknown'
       sourceStats[source] = (sourceStats[source] || 0) + 1
