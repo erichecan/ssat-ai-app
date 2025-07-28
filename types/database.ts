@@ -325,6 +325,134 @@ export interface Database {
           updated_at?: string
         }
       }
+      articles: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          topic_category: string
+          standard_summary: string
+          keywords: string[]
+          difficulty: 'easy' | 'medium' | 'hard'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          topic_category: string
+          standard_summary: string
+          keywords?: string[]
+          difficulty?: 'easy' | 'medium' | 'hard'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          topic_category?: string
+          standard_summary?: string
+          keywords?: string[]
+          difficulty?: 'easy' | 'medium' | 'hard'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      logic_puzzles: {
+        Row: {
+          id: string
+          main_thesis: string
+          elements: Record<string, any>
+          difficulty: 'easy' | 'medium' | 'hard'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          main_thesis: string
+          elements: Record<string, any>
+          difficulty?: 'easy' | 'medium' | 'hard'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          main_thesis?: string
+          elements?: Record<string, any>
+          difficulty?: 'easy' | 'medium' | 'hard'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      mock_test_prompts: {
+        Row: {
+          id: string
+          prompt_text: string
+          prompt_type: 'Persuasive' | 'Narrative'
+          difficulty: 'easy' | 'medium' | 'hard'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          prompt_text: string
+          prompt_type: 'Persuasive' | 'Narrative'
+          difficulty?: 'easy' | 'medium' | 'hard'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          prompt_text?: string
+          prompt_type?: 'Persuasive' | 'Narrative'
+          difficulty?: 'easy' | 'medium' | 'hard'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_submissions: {
+        Row: {
+          id: string
+          user_id: string
+          submission_type: 'summary' | 'logic' | 'essay'
+          content: string
+          score: Record<string, any> | null
+          feedback: string | null
+          article_id: string | null
+          puzzle_id: string | null
+          prompt_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          submission_type: 'summary' | 'logic' | 'essay'
+          content: string
+          score?: Record<string, any> | null
+          feedback?: string | null
+          article_id?: string | null
+          puzzle_id?: string | null
+          prompt_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          submission_type?: 'summary' | 'logic' | 'essay'
+          content?: string
+          score?: Record<string, any> | null
+          feedback?: string | null
+          article_id?: string | null
+          puzzle_id?: string | null
+          prompt_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

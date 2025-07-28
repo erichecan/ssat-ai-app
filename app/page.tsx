@@ -9,7 +9,8 @@ import {
   User,
   Clock,
   Brain,
-  FileText
+  FileText,
+  PenTool
 } from 'lucide-react';
 import { vocabularyScheduler } from '@/lib/vocabulary-scheduler';
 
@@ -102,6 +103,21 @@ export default function HomePage() {
                 </div>
               </div>
             </Link>
+
+            <Link 
+              href="/writing"
+              className="block bg-white rounded-xl p-4 border border-[#d0dbe7] hover:shadow-lg transition-all duration-200 hover:scale-[0.98]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                  <PenTool size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-[#0e141b] font-semibold text-base">Writing Practice</h4>
+                  <p className="text-[#4e7397] text-sm">Structured writing training with AI feedback</p>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
@@ -121,11 +137,11 @@ export default function HomePage() {
             </div>
             <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
+          <Link href="/writing" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">
-              <FileText size={24} />
+              <PenTool size={24} />
             </div>
-            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
+            <p className="text-[#4e7397] text-xs font-medium leading-normal tracking-[0.015em]">Writing</p>
           </Link>
           <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#4e7397]">
             <div className="text-[#4e7397] flex h-8 items-center justify-center">

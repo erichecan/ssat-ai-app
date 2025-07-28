@@ -17,7 +17,8 @@ import {
   HelpCircle,
   Shield,
   Save,
-  RotateCcw
+  RotateCcw,
+  PenTool
 } from 'lucide-react';
 import { MockSessionManager as SessionManager } from '@/lib/mock-auth';
 import { UserSettings } from '@/app/api/settings/route';
@@ -443,11 +444,11 @@ export default function SettingsPage() {
             </div>
             <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Practice</p>
           </Link>
-          <Link href="/grammar" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
+          <Link href="/writing" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
             <div className="text-[#5c738a] flex h-8 items-center justify-center">
-              <FileText size={24} />
+              <PenTool size={24} />
             </div>
-            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Grammar</p>
+            <p className="text-[#5c738a] text-xs font-medium leading-normal tracking-[0.015em]">Writing</p>
           </Link>
           <Link href="/flashcard" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#5c738a]">
             <div className="text-[#5c738a] flex h-8 items-center justify-center">
