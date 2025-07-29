@@ -77,7 +77,7 @@ Generate exactly ${batchSize} words.`
         
         if (parsedResponse.words && Array.isArray(parsedResponse.words)) {
           // 过滤并验证词汇
-          const validWords = parsedResponse.words.filter(word => {
+          const validWords = parsedResponse.words.filter((word: any) => {
             return (
               word.word && 
               word.definition &&
@@ -211,12 +211,21 @@ export async function GET(request: NextRequest) {
   const testMode = searchParams.get('test') === 'true'
   
   if (testMode) {
-    // 测试模式：生成5个词汇
-    return POST(new Request(request.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ batchSize: 5, userId: '00000000-0000-0000-0000-000000000001' })
-    }))
+    // 测试模式：直接调用生成逻辑
+    try {
+      // 模拟POST请求体
+      const mockRequest = {
+        json: async () => ({ batchSize: 5, userId: '00000000-0000-0000-0000-000000000001' })
+      }
+      
+      return POST(mockRequest as NextRequest)
+    } catch (error) {
+      return NextResponse.json({
+        success: false,
+        error: 'Test mode failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, { status: 500 })
+    }
   }
   
   return NextResponse.json({

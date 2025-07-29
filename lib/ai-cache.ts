@@ -96,12 +96,13 @@ class AICache {
     let oldestKey: string | null = null
     let oldestTime = Date.now()
 
-    for (const [key, entry] of Array.from(this.cache.entries())) {
+    // 使用更兼容的迭代方式
+    this.cache.forEach((entry, key) => {
       if (entry.timestamp < oldestTime) {
         oldestTime = entry.timestamp
         oldestKey = key
       }
-    }
+    })
 
     if (oldestKey) {
       this.cache.delete(oldestKey)
@@ -113,13 +114,20 @@ class AICache {
   cleanup(): number {
     const now = Date.now()
     let cleaned = 0
+    const keysToDelete: string[] = []
 
-    for (const [key, entry] of Array.from(this.cache.entries())) {
+    // 先收集要删除的键，避免在迭代过程中修改Map
+    this.cache.forEach((entry, key) => {
       if (now > entry.timestamp + entry.ttl) {
-        this.cache.delete(key)
-        cleaned++
+        keysToDelete.push(key)
       }
-    }
+    })
+
+    // 批量删除过期条目
+    keysToDelete.forEach(key => {
+      this.cache.delete(key)
+      cleaned++
+    })
 
     this.stats.size = this.cache.size
     if (cleaned > 0) {

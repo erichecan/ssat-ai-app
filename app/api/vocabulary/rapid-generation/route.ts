@@ -87,15 +87,20 @@ export async function POST(request: NextRequest) {
       const results = await Promise.all(promises)
       
       // 处理结果
-      for (const { batchNumber, result, success, error } of results) {
-        if (success && result.success) {
+      for (const batchResult of results) {
+        const { batchNumber, success } = batchResult
+        if (success && 'result' in batchResult && batchResult.result.success) {
+          const { result } = batchResult
           totalGenerated += result.stats?.generated || 0
           totalInserted += result.stats?.inserted || 0
           successfulBatches++
           console.log(`✅ Batch ${batchNumber} completed: ${result.stats?.inserted || 0} words inserted`)
         } else {
-          errors.push(`Batch ${batchNumber}: ${error || result.error || 'Unknown error'}`)
-          console.error(`❌ Batch ${batchNumber} failed:`, error || result.error)
+          const errorMsg = 'error' in batchResult 
+            ? batchResult.error 
+            : ('result' in batchResult ? batchResult.result.error : 'Unknown error')
+          errors.push(`Batch ${batchNumber}: ${errorMsg}`)
+          console.error(`❌ Batch ${batchNumber} failed:`, errorMsg)
         }
       }
       

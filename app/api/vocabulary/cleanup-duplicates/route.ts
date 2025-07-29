@@ -35,10 +35,16 @@ export async function POST(request: NextRequest) {
     })
     
     // 3. 找出重复的词汇
-    const duplicates = []
-    const toDelete = []
+    const duplicates: Array<{
+      word: string;
+      user_id: string;
+      count: number;
+      records: any[];
+    }> = []
+    const toDelete: string[] = []
     
-    for (const [key, words] of wordMap.entries()) {
+    // 使用更兼容的迭代方式
+    wordMap.forEach((words, key) => {
       if (words.length > 1) {
         duplicates.push({
           word: words[0].word,
@@ -50,7 +56,7 @@ export async function POST(request: NextRequest) {
         // 保留第一个（最早创建的），删除其余
         toDelete.push(...words.slice(1).map(w => w.id))
       }
-    }
+    })
     
     console.log(`Found ${duplicates.length} duplicate word groups`)
     console.log(`Will delete ${toDelete.length} duplicate records`)
