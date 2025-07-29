@@ -69,7 +69,7 @@ export default function TestPage() {
         })
 
         console.log('Response status:', response.status)
-        console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+        console.log('Response headers:', response.headers)
 
         // 先获取响应文本，然后检查是否为JSON
         const responseText = await response.text()
