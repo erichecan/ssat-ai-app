@@ -119,7 +119,7 @@ export default function FlashCardPage() {
       const currentUser = SessionManager.getCurrentUser()
       const userId = currentUser?.id || '00000000-0000-0000-0000-000000000001' // Fixed UUID format
 
-      let endpoint = `/api/flashcards/enhanced?userId=${userId}&limit=50`
+      let endpoint = `/api/flashcards/enhanced?userId=${userId}&limit=50` // 2025-01-27 15:30:45 - 增加limit到50以显示更多单词
       
       if (todayReviewOnly) {
         // 今日复习模式：只加载已掌握且根据艾宾浩斯曲线需要复习的单词
@@ -377,27 +377,41 @@ export default function FlashCardPage() {
     }
   }
 
-  // 触屏滑动处理
+  // 触屏滑动处理 - 2025-01-27 15:30:45 - 修复滑动逻辑，添加错误处理
   const minSwipeDistance = 50
 
   const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null)
-    setTouchStart(e.targetTouches[0].clientX)
+    try {
+      setTouchEnd(null)
+      setTouchStart(e.targetTouches[0].clientX)
+    } catch (error) {
+      console.error('Touch start error:', error)
+    }
   }
 
-  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX)
+  const onTouchMove = (e: React.TouchEvent) => {
+    try {
+      setTouchEnd(e.targetTouches[0].clientX)
+    } catch (error) {
+      console.error('Touch move error:', error)
+    }
+  }
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
-    const distance = touchStart - touchEnd
-    const isLeftSwipe = distance > minSwipeDistance
-    const isRightSwipe = distance < -minSwipeDistance
-    
-    if (isLeftSwipe) {
-      handleNext() // 循环处理已在handleNext中实现
-    }
-    if (isRightSwipe) {
-      handlePrevious() // 循环处理已在handlePrevious中实现
+    try {
+      if (!touchStart || !touchEnd) return
+      const distance = touchStart - touchEnd
+      const isLeftSwipe = distance > minSwipeDistance
+      const isRightSwipe = distance < -minSwipeDistance
+      
+      if (isLeftSwipe) {
+        handleNext() // 循环处理已在handleNext中实现
+      }
+      if (isRightSwipe) {
+        handlePrevious() // 循环处理已在handlePrevious中实现
+      }
+    } catch (error) {
+      console.error('Touch end error:', error)
     }
   }
 

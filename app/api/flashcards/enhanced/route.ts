@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       progressQuery = progressQuery
         .eq('is_mastered', true) // 只看已掌握的单词
         .lte('next_review', new Date().toISOString()) // 复习时间已到或逾期
+      console.log('Today Review mode: filtering for mastered words due for review') // 2025-01-27 15:30:45 - 添加调试日志
     }
 
     // 根据排序方式调整查询
@@ -116,6 +117,91 @@ export async function GET(request: NextRequest) {
 
       if (flashcard) {
         allFlashcards.push(flashcard)
+      }
+    }
+
+    // 2025-01-27 15:30:45 - 添加没有进度记录的新单词
+    if (!todayReviewOnly && !masteredOnly) {
+      // 获取所有动态flashcards，包括没有进度记录的
+      const { data: allDynamicFlashcards, error: allDynamicError } = await supabase
+        .from('flashcards')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('type', 'vocabulary')
+
+      if (!allDynamicError && allDynamicFlashcards) {
+        // 找出没有进度记录的单词
+        const progressFlashcardIds = new Set(progressData?.map(p => p.flashcard_id) || [])
+        
+        for (const dynamicFlashcard of allDynamicFlashcards) {
+          const flashcardId = dynamicFlashcard.word || dynamicFlashcard.id
+          if (!progressFlashcardIds.has(flashcardId)) {
+            // 创建新单词的进度记录
+            const newProgress = {
+              user_id: userId,
+              flashcard_id: flashcardId,
+              times_seen: 0,
+              times_correct: 0,
+              mastery_level: 0,
+              difficulty_rating: 3,
+              interval_days: 1,
+              ease_factor: 2.5,
+              next_review: new Date().toISOString(),
+              is_mastered: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+            
+            const flashcard = {
+              id: flashcardId,
+              word: dynamicFlashcard.word,
+              pronunciation: dynamicFlashcard.pronunciation,
+              part_of_speech: dynamicFlashcard.part_of_speech,
+              definition: dynamicFlashcard.definition,
+              example_sentence: dynamicFlashcard.example_sentence,
+              memory_tip: dynamicFlashcard.memory_tip,
+              synonyms: dynamicFlashcard.synonyms || [],
+              antonyms: dynamicFlashcard.antonyms || [],
+              etymology: dynamicFlashcard.etymology,
+              category: dynamicFlashcard.category || 'vocabulary',
+              difficulty: 'medium',
+              frequency_score: dynamicFlashcard.frequency_score || 50,
+              source: 'dynamic',
+              userProgress: newProgress
+            }
+            
+            allFlashcards.push(flashcard)
+          }
+        }
+      }
+      
+      // 添加静态flashcards中没有进度记录的
+      for (const staticFlashcard of staticFlashcards) {
+        const hasProgress = progressData?.some(p => p.flashcard_id === staticFlashcard.id)
+        if (!hasProgress) {
+          const newProgress = {
+            user_id: userId,
+            flashcard_id: staticFlashcard.id,
+            times_seen: 0,
+            times_correct: 0,
+            mastery_level: 0,
+            difficulty_rating: 3,
+            interval_days: 1,
+            ease_factor: 2.5,
+            next_review: new Date().toISOString(),
+            is_mastered: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+          
+          const flashcard = {
+            ...staticFlashcard,
+            source: 'static',
+            userProgress: newProgress
+          }
+          
+          allFlashcards.push(flashcard)
+        }
       }
     }
 
